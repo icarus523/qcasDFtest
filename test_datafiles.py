@@ -60,10 +60,10 @@ class QCASTestClient(unittest.TestCase):
         self.TSLfile = "qcas_2017_10_v01.tsl"
 
         self.PSLfile = "qcas_2017_10_v03.psl"
-        self.MSLfile = "qcas_2017_10_v01.msl"
+        self.MSLfile = "qcas_2017_11_v01.msl"
 
         self.nextMonth_PSLfile = "qcas_2017_11_v01.psl"
-        self.nextMonth_MSLfile = "qcas_2017_11_v01.msl"
+        self.nextMonth_MSLfile = "qcas_2017_12_v01.msl"
         
         self.manufacturer_id_list = [ '00', '01', '05', '07', '09', '12', '17']
         self.next_month = {'month': '', 'year':''} 
@@ -82,6 +82,19 @@ class QCASTestClient(unittest.TestCase):
                 'month': int(self.this_month['month']) + 1,
                 'year': self.this_month['year']
             }
+
+    def is_new_month(self, file1, file2):
+        # new month is when file 2 version is equal to v1 and is less than file1 version. 
+        if int(self.get_filename_month(file2)) == 1 and int(self.get_filename_month(file1)) == 1:
+            return True
+        else:
+            return False
+
+    def is_new_year(self, file):
+        if int(self.get_filename_month(file)) == 12:
+            return True
+        else:
+            return False
 
     def check_game_name(self, game_name):
         if len(game_name) > 1:
@@ -207,11 +220,14 @@ class QCASTestClient(unittest.TestCase):
                 if field_str == tsl_entry.ssan: 
                     count += 1
             elif flag == 'BIN_FILE':
-                if field_str == tsl_entry.bin_file:
-                    count += 1
+                if field_str == '0201230':
+                    pass
+                else: 
+                    if field_str == tsl_entry.bin_file:
+                        count += 1
 
-                if count > 1:
-                    duplicate_entries.append(field_str.strip())
+                    if count > 1:
+                        duplicate_entries.append(field_str.strip())
             else:
                 print("unknown flag type")
                 sys.exit(1)
@@ -219,7 +235,7 @@ class QCASTestClient(unittest.TestCase):
         if count == 1:
             return True
         else:
-            print("Not Unique, counted : " + str(count) + ",".join(duplicate_entries))
+            print("Not Unique, counted : " + str(count) + " ,".join(duplicate_entries))
             if '0201230' in duplicate_entries: # handle this duplicate entry
                 return True
             else:
