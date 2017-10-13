@@ -51,12 +51,14 @@ class TSLfile:
         self.bin_file = fields[3]
         self.bin_type = fields[4]
 
+        
 # Derived unittest.TestCase class used for unittest testing. 
 class QCASTestClient(unittest.TestCase):
     # common test behaviours
     
     def setUp(self):
         # Files to Verify
+        self.previous_TSLfile = "qcas_2017_09_v02.tsl"
         self.TSLfile = "qcas_2017_10_v01.tsl"
 
         self.PSLfile = "qcas_2017_10_v03.psl"
