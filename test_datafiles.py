@@ -1,56 +1,177 @@
 import unittest
 import csv
 import logging
+import os
+import hmac
+import hashlib
+import sys
+import json
 from datetime import datetime
+p_reset = "\x08"*8
 
 VALID_BIN_TYPE = ['BLNK','PS32','SHA1']
+#PATH_TO_BINIMAGE = 'G:\\OLGR-TECHSERV\\BINIMAGE'
+PATH_TO_BINIMAGE = 'C:\\Users\\aceretjr\\Documents\\dev\\qcas Datafiles Unittest\\binimage'
+DEFAULT_CACHE_FILE = 'qcas_df_cache_file.json'
+MID_LIST = [ '00', '01', '05', '07', '09', '12', '17']
 
+class CacheFile: 
+
+    def __init__(self, fname=DEFAULT_CACHE_FILE): 
+        self.cache_file = fname
+        self.cache_dict = self.importCacheFile()
+                
+    def importCacheFile(self):
+        if os.path.isfile(self.cache_file): 
+            # Verify Cache Integrity
+            #cache_file_sigs_filename = self.cache_file[:-4] + ".sigs"
+            #if self.verifyCacheIntegrity(cache_file_sigs_filename): 
+            with open(self.cache_file,'r') as json_cachefile: 
+                cache_data = json.load(json_cachefile)
+            #else: 
+            #    logging.warning("**** WARNING **** File Cache integrity issue: " +
+            #           " Cannot Verify signature")
+            #    logging.info("Generating new File Cache file:" + self.cache_file)
+            #    cache_data = {} # return empty cache
+        else:
+            logging.info(self.cache_file + 
+                " cannot be found. Generating default file...")
+            with open(self.cache_file, 'w+') as json_cachefile:
+                # write empty json file
+                json.dump({}, 
+                    json_cachefile, 
+                    sort_keys=True, 
+                    indent=4, 
+                    separators=(',', ': '))
+                print('Run script again, empty cache file created')
+                sys.exit(0)
+        
+        return(cache_data)
+
+    def checkCacheFilename(self, filename, seed_input, alg_input): # alg_input
+        # For filename_seed, concatenate to form unique string. 
+        if filename in self.cache_dict.keys(): # a hit?
+            data = self.cache_dict.get(filename) # now a list
+            for item in data:
+                # Check if Seed and Algorithm matches. 
+                if item['seed'] == seed_input and item['alg'] == alg_input: 
+                    verified_time = item['verify'] 
+                    return(str(item['hash'])) # return Hash result
+        else:
+            return 0
+    
+    def verifyCacheIntegrity(self, cache_location_sigs): 
+        if os.path.isfile(cache_location_sigs): # Sigs file exist?
+            with open(cache_location_sigs, 'r') as sigs_file: 
+                cache_sigs_data = json.load(sigs_file)
+                hashm = cache_sigs_data['cachefile_hash']
+                #fname = cache_sigs_data['filename']
+                
+                generated_hash = QCASTestClient.dohash_sha256(self.cache_file, 8192)
+                if hashm == generated_hash: 
+                    return True
+                else: 
+                    return False     
+        else: 
+            # advise user
+            logging.warning("\n**** WARNING **** Generating new Cache Sigs file\n") 
+            self.signCacheFile() # Generate Cache Sigs file
+        
+    def signCacheFile(self):
+        sigsCacheFile = self.cache_file[:-4] + "sigs" # .json file renaming to .sigs file
+        h = QCASTestClient.dohash_sha256(self.cache_file, 8192) # requires file name as input
+        
+        with open(sigsCacheFile,'w') as sigs_file:    
+            timestamp = datetime.now()
+            sigs_dict = { 'cachefile_hash' : h,
+                          'filename': self.cache_file,
+                          'last_generated_by_user' : getpass.getuser(),
+                          'date': str(timestamp.strftime("%Y-%m-%d %H:%M"))
+                        }
+            
+            json.dump(sigs_dict,
+                      sigs_file,
+                      sort_keys=True,
+                      indent=4,
+                      separators=(',', ': '))
+        
+    def updateCacheFile(self):
+        if os.path.isfile(self.cache_file):
+            with open(self.cache_file, 'w') as json_cachefile:
+                json.dump(self.cache_dict,
+                          json_cachefile,
+                          sort_keys=True,
+                          indent=4,
+                          separators=(',', ': '))
+            
+        # self.signCacheFile() # Sign Cache
+    
 class PSLfile:
     # helper class for PSL file
     def __init__(self, line):
         fields = str(line).split(',')
-        self.game_name = fields[0]
+        
+        self.game_name = fields[0].strip() # strip spaces
+        assert(len(self.game_name) < 31)
+       
         self.manufacturer = fields[1]
+        assert(self.manufacturer in MID_LIST)
+        
         self.year = int(fields[2])
+        valid_year = list(range(2017,9999))
+        assert(len(fields[2]) == 4)
+        assert(self.year in valid_year)
+        
         self.month = int(fields[3])
-        self.ssan = int(fields[4])
+        valid_months = list(range(1,13))
+        assert(self.month in valid_months)
+        
+        assert(len(fields[4]) == 10)
+        self.ssan = int(fields[4].strip())
 
-        included_cols = [5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35]
+        included_cols = list(range(5,36)) 
         self.hash_list = list(fields[i] for i in included_cols)
         assert(len(self.hash_list) == 31)
 
-        #count = 0
-        #for item in self.hash_list:
-        #    print("Count: " + str(count) + " Hash: " + str(item))
-        #    count += 1
 
 class MSLfile:
     # helper class for MSL file
     def __init__(self, line):
         fields = str(line).split(',')
+        
         self.year = int(fields[0])
+        valid_year = list(range(2017,9999))
+        assert(self.year in valid_year) # verify year field is 2017-9999
+       
         self.month = int(fields[1])
-
-        included_cols = [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32]
+        valid_months = list(range(1,13))
+        assert(self.month in valid_months) # verify months fields is 1-12
+        
+        included_cols = list(range(2, 33))
         self.seed_list = list(fields[i] for i in included_cols)
-
-        #count = 1
-        #for item in self.seed_list:
-        #    print("Day: " + str(count) + " Seed item: " + str(item))
-        #    count += 1
-            
-        assert(len(self.seed_list) == 31)
+        assert(len(self.seed_list) == 31) # verify 31 seeds
+        for seed in self.seed_list: 
+            assert(len(seed) == 8)  # verify each seed has 8 characters
         
 class TSLfile:
     # helper class for TSL file
     def __init__(self, line):
         fields = str(line).split(',')
-        self.mid = int(fields[0])
+        self.mid = fields[0]
+        assert(self.mid in MID_LIST)
+        
+        assert(len(fields[1]) == 10)
         self.ssan = int(fields[1])
-        self.game_name = fields[2]
-        self.bin_file = fields[3]
-        self.bin_type = fields[4]
-
+        
+        self.game_name = fields[2].strip()
+        assert(len(self.game_name) < 31)
+        
+        self.bin_file = fields[3].strip()
+        assert(len(self.bin_file) < 21)
+        
+        self.bin_type = fields[4].strip()
+        assert(self.bin_type in VALID_BIN_TYPE)
+        
         
 # Derived unittest.TestCase class used for unittest testing. 
 class QCASTestClient(unittest.TestCase):
@@ -62,12 +183,12 @@ class QCASTestClient(unittest.TestCase):
         self.TSLfile = "qcas_2017_10_v01.tsl"
 
         self.PSLfile = "qcas_2017_10_v03.psl"
-        self.MSLfile = "qcas_2017_11_v01.msl"
+        self.MSLfile = "qcas_2017_10_v01.msl"
 
         self.nextMonth_PSLfile = "qcas_2017_11_v01.psl"
-        self.nextMonth_MSLfile = "qcas_2017_12_v01.msl"
+        self.nextMonth_MSLfile = "qcas_2017_11_v01.msl"
         
-        self.manufacturer_id_list = [ '00', '01', '05', '07', '09', '12', '17']
+        #self.manufacturer_id_list = [ '00', '01', '05', '07', '09', '12', '17']
         self.next_month = {'month': '', 'year':''} 
         self.this_month = {
             'month': datetime.now().month,
@@ -113,7 +234,7 @@ class QCASTestClient(unittest.TestCase):
         else:
             temp_manufacturer = manufacturer
 
-        if temp_manufacturer in set(self.manufacturer_id_list):
+        if temp_manufacturer in set(MID_LIST):
             output =  True
         else:
             output = False
@@ -243,8 +364,176 @@ class QCASTestClient(unittest.TestCase):
             else:
                 return False
 
+    def get_newgames_to_be_added(self): 
+        game_list_to_be_added = list()
+        tsl_difference = set()
 
+        with open(self.TSLfile, 'r') as file1:
+            with open(self.previous_TSLfile, 'r') as file2:
+                tsl_difference = set(file1).difference(file2)
+        
+        self.assertTrue(len(tsl_difference) > 0) # TSL files must be contain a new game? 
+        # print("\nNew Games added: \n" + "".join(list(tsl_difference)))
+  
+        # Differences are the new games to be added. 
+        for game in list(tsl_difference): # Single Line
+            game_list_to_be_added.append(TSLfile(game)) # Generate TSL object
+        
+        return game_list_to_be_added
+    
+        # output: psl entries for the TSL_object list (new games). 
+        # 
+    def generate_PSL_entries(self, MSL_file, TSL_object_list): 
+        msl_object = self.check_file_format(MSL_file, 'MSL')    # generate MSL objects
+        seed_list = msl_object[0].seed_list                     # get only seed list from MSL file
+        oh = "0000000000000000000000000000000000000000"
+        psl_entry = ''
+        psl_entries = list()
+        assert(len(TSL_object_list) > 0)
+
+        psl_cache_file = CacheFile() # use a Cachefile - all defaults
+        
+        # PSL format: 
+        # 00 GOLD - JACKPOT STREAK-V    ,00,2016,05,0000131778,8034AFE7,...,8E2043CC
+
+        for seed in seed_list:
+            print(seed)
+        
+        for game in TSL_object_list: 
+            psl_entry = "%(game_name)-30s,%(mid)02d,%(year)4s,%(month)02d,%(ssan)010d," % {'game_name': game.game_name, 'mid': int(game.mid), 'year': msl_object[0].year, 'month': msl_object[0].month, 'ssan': game.ssan}
+            for seed in seed_list: 
+                # Generate a hash for each seed and append this result to psl_entry. 
+                if str(game.bin_type).startswith('BLNK'): 
+                    blnk_file = os.path.join(PATH_TO_BINIMAGE, self.getMID_Directory(game.mid), game.bin_file.strip() + "." + self.get_bin_type(game.bin_type))
+                    with open(blnk_file, 'r') as file:         # Read BNK file
+                        field_names = ['fname', 'type', 'blah']
+                        reader = csv.DictReader(file, delimiter=' ', fieldnames=field_names)
+                        cached = False
+                        for row in reader: 
+                            if row['type'].upper() == 'SHA1':   # Process only HMAC SHA1 hashes
+                                localhash = '00'
+                                complete_path_to_file = os.path.join(PATH_TO_BINIMAGE,self.getMID_Directory(game.mid), str(row['fname']))
+                                
+                                cachedhit = psl_cache_file.checkCacheFilename(complete_path_to_file, self.getQCAS_Expected_output(seed), row['type'].upper()) 
+                                if cachedhit:
+                                    localhash = cachedhit # use cached data
+                                else: 
+                                    new_cache_list = list()
+                                    localhash = self.dohash_hmacsha1(complete_path_to_file, self.getQCAS_Expected_output(seed), 65534) # Important! Reverse seed since QCAS datafiles)
+                                
+                                    # create cache object
+                                    cache_object = { 
+                                        'seed': seed, 
+                                        'alg': row['type'].upper(), 
+                                        'verify':'0', 
+                                        'hash': localhash 
+                                    }        
+                                    
+                                    cache_entry_list = psl_cache_file.cache_dict.get(complete_path_to_file) # Should return a list. 
+                                    
+                                    if cache_entry_list :   # File Entry Exists, append to list
+                                        cache_entry_list.append(cache_object) # print this
+                                        psl_cache_file.cache_dict[complete_path_to_file] = cache_entry_list
+                                    else:                   # No File Entry Exits generate new list entry in cache_dict
+                                        new_cache_list.append(cache_object)
+                                        psl_cache_file.cache_dict[complete_path_to_file] = new_cache_list # keep unique
+                                                                    
+                                    psl_cache_file.updateCacheFile() # Update file cache
+                                    # psl_cache_file.signCacheFile() # Sign updated file
+                                                                                                       
+                                oh = hex(int(oh,16) ^ int(str(localhash), 16)) # XOR
+                            else:
+                                print("Not processing any other file other than SHA1!")
+                                sys.exit(1)
+                        
+                else:
+                    print("bin_type is: " + game.bin_type)
+                
+                psl_entry += oh.lstrip('0x').upper() + "," # Append day for each day of month
+            psl_entries.append(psl_entry) # append psl_entry for each game
+
+        # NewGamesHashlist now includes all new games, for each seed, and hash.
+        # In the following dict: { 'seed': seed of the day, 'hash': hash using seed of the day, 'game_name' : game name }
+        return(psl_entries)
+
+    # input: file to be hashed using sha256()
+    # output: hexdigest of input file    
+    def dohash_sha256(self, fname, chunksize=8192): 
+        m = hashlib.sha256()         
+
+        # Read in chunksize blocks at a time
+        with open(fname, 'rb') as f:
+            while True:
+                block = f.read(chunksize)
+                if not block: break
+                m.update(block)    
+
+        return m.hexdigest()
+        
+    # input: file to be hashed using hmac-sha1
+    # output: hexdigest of input file    
+    def dohash_hmacsha1(self, fname, seed='00', chunksize=8192):
+        key = bytes.fromhex(seed)
+        m = hmac.new(key, digestmod = hashlib.sha1) # change this if you want other hashing types for HMAC, e.g. hashlib.md5
+        done = 0
+        size = os.path.getsize(fname)
+        # Read in chunksize blocks at a time
+        with open(fname, 'rb') as f:
+            print("\nHashing: " + fname + ":\t" + "Seed:\t" + seed + "\t", end="")
+            while True:
+                block = f.read(chunksize)
+                done += chunksize
+                sys.stdout.write("%7d"%(done*100/size) + "%" + p_reset)
+                if not block: break
+                m.update(block)      
+        return m.hexdigest()
+        
+    def get_bin_type(self, bin_type):
+        if bin_type.startswith('BLNK'):
+            return "BNK"
+        elif bin_type.startswith('SHA1'): 
+            return "BIN"
+        elif bin_type.startswith('CR32'): 
+            return "BIN"
+        else: 
+            assert(bin_type in VALID_BIN_TYPE)
+            sys.exit(1)
+    
+    def getMID_Directory(self, mid):
+    # Check if inactive manufacturers exist in TSL file
+        manufacturer = ''
+        
+        if (mid == '00'): manufacturer = 'ARI'
+        elif (mid == '01'): manufacturer = 'IGT'
+        elif (mid == '05'): manufacturer = 'PAC'
+        elif (mid == '07'): manufacturer = 'VID'
+        elif (mid == '09'): manufacturer = 'KONAMI'
+        elif (mid == '12'): manufacturer = 'AGT'
+        elif (mid == '17'): manufacturer = 'VGT'
+        else:
+            assert(mid in MID_LIST)
+            sys.exit(1)
+            
+        return manufacturer
+    
+    def getQCAS_Expected_output(self, text):
+        tmpstr = text[:8] # Returns from the beginning to position 8 of uppercase text
+        return "".join(reversed([tmpstr[i:i+2] for i in range(0, len(tmpstr), 2)]))     
+    
+    def verify_psl_entry_exist(self, psl_entry, file):
+        with open(file, 'r') as psl_file: 
+            reader = psl_file.readlines()
+            for line in reader: 
+                if psl_entry == line.strip(): 
+                    return True
+                else: 
+                    return False
+                
+    
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG, format=' %(asctime)s - %(levelname)s- %(message)s')
     logging.debug('Start of unittesting for qcas datafiles.py')
     unittest.main()
+
+    
+    

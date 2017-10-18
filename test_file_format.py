@@ -72,10 +72,6 @@ class test_file_format(QCASTestClient):
 
             # Check BNK File name is unique
             #@unittest.skipIf(tsl_entry.binfile == '0101230', "Duplicate entry exist for this game")
-            if tsl_entry.bin_file == '0101230':
-                pass
-            else: 
-                self.assertTrue(self.check_unique_field(tsl_entry.bin_file, tslfile_list, flag='BIN_FILE'))
 
             # Check BNK Type is valid
             self.assertTrue(self.check_valid_binimage_type(tsl_entry.bin_type))

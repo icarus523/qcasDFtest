@@ -3,6 +3,8 @@ import csv
 
 from test_datafiles import QCASTestClient, PSLfile, TSLfile
 
+MID_LIST = [ '00', '01', '05', '07', '09', '12', '17']
+
 class test_chk01_checklist(QCASTestClient):
    
     def test_Generated_PSL_files_Differ(self):
@@ -15,19 +17,7 @@ class test_chk01_checklist(QCASTestClient):
         self.assertFalse(len(same) > 0)
                 
     def test_new_games_to_be_added_are_in_PSL_files(self):
-        tsl_difference = set()
-        game_list_to_be_added = list()
-        
-        with open(self.TSLfile, 'r') as file1:
-            with open(self.previous_TSLfile, 'r') as file2:
-                tsl_difference = set(file1).difference(file2)
-        
-        self.assertTrue(len(tsl_difference) > 0) # TSL files must be contain a new game? 
-        print("\nNew Games added: \n" + "".join(list(tsl_difference)))
-  
-        # Differences are the new games to be added. 
-        for game in list(tsl_difference): # Single Line
-            game_list_to_be_added.append(TSLfile(game)) # Generate TSL object
+        game_list_to_be_added = self.get_newgames_to_be_added()
             
         # Find these games in the both PSL files
         psl_file_list = [self.PSLfile, self.nextMonth_PSLfile] 
@@ -42,8 +32,53 @@ class test_chk01_checklist(QCASTestClient):
                         verified_game.append(game)  # List of TSL entries that have been verified. 
                         
             psl_difference = list(set(verified_game).intersection(set(game_list_to_be_added))) # TSL lists
-            for tslitem in psl_difference: 
-                print("Verified added games in " + psl_file + " is: " + tslitem.game_name)
+            #for tslitem in psl_difference: 
+            #    print("Verified added games in " + psl_file + " is: " + tslitem.game_name)
                 
             self.assertTrue(set(verified_game).intersection(set(game_list_to_be_added)))
-             
+    
+    def test_TSL_entries_exist_in_PSL_files(self):        
+        # Read TSL entry
+        # Generate PSL entry with seeds
+        # Find that this PSL entry exits in PSL file. 
+        
+        TSL_game_list_to_be_added = self.get_newgames_to_be_added()
+        both_MSL_seed_list_file = [self.MSLfile, self.nextMonth_MSLfile] 
+        psl_list_for_each_month = list()
+        for MSL_file in both_MSL_seed_list_file: 
+            new_psl_entries_list = self.generate_PSL_entries(MSL_file, TSL_game_list_to_be_added) 
+            psl_list_for_each_month.append(new_psl_entries_list) # should return two lists for two games 
+            
+        # print("Size of PSL entries generated: " + str(len(new_psl_entries_list)))
+        
+        # test the psl_entry to be formatted as an PSL object
+        for month in psl_list_for_each_month:
+            for psl_entry in new_psl_entries_list: 
+                print(psl_entry)
+                psl_entry_object = PSLfile(psl_entry) 
+                
+                assert(len(psl_entry_object.game_name) < 31)
+                assert(psl_entry_object.manufacturer in MID_LIST)
+                
+                valid_year = list(range(2017,9999))
+                assert(psl_entry_object.year in valid_year)
+                
+                valid_months = list(range(1,13))
+                assert(psl_entry_object.month in valid_months)
+            
+                #valid_ssan = list (range(150000, 999999999))
+                #print(psl_entry_object.ssan in valid_ssan)
+                
+                assert(len(psl_entry_object.hash_list) == 31)
+        
+        # verify that PSL object fields matches is the the PSLfiles 
+        #psl_files_list = [self.PSLfile, self.nextMonth_PSLfile] 
+        #count = 0
+        #for psl_entry in new_psl_entries_list: 
+        #   for psl_file in psl_files_list:
+        #        if self.verify_psl_entry_exist(psl_entry, psl_file): 
+        #            count+=1
+        
+        #print("Length of new_psl_entries_list: " + str(len(new_psl_entries_list)) + " Identified Entries: " + str(count))
+        #assert(count == len(new_psl_entries_list))
+        # print("PSL entries generated: " + ', '.join(new_psl_entries_list))
