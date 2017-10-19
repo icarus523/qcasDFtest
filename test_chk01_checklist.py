@@ -1,7 +1,7 @@
 import os
 import csv
 
-from test_datafiles import QCASTestClient, PSLfile, TSLfile
+from test_datafiles import QCASTestClient, PSLfile, TSLfile, MSLfile
 
 MID_LIST = [ '00', '01', '05', '07', '09', '12', '17']
 
@@ -41,44 +41,39 @@ class test_chk01_checklist(QCASTestClient):
         # Read TSL entry
         # Generate PSL entry with seeds
         # Find that this PSL entry exits in PSL file. 
+        psl_object_list = list()
         
         TSL_game_list_to_be_added = self.get_newgames_to_be_added()
-        both_MSL_seed_list_file = [self.MSLfile, self.nextMonth_MSLfile] 
-        psl_list_for_each_month = list()
+        both_MSL_seed_list_file = [self.MSLfile , self.nextMonth_MSLfile] 
         for MSL_file in both_MSL_seed_list_file: 
-            new_psl_entries_list = self.generate_PSL_entries(MSL_file, TSL_game_list_to_be_added) 
-            psl_list_for_each_month.append(new_psl_entries_list) # should return two lists for two games 
-            
-        # print("Size of PSL entries generated: " + str(len(new_psl_entries_list)))
-        
-        # test the psl_entry to be formatted as an PSL object
-        for month in psl_list_for_each_month:
-            for psl_entry in new_psl_entries_list: 
-                print(psl_entry)
-                psl_entry_object = PSLfile(psl_entry) 
+            count = 0
+            for game in TSL_game_list_to_be_added: 
+                psl_entry_string = self.generate_PSL_entries(MSL_file, game) 
+                print("\n" + psl_entry_string)
                 
-                assert(len(psl_entry_object.game_name) < 31)
-                assert(psl_entry_object.manufacturer in MID_LIST)
+                # test the psl_entry to be formatted as an PSL object
+                psl_entry_object = PSLfile(psl_entry_string) 
+                
+                self.assertTrue(len(psl_entry_object.game_name) < 31)
+                self.assertTrue(psl_entry_object.manufacturer in MID_LIST)
                 
                 valid_year = list(range(2017,9999))
-                assert(psl_entry_object.year in valid_year)
+                self.assertTrue(psl_entry_object.year in valid_year)
                 
                 valid_months = list(range(1,13))
-                assert(psl_entry_object.month in valid_months)
+                self.assertTrue(psl_entry_object.month in valid_months)
             
                 #valid_ssan = list (range(150000, 999999999))
-                #print(psl_entry_object.ssan in valid_ssan)
+                self.assertTrue(psl_entry_object.ssan < 999999999 and psl_entry_object.ssan > 150000)
                 
-                assert(len(psl_entry_object.hash_list) == 31)
+                self.assertTrue(len(psl_entry_object.hash_list) == 31)
+                
+                # verify that PSL object fields matches is the the PSLfiles  
+                psl_files_list = [self.PSLfile, self.nextMonth_PSLfile] 
+                for psl_file in psl_files_list:
+                    if self.verify_psl_entry_exist(psl_entry_object.toString(), psl_file): 
+                        count+=1
         
-        # verify that PSL object fields matches is the the PSLfiles 
-        #psl_files_list = [self.PSLfile, self.nextMonth_PSLfile] 
-        #count = 0
-        #for psl_entry in new_psl_entries_list: 
-        #   for psl_file in psl_files_list:
-        #        if self.verify_psl_entry_exist(psl_entry, psl_file): 
-        #            count+=1
-        
-        #print("Length of new_psl_entries_list: " + str(len(new_psl_entries_list)) + " Identified Entries: " + str(count))
-        #assert(count == len(new_psl_entries_list))
-        # print("PSL entries generated: " + ', '.join(new_psl_entries_list))
+            print("Length of new_psl_entries_list: " + str(len(psl_object_list)) + " Identified Entries: " + str(count))
+            assert(count == len(TSL_game_list_to_be_added))
+            print("PSL entries generated: " + ', '.join(new_psl_entries_list))

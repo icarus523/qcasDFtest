@@ -6,6 +6,7 @@ import hmac
 import hashlib
 import sys
 import json
+import difflib
 from datetime import datetime
 p_reset = "\x08"*8
 
@@ -112,6 +113,7 @@ class PSLfile:
         fields = str(line).split(',')
         
         self.game_name = fields[0].strip() # strip spaces
+        # print(len(self.game_name))
         assert(len(self.game_name) < 31)
        
         self.manufacturer = fields[1]
@@ -129,10 +131,20 @@ class PSLfile:
         assert(len(fields[4]) == 10)
         self.ssan = int(fields[4].strip())
 
-        included_cols = list(range(5,36)) 
-        self.hash_list = list(fields[i] for i in included_cols)
+        # included_cols = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35]
+        included_cols_v2 = list(range(5,36))
+        self.hash_list = list(fields[i] for i in included_cols_v2)
         assert(len(self.hash_list) == 31)
-
+        
+        self.psl_entry_str = self.toString()
+        print("PSL_ENTRY" + self.psl_entry_str)
+        assert(self.psl_entry_str == line)
+        
+    def toString(self): 
+        self.psl_entry_str = "%(game_name)-30s,%(mid)02d,%(year)4s,%(month)02d,%(ssan)010d" % {'game_name': self.game_name, 'mid': int(self.manufacturer), 'year': self.year, 'month': int(self.month), 'ssan': int(self.ssan)}
+        for hash_item in self.hash_list: 
+            self.psl_entry_str += hash_item + ","
+        return self.psl_entry_str.strip(',')
 
 class MSLfile:
     # helper class for MSL file
@@ -382,79 +394,104 @@ class QCASTestClient(unittest.TestCase):
         return game_list_to_be_added
     
         # output: psl entries for the TSL_object list (new games). 
-        # 
-    def generate_PSL_entries(self, MSL_file, TSL_object_list): 
-        msl_object = self.check_file_format(MSL_file, 'MSL')    # generate MSL objects
+        # input: 
+    def generate_PSL_entries(self, MSL_filename, TSL_object): 
+        msl_object = self.check_file_format(MSL_filename, 'MSL')    # generate MSL objects
         seed_list = msl_object[0].seed_list                     # get only seed list from MSL file
-        oh = "0000000000000000000000000000000000000000"
-        psl_entry = ''
-        psl_entries = list()
-        assert(len(TSL_object_list) > 0)
 
         psl_cache_file = CacheFile() # use a Cachefile - all defaults
-        
         # PSL format: 
         # 00 GOLD - JACKPOT STREAK-V    ,00,2016,05,0000131778,8034AFE7,...,8E2043CC
-
-        for seed in seed_list:
-            print(seed)
         
-        for game in TSL_object_list: 
-            psl_entry = "%(game_name)-30s,%(mid)02d,%(year)4s,%(month)02d,%(ssan)010d," % {'game_name': game.game_name, 'mid': int(game.mid), 'year': msl_object[0].year, 'month': msl_object[0].month, 'ssan': game.ssan}
-            for seed in seed_list: 
-                # Generate a hash for each seed and append this result to psl_entry. 
-                if str(game.bin_type).startswith('BLNK'): 
-                    blnk_file = os.path.join(PATH_TO_BINIMAGE, self.getMID_Directory(game.mid), game.bin_file.strip() + "." + self.get_bin_type(game.bin_type))
-                    with open(blnk_file, 'r') as file:         # Read BNK file
-                        field_names = ['fname', 'type', 'blah']
-                        reader = csv.DictReader(file, delimiter=' ', fieldnames=field_names)
-                        cached = False
-                        for row in reader: 
-                            if row['type'].upper() == 'SHA1':   # Process only HMAC SHA1 hashes
-                                localhash = '00'
-                                complete_path_to_file = os.path.join(PATH_TO_BINIMAGE,self.getMID_Directory(game.mid), str(row['fname']))
-                                
-                                cachedhit = psl_cache_file.checkCacheFilename(complete_path_to_file, self.getQCAS_Expected_output(seed), row['type'].upper()) 
-                                if cachedhit:
-                                    localhash = cachedhit # use cached data
-                                else: 
-                                    new_cache_list = list()
-                                    localhash = self.dohash_hmacsha1(complete_path_to_file, self.getQCAS_Expected_output(seed), 65534) # Important! Reverse seed since QCAS datafiles)
-                                
-                                    # create cache object
-                                    cache_object = { 
-                                        'seed': seed, 
-                                        'alg': row['type'].upper(), 
-                                        'verify':'0', 
-                                        'hash': localhash 
-                                    }        
-                                    
-                                    cache_entry_list = psl_cache_file.cache_dict.get(complete_path_to_file) # Should return a list. 
-                                    
-                                    if cache_entry_list :   # File Entry Exists, append to list
-                                        cache_entry_list.append(cache_object) # print this
-                                        psl_cache_file.cache_dict[complete_path_to_file] = cache_entry_list
-                                    else:                   # No File Entry Exits generate new list entry in cache_dict
-                                        new_cache_list.append(cache_object)
-                                        psl_cache_file.cache_dict[complete_path_to_file] = new_cache_list # keep unique
-                                                                    
-                                    psl_cache_file.updateCacheFile() # Update file cache
-                                    # psl_cache_file.signCacheFile() # Sign updated file
-                                                                                                       
-                                oh = hex(int(oh,16) ^ int(str(localhash), 16)) # XOR
-                            else:
-                                print("Not processing any other file other than SHA1!")
-                                sys.exit(1)
-                        
-                else:
-                    print("bin_type is: " + game.bin_type)
+        psl_entry = "%(game_name)-30s,%(mid)02d,%(year)4s,%(month)02d,%(ssan)010d," % {'game_name': TSL_object.game_name, 'mid': int(TSL_object.mid), 'year': msl_object[0].year, 'month': msl_object[0].month, 'ssan': TSL_object.ssan}
+        blnk_file = os.path.join(PATH_TO_BINIMAGE, self.getMID_Directory(TSL_object.mid), TSL_object.bin_file.strip() + "." + self.get_bin_type(TSL_object.bin_type))
+        for seed in seed_list:
+            oh = "0000000000000000000000000000000000000000" # must reset always for each new seed
+            # Generate a hash for each seed and append this result to psl_entry. 
+            if str(TSL_object.bin_type).startswith('BLNK'): 
+                # blnk_file = os.path.join(PATH_TO_BINIMAGE, self.getMID_Directory(TSL_object.mid), TSL_object.bin_file.strip() + "." + self.get_bin_type(TSL_object.bin_type))
                 
-                psl_entry += oh.lstrip('0x').upper() + "," # Append day for each day of month
-            psl_entries.append(psl_entry) # append psl_entry for each game
+                with open(blnk_file, 'r') as file:         # Read BNK file
+                    field_names = ['fname', 'type', 'blah']
+                    reader = csv.DictReader(file, delimiter=' ', fieldnames=field_names)
+                    
+                    for row in reader: 
+                        if row['type'].upper() == 'SHA1':   # Process only HMAC SHA1 hashes
+                            localhash = '00'
+                            complete_path_to_file = os.path.join(PATH_TO_BINIMAGE,self.getMID_Directory(TSL_object.mid), str(row['fname']))
+                            
+                            cachedhit = psl_cache_file.checkCacheFilename(complete_path_to_file, self.getQCAS_Expected_output(seed), row['type'].upper()) 
+                            if cachedhit:
+                                localhash = cachedhit # use cached data
+                            else: 
+                                new_cache_list = list()
+                                localhash = self.dohash_hmacsha1(complete_path_to_file, self.getQCAS_Expected_output(seed), 65534) 
+                            
+                                # create cache object
+                                cache_object = { 
+                                    'seed': self.getQCAS_Expected_output(seed), 
+                                    'alg': row['type'].upper(), 
+                                    'verify':'0', 
+                                    'hash': localhash 
+                                }        
+                                
+                                cache_entry_list = psl_cache_file.cache_dict.get(complete_path_to_file) # Should return a list. 
+                                
+                                if cache_entry_list :   # File Entry Exists, append to list
+                                    cache_entry_list.append(cache_object) # print this
+                                    psl_cache_file.cache_dict[complete_path_to_file] = cache_entry_list
+                                else:                   # No File Entry Exits generate new list entry in cache_dict
+                                    new_cache_list.append(cache_object)
+                                    psl_cache_file.cache_dict[complete_path_to_file] = new_cache_list # keep unique
+                                                                
+                                psl_cache_file.updateCacheFile() # Update file cache
+                                # psl_cache_file.signCacheFile() # Sign updated file
+                                                                                                   
+                            oh = hex(int(oh,16) ^ int(str(localhash), 16)) # XOR
+                            
+                        else:
+                            print("Not processing any other file other than SHA1!")
+                            sys.exit(1)
+            elif str(TSL_object.bin_type).startswith('SHA1'): # support SHA1 i.e. .bin files
+                complete_path_to_file = os.path.join(PATH_TO_BINIMAGE,self.getMID_Directory(TSL_object.mid), TSL_object.bin_file)
+                
+                cachedhit = psl_cache_file.checkCacheFilename(complete_path_to_file, self.getQCAS_Expected_output(seed), TSL_object.bin_type) 
+                if cachedhit:
+                    localhash = cachedhit # use cached data
+                else: 
+                    new_cache_list = list()
+                    localhash = self.dohash_hmacsha1(complete_path_to_file, self.getQCAS_Expected_output(seed), 65534) 
+                
+                    # create cache object
+                    cache_object = { 
+                        'seed': self.getQCAS_Expected_output(seed), 
+                        'alg': row['type'].upper(), 
+                        'verify':'0', 
+                        'hash': localhash 
+                    } 
+                    
+                    cache_entry_list = psl_cache_file.cache_dict.get(complete_path_to_file) # Should return a list. 
+                                
+                    if cache_entry_list :   # File Entry Exists, append to list
+                        cache_entry_list.append(cache_object) # print this
+                        psl_cache_file.cache_dict[complete_path_to_file] = cache_entry_list
+                    else:                   # No File Entry Exits generate new list entry in cache_dict
+                        new_cache_list.append(cache_object)
+                        psl_cache_file.cache_dict[complete_path_to_file] = new_cache_list # keep unique
+                                                    
+                    psl_cache_file.updateCacheFile() # Update file cache
+                    # psl_cache_file.signCacheFile() # Sign updated file
+                    
+                oh = hex(int(oh,16) ^ int(str(localhash), 16)) # XOR
+                    
+            else: # str(TSL_object.bin_type).startswith('BLNK'):
+                print("Unsupported bin_type: " + game.bin_type)
+                sys.exit(1)
+            
+            qcas_str = self.getQCAS_Expected_output(oh.lstrip('0x').upper())
+            psl_entry += qcas_str + "," # Append day for each day of month
 
-        # NewGamesHashlist now includes all new games, for each seed, and hash.
-        # In the following dict: { 'seed': seed of the day, 'hash': hash using seed of the day, 'game_name' : game name }
-        return(psl_entries)
+        return(psl_entry)
 
     # input: file to be hashed using sha256()
     # output: hexdigest of input file    
@@ -520,14 +557,18 @@ class QCASTestClient(unittest.TestCase):
         tmpstr = text[:8] # Returns from the beginning to position 8 of uppercase text
         return "".join(reversed([tmpstr[i:i+2] for i in range(0, len(tmpstr), 2)]))     
     
-    def verify_psl_entry_exist(self, psl_entry, file):
+        # input: psl entry string, filename
+        # output: Does PSL entry string exist in filename. 
+    def verify_psl_entry_exist(self, psl_entry_str, file):
         with open(file, 'r') as psl_file: 
             reader = psl_file.readlines()
             for line in reader: 
-                if psl_entry == line.strip(): 
-                    return True
-                else: 
-                    return False
+                output_list = [li for li in list(difflib.ndiff(psl_entry_str,line)) if li[0] != ' ']
+                
+                #if psl_entry_str.strip(',') == line.strip(): 
+                #    return True
+                #else: 
+                #    return False
                 
     
 if __name__ == '__main__':
