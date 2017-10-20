@@ -12,7 +12,7 @@ p_reset = "\x08"*8
 
 VALID_BIN_TYPE = ['BLNK','PS32','SHA1']
 #PATH_TO_BINIMAGE = 'G:\\OLGR-TECHSERV\\BINIMAGE'
-PATH_TO_BINIMAGE = 'C:\\Users\\aceretjr\\Documents\\dev\\qcas Datafiles Unittest\\binimage'
+PATH_TO_BINIMAGE = 'C:\\Users\\aceretjr\\Documents\\dev\\qcas-Datafiles-Unittest\\binimage'
 DEFAULT_CACHE_FILE = 'qcas_df_cache_file.json'
 MID_LIST = [ '00', '01', '05', '07', '09', '12', '17']
 
@@ -111,6 +111,7 @@ class PSLfile:
     # helper class for PSL file
     def __init__(self, line):
         fields = str(line).split(',')
+        input_line = line.strip(',') # remove trailing comma
         
         self.game_name = fields[0].strip() # strip spaces
         # print(len(self.game_name))
@@ -137,14 +138,28 @@ class PSLfile:
         assert(len(self.hash_list) == 31)
         
         self.psl_entry_str = self.toString()
-        print("PSL_ENTRY" + self.psl_entry_str)
-        assert(self.psl_entry_str == line)
+        if self.psl_entry_str != input_line:
+            self.identifyDifference(self.psl_entry_str, input_line)
+        
+        assert(self.psl_entry_str == input_line)
         
     def toString(self): 
-        self.psl_entry_str = "%(game_name)-30s,%(mid)02d,%(year)4s,%(month)02d,%(ssan)010d" % {'game_name': self.game_name, 'mid': int(self.manufacturer), 'year': self.year, 'month': int(self.month), 'ssan': int(self.ssan)}
+        self.psl_entry_str = "%(game_name)-30s,%(mid)02d,%(year)4s,%(month)02d,%(ssan)010d," % {'game_name': self.game_name, 'mid': int(self.manufacturer), 'year': self.year, 'month': int(self.month), 'ssan': int(self.ssan)}
         for hash_item in self.hash_list: 
             self.psl_entry_str += hash_item + ","
         return self.psl_entry_str.strip(',')
+        
+    def identifyDifference(self, str1, str2): 
+        cases = [(str1, str2)] 
+        for a,b in cases:     
+            print('{} => {}'.format(a,b))  
+            for i,s in enumerate(difflib.ndiff(a, b)):
+                if s[0]==' ': continue
+                elif s[0]=='-':
+                    print(u'Delete "{}" from position {}'.format(s[-1],i))
+                elif s[0]=='+':
+                    print(u'Add "{}" to position {}'.format(s[-1],i))    
+            print()
 
 class MSLfile:
     # helper class for MSL file
@@ -516,7 +531,7 @@ class QCASTestClient(unittest.TestCase):
         size = os.path.getsize(fname)
         # Read in chunksize blocks at a time
         with open(fname, 'rb') as f:
-            print("\nHashing: " + fname + ":\t" + "Seed:\t" + seed + "\t", end="")
+            print("\nHashing: " + os.path.basename(fname) + "\tSeed:" + seed + "\t", end="")
             while True:
                 block = f.read(chunksize)
                 done += chunksize
@@ -563,14 +578,36 @@ class QCASTestClient(unittest.TestCase):
         with open(file, 'r') as psl_file: 
             reader = psl_file.readlines()
             for line in reader: 
-                output_list = [li for li in list(difflib.ndiff(psl_entry_str,line)) if li[0] != ' ']
-                
-                #if psl_entry_str.strip(',') == line.strip(): 
-                #    return True
-                #else: 
-                #    return False
-                
+                if psl_entry_str.strip() == str(line).strip(): 
+                    return True
+                else: 
+                    pass
+            return False # end of file return false
     
+    def verify_epsig_command_used(self, command_str): 
+        command_str = command_str.lstrip()
+        self.assertTrue(command_str.startswith("D:\OLGR-TECHSERV\MISC\BINIMAGE\qcas\epsigQCAS3_5.exe"))
+
+        fields = command_str.split(' ')
+        # assert(len(fields) == 5)
+        
+        command = fields[0]
+        self.assertTrue(command == "D:\OLGR-TECHSERV\MISC\BINIMAGE\qcas\epsigQCAS3_5.exe")
+        
+        path = fields[1]
+        self.assertTrue(path == "d:\OLGR-TECHSERV\BINIMAGE\*.*")
+        
+        msl = fields[2]
+        msl_list = [self.MSLfile, self.nextMonth_MSLfile]
+        self.assertTrue(any(msl in x for x in msl_list)) 
+        
+        tsl = fields[3]
+        tsl_list = [self.TSLfile, self.previous_TSLfile]
+        self.assertTrue(any(tsl in x for x in tsl_list))
+        
+        psl = fields[4]
+        self.assertTrue(psl in [self.PSLfile, self.nextMonth_PSLfile])
+        
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG, format=' %(asctime)s - %(levelname)s- %(message)s')
     logging.debug('Start of unittesting for qcas datafiles.py')
