@@ -8,6 +8,7 @@ import sys
 import json
 import difflib
 from datetime import datetime
+from epsig2_gui import epsig2
 p_reset = "\x08"*8
 
 VALID_BIN_TYPE = ['BLNK','PS32','SHA1']
@@ -191,7 +192,7 @@ class TSLfile:
         self.ssan = int(fields[1])
         
         self.game_name = fields[2].strip()
-        assert(len(self.game_name) < 31)
+        assert(len(self.game_name) < 61)
         
         self.bin_file = fields[3].strip()
         assert(len(self.bin_file) < 21)
@@ -214,6 +215,7 @@ class QCASTestClient(unittest.TestCase):
 
         self.nextMonth_PSLfile = "qcas_2017_11_v01.psl"
         self.nextMonth_MSLfile = "qcas_2017_11_v01.msl"
+    
         
         #self.manufacturer_id_list = [ '00', '01', '05', '07', '09', '12', '17']
         self.next_month = {'month': '', 'year':''} 
@@ -408,6 +410,60 @@ class QCASTestClient(unittest.TestCase):
         
         return game_list_to_be_added
     
+    def format_output(self, inputstr):
+        outputstr = ''
+        outputstr = self.getQCAS_Expected_output(outputstr)
+        
+        return outputstr
+    
+    def dobnk(self, fname, seed, mid, blocksize:65534)
+        psl_cache_file = CacheFile() # use a Cachefile - all defaults
+
+        with open(blnk_file, 'r') as file:         # Read BNK file
+            field_names = ['fname', 'type', 'blah']
+            reader = csv.DictReader(file, delimiter=' ', fieldnames=field_names)
+            print(self.getQCAS_Expected_output(seed))
+        
+            for row in reader: 
+                if row['type'].upper() == 'SHA1':
+                    complete_path_to_file = os.path.join(PATH_TO_BINIMAGE,self.getMID_Directory(mid), str(row['fname']))    
+                    cachedhit = psl_cache_file.checkCacheFilename(complete_path_to_file, self.getQCAS_Expected_output(seed), row['type'].upper()) 
+        
+                    if cachedhit:
+                        localhash = cachedhit # use cached data
+                    else: 
+                        new_cache_list = list()
+                        localhash = self.dohash_hmacsha1(complete_path_to_file, self.getQCAS_Expected_output(seed), 65534) 
+                    
+                        # create cache object
+                        cache_object = { 
+                            'seed': self.getQCAS_Expected_output(seed), 
+                            'alg': row['type'].upper(), 
+                            'verify':'0', 
+                            'hash': localhash 
+                        }        
+                        
+                        cache_entry_list = psl_cache_file.cache_dict.get(complete_path_to_file) # Should return a list. 
+                        
+                        if cache_entry_list :   # File Entry Exists, append to list
+                            cache_entry_list.append(cache_object) # print this
+                            psl_cache_file.cache_dict[complete_path_to_file] = cache_entry_list
+                        else:                   # No File Entry Exits generate new list entry in cache_dict
+                            new_cache_list.append(cache_object)
+                            psl_cache_file.cache_dict[complete_path_to_file] = new_cache_list # keep unique
+                                                        
+                        psl_cache_file.updateCacheFile() # Update file cache
+    
+                    if localhash == 0:
+                        break
+                        
+                    oh = hex(int(oh,16) ^ int(str(localhash), 16)) # XOR
+
+                else: 
+                    print("Not processing any other file other than SHA1!")
+                    sys.exit(1)    
+        return oh
+             
         # output: psl entries for the TSL_object list (new games). 
         # input: 
     def generate_PSL_entries(self, MSL_filename, TSL_object): 
@@ -467,6 +523,7 @@ class QCASTestClient(unittest.TestCase):
                         else:
                             print("Not processing any other file other than SHA1!")
                             sys.exit(1)
+            
             elif str(TSL_object.bin_type).startswith('SHA1'): # support SHA1 i.e. .bin files
                 complete_path_to_file = os.path.join(PATH_TO_BINIMAGE,self.getMID_Directory(TSL_object.mid), TSL_object.bin_file)
                 

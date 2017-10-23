@@ -4,17 +4,22 @@ from test_datafiles import QCASTestClient, PSLfile
 class test_file_format(QCASTestClient):
    
     def test_Read_PSL_file(self):
-        assert(os.path.isfile(self.PSLfile) == True)
+        self.assertTrue(os.path.isfile(self.PSLfile))
+        self.assertTrue(os.path.isfile(self.nextMonth_PSLfile))
 
     def test_Read_TSL_file(self):
-        assert(os.path.isfile(self.TSLfile) == True)
-
+        self.assertTrue(os.path.isfile(self.TSLfile))
+        self.assertTrue(os.path.isfile(self.previous_TSLfile))
+        
     def test_Read_MSL_file(self):
-        assert(os.path.isfile(self.MSLfile) == True)
+        self.assertTrue(os.path.isfile(self.MSLfile))
+        self.assertTrue(os.path.isfile(self.nextMonth_MSLfile))
 
     def test_MSL_file_one_row(self):
-        with open(self.MSLfile, 'r') as msl:
-            assert(sum(1 for _ in msl) == 1) # count the number of rows
+        msl_files = [self.MSLfile, self.nextMonth_MSLfile]
+        for msl_file in msl_files:
+            with open(msl_file, 'r') as msl:
+                self.assertEqual(sum(1 for _ in msl), 1) # count the number of rows
 
     def test_MSL_fields(self):
         mslfile_list = [self.MSLfile, self.nextMonth_MSLfile]

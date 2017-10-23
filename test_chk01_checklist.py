@@ -1,7 +1,9 @@
 import os
 import csv
+import random
 
 from test_datafiles import QCASTestClient, PSLfile, TSLfile, MSLfile
+from epsig2_gui import epsig2_gui
 
 MID_LIST = [ '00', '01', '05', '07', '09', '12', '17']
 
@@ -82,9 +84,25 @@ class test_chk01_checklist(QCASTestClient):
         # Difference from previous month PSL and this Months PSL files (multiple). 
         print("test - Games removed from PSL files")
     
-    def test_One_new_game_to_be_added_in_PSL_files(self): 
-        print("test - one new game to be added in PSL files")
-    
+    def test_One_new_game_to_be_added_in_PSL_files(self):
+        new_games_to_be_added = self.get_newgames_to_be_added()   # TSL object list
+        random_tsl_entry = random.choice(new_games_to_be_added) 
+        
+        psl_entry_list = list()
+        seed_list = [self.MSLfile, self.nextMonth_MSLfile]
+        
+        for mslfile in seed_list: 
+            psl_entry_string = self.generate_PSL_entries(mslfile, random_tsl_entry) 
+            psl_entry_list.append(psl_entry_string)
+            
+        self.assertEqual(len(psl_entry_list), 2) # one PSL entry for each month
+        
+        for psl_entry in psl_entry_list:
+            print(psl_entry)
+        
+        self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[0], self.PSLfile))
+        self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[1], self.nextMonth_PSLfile))
+        
     def test_One_old_game_to_be_added_in_PSL_files(self): 
         print("test - one old game to be added in PSL files")
     
