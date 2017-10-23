@@ -102,7 +102,7 @@ class test_chk01_checklist(QCASTestClient):
             tmpStr = str(h).lstrip('0x').zfill(40)
             
             
-            print(tmpStr)
+            print(self.getQCAS_Expected_output(tmpStr))
             #psl_entry_string = self.generate_PSL_entries(mslfile, random_tsl_entry) 
             #psl_entry_list.append(psl_entry_string)
             
