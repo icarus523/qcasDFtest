@@ -3,9 +3,10 @@ import csv
 import random
 
 from test_datafiles import QCASTestClient, PSLfile, TSLfile, MSLfile
-from epsig2_gui import epsig2_gui
+from epsig2_gui import epsig2
 
 MID_LIST = [ '00', '01', '05', '07', '09', '12', '17']
+PATH_TO_BINIMAGE = 'C:\\Users\\aceretjr\\Documents\\dev\\qcas-Datafiles-Unittest\\binimage'
 
 class test_chk01_checklist(QCASTestClient):
    
@@ -73,10 +74,10 @@ class test_chk01_checklist(QCASTestClient):
                 for psl_file in psl_files_list:
                     with open(psl_file, 'r') as file: 
                         if psl_entry_object.toString().strip(',') in file.read(): 
-                            print(psl_entry_object.toString() + "\t found!")
+                            # print(psl_entry_object.toString() + "\t found!")
                             count+=1
         
-            print("Length of new_psl_entries_list: " + str(len(TSL_game_list_to_be_added)) + " Identified Entries: " + str(count))
+            # print("Length of new_psl_entries_list: " + str(len(TSL_game_list_to_be_added)) + " Identified Entries: " + str(count))
         #assert(count == len(TSL_game_list_to_be_added))
     
     def test_Games_removed_from_PSL_files(self): 
@@ -87,21 +88,31 @@ class test_chk01_checklist(QCASTestClient):
     def test_One_new_game_to_be_added_in_PSL_files(self):
         new_games_to_be_added = self.get_newgames_to_be_added()   # TSL object list
         random_tsl_entry = random.choice(new_games_to_be_added) 
-        
+        blnk_file = os.path.join(PATH_TO_BINIMAGE, self.getMID_Directory(random_tsl_entry.mid), random_tsl_entry.bin_file.strip() + "." + self.get_bin_type(random_tsl_entry.bin_type))
+
         psl_entry_list = list()
-        seed_list = [self.MSLfile, self.nextMonth_MSLfile]
+        msl  = self.check_file_format(self.MSLfile, 'MSL')
+        seed_list = msl[0].seed_list
         
-        for mslfile in seed_list: 
-            psl_entry_string = self.generate_PSL_entries(mslfile, random_tsl_entry) 
-            psl_entry_list.append(psl_entry_string)
+        for seed in seed_list: 
+            # def dobnk(self, fname, seed, mid, blocksize:65534)
+            h = self.dobnk(blnk_file, seed, random_tsl_entry.mid, blocksize=65534)
             
-        self.assertEqual(len(psl_entry_list), 2) # one PSL entry for each month
+            tmpStr = str(h).lstrip('0X').zfill(40) # forces 40 characters with starting 0 characters. 
+            tmpStr = str(h).lstrip('0x').zfill(40)
+            
+            
+            print(tmpStr)
+            #psl_entry_string = self.generate_PSL_entries(mslfile, random_tsl_entry) 
+            #psl_entry_list.append(psl_entry_string)
+            
+        #self.assertEqual(len(psl_entry_list), 2) # one PSL entry for each month
         
-        for psl_entry in psl_entry_list:
-            print(psl_entry)
+        #for psl_entry in psl_entry_list:
+        #    print(psl_entry)
         
-        self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[0], self.PSLfile))
-        self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[1], self.nextMonth_PSLfile))
+        #self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[0], self.PSLfile))
+        #self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[1], self.nextMonth_PSLfile))
         
     def test_One_old_game_to_be_added_in_PSL_files(self): 
         print("test - one old game to be added in PSL files")

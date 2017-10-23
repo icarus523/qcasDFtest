@@ -217,7 +217,7 @@ class QCASTestClient(unittest.TestCase):
         self.nextMonth_MSLfile = "qcas_2017_11_v01.msl"
     
         
-        #self.manufacturer_id_list = [ '00', '01', '05', '07', '09', '12', '17']
+        self.MID_LIST = [ '00', '01', '05', '07', '09', '12', '17']
         self.next_month = {'month': '', 'year':''} 
         self.this_month = {
             'month': datetime.now().month,
@@ -410,19 +410,15 @@ class QCASTestClient(unittest.TestCase):
         
         return game_list_to_be_added
     
-    def format_output(self, inputstr):
-        outputstr = ''
-        outputstr = self.getQCAS_Expected_output(outputstr)
-        
-        return outputstr
     
-    def dobnk(self, fname, seed, mid, blocksize:65534)
+    def dobnk(self, blnk_file, seed, mid, blocksize=65534):
         psl_cache_file = CacheFile() # use a Cachefile - all defaults
+        oh = "0000000000000000000000000000000000000000"
 
         with open(blnk_file, 'r') as file:         # Read BNK file
             field_names = ['fname', 'type', 'blah']
             reader = csv.DictReader(file, delimiter=' ', fieldnames=field_names)
-            print(self.getQCAS_Expected_output(seed))
+            # print(self.getQCAS_Expected_output(seed))
         
             for row in reader: 
                 if row['type'].upper() == 'SHA1':
@@ -433,7 +429,7 @@ class QCASTestClient(unittest.TestCase):
                         localhash = cachedhit # use cached data
                     else: 
                         new_cache_list = list()
-                        localhash = self.dohash_hmacsha1(complete_path_to_file, self.getQCAS_Expected_output(seed), 65534) 
+                        localhash = self.dohash_hmacsha1(complete_path_to_file, self.getQCAS_Expected_output(seed), blocksize) 
                     
                         # create cache object
                         cache_object = { 
