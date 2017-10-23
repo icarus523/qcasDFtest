@@ -13,7 +13,8 @@ p_reset = "\x08"*8
 
 VALID_BIN_TYPE = ['BLNK','PS32','SHA1']
 #PATH_TO_BINIMAGE = 'G:\\OLGR-TECHSERV\\BINIMAGE'
-PATH_TO_BINIMAGE = 'C:\\Users\\aceretjr\\Documents\\dev\\qcas-Datafiles-Unittest\\binimage'
+#PATH_TO_BINIMAGE = 'C:\\Users\\aceretjr\\Documents\\dev\\qcas-Datafiles-Unittest\\binimage'
+PATH_TO_BINIMAGE = '/Users/james/OneDrive for Business/OneDrive - DJAG/Datafiles/QCAS datafiles/binimage'
 DEFAULT_CACHE_FILE = 'qcas_df_cache_file.json'
 MID_LIST = [ '00', '01', '05', '07', '09', '12', '17']
 
@@ -218,6 +219,7 @@ class QCASTestClient(unittest.TestCase):
     
         
         self.MID_LIST = [ '00', '01', '05', '07', '09', '12', '17']
+        
         self.next_month = {'month': '', 'year':''} 
         self.this_month = {
             'month': datetime.now().month,
@@ -256,7 +258,6 @@ class QCASTestClient(unittest.TestCase):
 
     def check_manufacturer(self, manufacturer):
         output = ''
-        #print("manufacturer is: " + manufacturer)
             
         if len(manufacturer) < 2:
             temp_manufacturer = "0" + manufacturer
@@ -267,8 +268,6 @@ class QCASTestClient(unittest.TestCase):
             output =  True
         else:
             output = False
-
-        #print("temp_manufacturer is: " + temp_manufacturer)
 
         return output
     
@@ -334,9 +333,6 @@ class QCASTestClient(unittest.TestCase):
 
     def get_filename_version(self, filename):
         file_version = ''
-        #self.PSLfile = "qcas_2016_05_v03.psl"
-        #self.MSLfile = "qcas_2016_06_v01.msl"
-        #self.TSLfile = "qcas_2016_06_v01.tsl"
 
         #strip file suffix:
         fields = filename.split('_')
@@ -588,7 +584,7 @@ class QCASTestClient(unittest.TestCase):
             while True:
                 block = f.read(chunksize)
                 done += chunksize
-                sys.stdout.write("%7d"%(done*100/size) + "%" + p_reset)
+                sys.stdout.write("%7d" % (done*100/size) + "%" + p_reset)
                 if not block: break
                 m.update(block)      
         return m.hexdigest()
@@ -631,7 +627,7 @@ class QCASTestClient(unittest.TestCase):
         with open(file, 'r') as psl_file: 
             reader = psl_file.readlines()
             for line in reader: 
-                if psl_entry_str.strip() == str(line).strip(): 
+                if psl_entry_str.rstrip(',') == str(line).strip(): 
                     return True
                 else: 
                     pass

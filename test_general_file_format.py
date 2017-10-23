@@ -1,7 +1,7 @@
 import os
 from test_datafiles import QCASTestClient, PSLfile
 
-class test_file_format(QCASTestClient):
+class test_general_file_format(QCASTestClient):
    
     def test_Read_PSL_file(self):
         self.assertTrue(os.path.isfile(self.PSLfile))
@@ -11,16 +11,6 @@ class test_file_format(QCASTestClient):
         self.assertTrue(os.path.isfile(self.TSLfile))
         self.assertTrue(os.path.isfile(self.previous_TSLfile))
         
-    def test_Read_MSL_file(self):
-        self.assertTrue(os.path.isfile(self.MSLfile))
-        self.assertTrue(os.path.isfile(self.nextMonth_MSLfile))
-
-    def test_MSL_file_one_row(self):
-        msl_files = [self.MSLfile, self.nextMonth_MSLfile]
-        for msl_file in msl_files:
-            with open(msl_file, 'r') as msl:
-                self.assertEqual(sum(1 for _ in msl), 1) # count the number of rows
-
     def test_MSL_fields(self):
         mslfile_list = [self.MSLfile, self.nextMonth_MSLfile]
 
