@@ -25,12 +25,12 @@ Will run all unit test scripts. To specify a specifc unit test use: `py -m unitt
 
 ---
 # Unit Test Module Details
-## `test_datafiles.py`
+## Module: `test_datafiles.py`
 Main class (QCASTestClient) derived from unittest.TestCase, includes the following helper class files: `PSLfile`, `MSLfile`, `TSLfile` and `CacheFile`. 
 
 The QCASTestClient includes all modules that have common test procedures. 
 
-## `test_chk01_checklist.py`
+## Module: `test_chk01_checklist.py`
 Mirrors the checks specified in CHK01 Casino Datafiles checklist, the following unit tests are performed in this test: 
 
 #### `test_Generated_PSL_files_Differ()`
@@ -55,7 +55,7 @@ Verifies the following entry for each new game generated:
 #### `test_Games_removed_from_PSL_files()`
 Generates a difference from previous month PSL and this Months PSL files 
 
-Verifies that expected games removed has been identified from the PSL files. 
+[to be completed] Verifies that expected games removed has been identified from the PSL files. 
 
 #### `test_One_new_game_to_be_added_in_PSL_files()`
 Selects one new game randomly to be added into the PSL files, and then generates the PSL entry using the MSL files (two months). 
@@ -71,7 +71,7 @@ Verifies that the generated PSL entries for two months is created for the Random
 
 Verifies that the PSL entries matches for two months exists in `self.PSLfile and self.nextMonth_PSLfile`
 
-## `test_epsig_log_files.py`
+## Module: `test_epsig_log_files.py`
 This test script verifies the expected output of the EPSIG log. 
 
 #### `test_Epsig_Log_file()`
@@ -80,9 +80,9 @@ This test script verifies the expected output of the EPSIG log.
 - Verifies that the time stamp for when EPSIG last ran is reasonable (within 7 days)
 - Verifies that the time stamp for when EPSIG last completed is reasonable (within 7 days)
 - Verifies that the end of the Epsig Log File indicates: "with EXIT_SUCCESS"
-- Verifies that the command that was used for Epsig is correct. (Correct Epsig Binary used; Correct BINIMAGE Path used: i.e. G:\; Correct Datafiles referenced, i.e. MSL file is `self.MSLfile or self.nextMonth_MSLfile`; TSL file is `self.TSLfile`; PSL file is `self.PSLfile or nextMonth_PSLfile`
+- Verifies that the command that was used for Epsig is correct. (Correct Epsig Binary used; Correct BINIMAGE Path used: i.e. G:\; Correct Datafiles referenced, i.e. MSL file is `self.MSLfile or self.nextMonth_MSLfile`; TSL file is `self.TSLfile`; PSL file is `self.PSLfile or self.nextMonth_PSLfile`
 
-## `test_file_name_format.py`
+## Module: `test_file_name_format.py`
 Generic test scripts for correct file name format and conventions. 
 
 #### `test_MSL_filename_ends_with_MSL()`
@@ -101,3 +101,10 @@ Generic test scripts for correct file name format and conventions.
 
 #### `test_PSLfile_ends_with_PSL()`
 - Verifies that the `self.PSLfile or self.nextMonth_PSLfile` ends with '.psl'
+
+#### `test_PSL_file_version_increment()`
+- [to be completed] Verifies that the PSL file version should be incremented if not a new moth.
+
+#### `test_PSL_filename_date()`
+- Verify that current PSL month is not equal to the new PSL month 
+- Verify that the PSL year is the same, unless current PSL month is December.
