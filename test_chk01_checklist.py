@@ -1,6 +1,8 @@
 import os
 import csv
 import random
+import unittest
+import sys
 
 from test_datafiles import QCASTestClient, PSLfile, TSLfile, MSLfile
 from epsig2_gui import epsig2
@@ -81,15 +83,16 @@ class test_chk01_checklist(QCASTestClient):
         psl_file_list1 = self.check_file_format(self.PSLfile, 'PSL')
         psl_file_list2 = self.check_file_format(self.nextMonth_PSLfile, 'PSL')
 
-
-        psl_difference = list(set(verified_game).intersection(set(game_list_to_be_added))) 
+        psl_difference = list(set(psl_file_list1).intersection(set(psl_file_list2))) 
+        print("PSL difference is: " + ",".join(psl_difference))
     
     # Generate PSL entries for one randomly chosen new game in the new TSL file
     # Compare with PSL files and make sure that entries for both months matches 
     def test_One_new_game_to_be_added_in_PSL_files(self):
         new_games_to_be_added = self.get_newgames_to_be_added()   # TSL object list
         random_tsl_entry = random.choice(new_games_to_be_added) 
-        blnk_file = os.path.join(PATH_TO_BINIMAGE, self.getMID_Directory(random_tsl_entry.mid), random_tsl_entry.bin_file.strip() + "." + self.get_bin_type(random_tsl_entry.bin_type))
+        blnk_file = os.path.join(PATH_TO_BINIMAGE, self.getMID_Directory(random_tsl_entry.mid), 
+            random_tsl_entry.bin_file.strip() + "." + self.get_bin_type(random_tsl_entry.bin_type))
         
         psl_entry_list = self.generate_PSL_entry(blnk_file, random_tsl_entry)
                     
@@ -99,6 +102,7 @@ class test_chk01_checklist(QCASTestClient):
 
     # Generate PSL entries for one randomly chosen new game in the new TSL file (all games)
     # Compare with PSL files and make sure that entries for both months matches 
+    @unittest.skipUnless(os.path.isdir('G:\\OLGR-TECHSERV\\BINIMAGE'), "requires G: Drive")
     def test_One_old_game_to_be_added_in_PSL_files(self): 
         all_games = self.check_file_format(self.TSLfile, 'TSL') 
         complete = False
@@ -118,8 +122,4 @@ class test_chk01_checklist(QCASTestClient):
                 self.assertEqual(len(psl_entry_list), 2) # one PSL entry for each month       
                 self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[0], self.PSLfile))
                 self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[1], self.nextMonth_PSLfile))
-                
-
-
-        
-    
+                       

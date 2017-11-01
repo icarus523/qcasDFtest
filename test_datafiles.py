@@ -12,7 +12,6 @@ from epsig2_gui import epsig2
 p_reset = "\x08"*8
 
 VALID_BIN_TYPE = ['BLNK','PS32','SHA1']
-#PATH_TO_BINIMAGE = 'G:\\OLGR-TECHSERV\\BINIMAGE'
 #PATH_TO_BINIMAGE = 'C:\\Users\\aceretjr\\Documents\\dev\\qcas-Datafiles-Unittest\\binimage'
 PATH_TO_BINIMAGE = '/Users/james/OneDrive for Business/OneDrive - DJAG/Datafiles/QCAS datafiles/binimage'
 DEFAULT_CACHE_FILE = 'qcas_df_cache_file.json'
