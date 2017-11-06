@@ -96,3 +96,13 @@ Generic test scripts for correct file name format and conventions.
 #### `test_PSL_filename_date()`
 - Verify that current PSL month is not equal to the new PSL month 
 - Verify that the PSL year is the same, unless current PSL month is December.
+
+## Module: `test_general_file_format.py`
+#### `test_Read_PSL_file()`
+- Verifies that `self.PSLfile` and `self.nextMonth_PSLfile` can be read from disk
+
+#### `test_Read_TSL_file()`
+- Verifies that `self.TSLfile` and `self.previous_TSLfile` can be read from disk
+
+## Module: `test_PSL_files.py`
+## Module: `test_MSL_files.py`
