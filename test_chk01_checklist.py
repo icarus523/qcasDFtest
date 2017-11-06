@@ -8,8 +8,9 @@ from test_datafiles import QCASTestClient, PSLfile, TSLfile, MSLfile
 from epsig2_gui import epsig2
 
 # MID_LIST = [ '00', '01', '05', '07', '09', '12', '17']
-PATH_TO_BINIMAGE = '/Users/james/OneDrive for Business/OneDrive - DJAG/Datafiles/QCAS datafiles/binimage'
+#PATH_TO_BINIMAGE = '/Users/james/OneDrive for Business/OneDrive - DJAG/Datafiles/QCAS datafiles/binimage'
 #'C:\\Users\\aceretjr\\Documents\\dev\\qcas-Datafiles-Unittest\\binimage'
+PATH_TO_BINIMAGE = '\\\Justice.qld.gov.au\\Data\\OLGR-TECHSERV\\BINIMAGE'
 
 class test_chk01_checklist(QCASTestClient):
    
@@ -77,14 +78,14 @@ class test_chk01_checklist(QCASTestClient):
             self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[0], self.PSLfile))
             self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[1], self.nextMonth_PSLfile))
     
-    def test_Games_removed_from_PSL_files(self): 
+    #def test_Games_removed_from_PSL_files(self): 
         # generate a list of games removed. 
         # Difference from previous month PSL and this Months PSL files (multiple). 
-        psl_file_list1 = self.check_file_format(self.PSLfile, 'PSL')
-        psl_file_list2 = self.check_file_format(self.nextMonth_PSLfile, 'PSL')
+    #    psl_file_list1 = self.check_file_format(self.PSLfile, 'PSL')
+    #    psl_file_list2 = self.check_file_format(self.nextMonth_PSLfile, 'PSL')
 
-        psl_difference = list(set(psl_file_list1).intersection(set(psl_file_list2))) 
-        print("PSL difference is: " + ",".join(psl_difference))
+    #    psl_difference = list(set(psl_file_list1).intersection(set(psl_file_list2))) 
+    #    print("PSL difference is: " + ",".join(psl_difference))
     
     # Generate PSL entries for one randomly chosen new game in the new TSL file
     # Compare with PSL files and make sure that entries for both months matches 
