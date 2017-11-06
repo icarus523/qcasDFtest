@@ -34,16 +34,12 @@ The QCASTestClient includes all modules that have common test procedures.
 Mirrors the checks specified in CHK01 Casino Datafiles checklist, the following unit tests are performed in this test: 
 
 #### `test_Generated_PSL_files_Differ()`
-Check that the two PSL files: `self.PSLfile and self.nextMonth_PSLfile` are not the same. 
+- Verifies that the two PSL files: `self.PSLfile and self.nextMonth_PSLfile` are not the same. 
 
 #### `test_new_games_to_be_added_are_in_PSL_files()`
-Confirms if the SSANs of new games exist in both `self.PSLfile and self.nextMonth_PSLfile` files. 
+- Verifies if the SSANs of new games exist in both `self.PSLfile and self.nextMonth_PSLfile` files. 
 
 #### `test_TSL_entries_exist_in_PSL_files()`
-Generates a list of new games based on the current TSL file
-
-Generates a PSL entry for each item in the list of new games, for the current and next month (using the `self.MSLfile and self.nextMonth_PSLfile`) and compares it to the entries generated in the `self.PSLfile and self.nextMonth_PSLfile`. 
-
 Verifies the following entry for each new game generated: 
 - Game Name is less than 30 characters long
 - Manufacturer ID is valid: 00, 01, 05, 07, 09, 12, 17
@@ -52,24 +48,16 @@ Verifies the following entry for each new game generated:
 - PSL SSAN is valid: 150000 < SSAN < 999999999
 - Number of Hashes in the PSL entry is equal to 31
 
-#### `test_Games_removed_from_PSL_files()`
-Generates a difference from previous month PSL and this Months PSL files 
-
-[to be completed] Verifies that expected games removed has been identified from the PSL files. 
+#### [to be completed] `test_Games_removed_from_PSL_files()`
+- Verifies that expected games removed has been identified from the PSL files. 
 
 #### `test_One_new_game_to_be_added_in_PSL_files()`
-Selects one new game randomly to be added into the PSL files, and then generates the PSL entry using the MSL files (two months). 
-
-Verifies that the generated PSL entries for two months is created for the Random game. 
-
-Verifies that the PSL entries matches for two months exists in `self.PSLfile and self.nextMonth_PSLfile`
+- Verifies that the generated PSL entries for two months is created for the Random game. 
+- Verifies that the PSL entries matches for two months exists in `self.PSLfile and self.nextMonth_PSLfile`
 
 #### `test_One_old_game_to_be_added_in_PSL_files()`
-Selects a Random game from the complete TSL file (SHA1 or BLNK only) and then generates the PSL entry using the MSL files (two months). 
-
-Verifies that the generated PSL entries for two months is created for the Random game. 
-
-Verifies that the PSL entries matches for two months exists in `self.PSLfile and self.nextMonth_PSLfile`
+- Verifies that the generated PSL entries for two months is created for the Random game. 
+- Verifies that the PSL entries matches for two months exists in `self.PSLfile and self.nextMonth_PSLfile`
 
 ## Module: `test_epsig_log_files.py`
 This test script verifies the expected output of the EPSIG log. 
