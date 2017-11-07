@@ -24,7 +24,7 @@ class Preferences:
             self.mid_list = [ '00', '01', '05', '07', '09', '12', '17']
             self.cache_filename = 'qcas_df_cache_file.json'
             self.valid_bin_types = VALID_BIN_TYPE = ['BLNK','PS32','SHA1']
-            self.epsig_log_file = 'C:\\Users\\aceretjr\\Documents\\dev\\qcas-Datafiles-Unittest\\logs\\epsig.log'
+            self.epsig_log_file = 'G:\\OLGR-TECHSERV\\MISC\\BINIMAGE\\qcas\\log\\epsig.log'
             
             # default values
             self.data = { 'path_to_binimage' : self.path_to_binimage,
