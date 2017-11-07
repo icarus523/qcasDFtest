@@ -104,5 +104,42 @@ Generic test scripts for correct file name format and conventions.
 #### `test_Read_TSL_file()`
 - Verifies that `self.TSLfile` and `self.previous_TSLfile` can be read from disk
 
+#### `test_MSL_fields()`
+- Verifies `self.MSLfile` file format
+- Verifies MSL file month field is this month's or next
+- Verifies MSL file year field is this year's or next
+- Verifies MSL file has 31 seeds
+
+#### `test_PSL_fields()`
+- Verifies `self.PSLfile` and `self.nextMonth_PSLfile` file format
+- Verifies PSL file manufacturer field is valid
+- Verifies PSL Game name field length is 30 characters or less
+- Verifies PSL year field is this year's or next
+- Verifies PSL month field is this month's or next
+
+#### `test_TSL_fields()`
+- Verifies TSL file manufacturer field entries is valid
+- Verifies TSL file SSAN field is unique
+- Verifies TSL file Bin Image Type is valid 
+
 ## Module: `test_PSL_files.py`
+#### `test_PSL_size_is_reasonable()`
+- Verifies that the file size of the PSL files is reasonable (greater than 1055KB as at July 2013)
+
+### `test_PSL_content()`
+- Verifies the `self.PSLfile` and `self.nextMonth_PSLfile` file formats
+- Verifies that the PSL file has the same number of lines as the generated PSL entry
+
 ## Module: `test_MSL_files.py`
+#### `test_MSL_size_is_reasonable()`
+- Verifies that the file size of the MSL files is reasonable (The size should not change and is 1KB)
+
+#### `test_MSL_content()`
+- Verifies the `self.MSLfile` and `self.nextMonth_MSLfile` file formats
+- Verifies that the MSL files only has one entry
+
+#### `test_MSL_file_one_row()`
+- Verifies that the MSL files only has one entry
+
+#### `test_Read_MSL_file()`
+- Verifies that the `self.MSLfile` and `self.nextMonth_MSLfile` can be read from disk 
