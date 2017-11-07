@@ -11,15 +11,64 @@ from datetime import datetime
 from epsig2_gui import epsig2
 p_reset = "\x08"*8
 
-VALID_BIN_TYPE = ['BLNK','PS32','SHA1']
-#PATH_TO_BINIMAGE = 'C:\\Users\\aceretjr\\Documents\\dev\\qcas-Datafiles-Unittest\\binimage'
-PATH_TO_BINIMAGE = '/Users/james/OneDrive for Business/OneDrive - DJAG/Datafiles/QCAS datafiles/binimage'
-DEFAULT_CACHE_FILE = 'qcas_df_cache_file.json'
-MID_LIST = [ '00', '01', '05', '07', '09', '12', '17']
+class Preferences: 
 
+    def __init__(self): 
+        preference_filename = 'preferences.dat'
+        self.data = dict()
+        
+        if os.path.isfile(preference_filename): 
+            self.readfile(preference_filename)
+        else: 
+            self.path_to_binimage = '\\\Justice.qld.gov.au\\Data\\OLGR-TECHSERV\\BINIMAGE'
+            self.mid_list = [ '00', '01', '05', '07', '09', '12', '17']
+            self.cache_filename = 'qcas_df_cache_file.json'
+            self.valid_bin_types = VALID_BIN_TYPE = ['BLNK','PS32','SHA1']
+            self.epsig_log_file = 'C:\\Users\\aceretjr\\Documents\\dev\\qcas-Datafiles-Unittest\\logs\\epsig.log'
+            
+            # default values
+            self.data = { 'path_to_binimage' : self.path_to_binimage,
+                          'mid_list' : self.mid_list,
+                          'cache_filename' : self.cache_filename,
+                          'valid_bin_types' : self.valid_bin_types,
+                          'epsig_log_file' : self.epsig_log_file,
+                          'previous_TSLfile' : "qcas_2017_09_v02.tsl", 
+                          'TSLfile' : "qcas_2017_10_v01.tsl", 
+                          'PSLfile' : "qcas_2017_10_v03.psl", 
+                          'nextMonth_PSLfile': "qcas_2017_11_v01.psl", 
+                          'MSLfile' : "qcas_2017_10_v01.msl",
+                          'nextMonth_MSLfile' : "qcas_2017_11_v01.msl",
+                        }
+            self.writefile(preference_filename)
+            
+    def readfile(self, filename): 
+        with open(filename, 'r') as jsonfile: 
+            data = json.load(jsonfile)
+            # data file preferences
+            self.path_to_binimage = data['path_to_binimage']
+            self.mid_list = data['mid_list']
+            self.cache_filename = data['cache_filename']
+            self.valid_bin_types = data['valid_bin_types']
+            self.previous_TSLfile = data['previous_TSLfile']
+            self.epsig_log_file = data['epsig_log_file']
+            
+            # Datafiles 
+            self.TSLfile = data['TSLfile']
+            self.PSLfile = data['PSLfile']
+            self.nextMonth_PSLfile = data['nextMonth_PSLfile']
+            self.MSLfile = data['MSLfile']
+            self.nextMonth_MSLfile = data['nextMonth_MSLfile']
+            
+    def toJSON(self): 
+        return (json.dumps(self, default=lambda o: o.__dict__, sort_keys = True, indent=4))
+    
+    def writefile(self, fname): 
+        with open(fname, 'w') as outfile: 
+            json.dump(self.data, outfile,sort_keys=False, indent=4, separators=(',', ': '))
+        
 class CacheFile: 
 
-    def __init__(self, fname=DEFAULT_CACHE_FILE): 
+    def __init__(self, fname): 
         self.cache_file = fname
         self.cache_dict = self.importCacheFile()
                 
@@ -111,6 +160,7 @@ class CacheFile:
 class PSLfile:
     # helper class for PSL file
     def __init__(self, line):
+        my_preferences = Preferences()
         fields = str(line).split(',')
         input_line = line.strip(',') # remove trailing comma
         
@@ -119,7 +169,7 @@ class PSLfile:
         assert(len(self.game_name) < 31)
        
         self.manufacturer = fields[1]
-        assert(self.manufacturer in MID_LIST)
+        assert(self.manufacturer in my_preferences.mid_list)
         
         self.year = int(fields[2])
         valid_year = list(range(2017,9999))
@@ -184,9 +234,11 @@ class MSLfile:
 class TSLfile:
     # helper class for TSL file
     def __init__(self, line):
+        my_preferences = Preferences()
+        
         fields = str(line).split(',')
         self.mid = fields[0]
-        assert(self.mid in MID_LIST)
+        assert(self.mid in my_preferences.mid_list)
         
         assert(len(fields[1]) == 10)
         self.ssan = int(fields[1])
@@ -198,7 +250,7 @@ class TSLfile:
         assert(len(self.bin_file) < 21)
         
         self.bin_type = fields[4].strip()
-        assert(self.bin_type in VALID_BIN_TYPE)
+        assert(self.bin_type in my_preferences.valid_bin_types)
         
         
 # Derived unittest.TestCase class used for unittest testing. 
@@ -206,22 +258,25 @@ class QCASTestClient(unittest.TestCase):
     # common test behaviours
     
     def setUp(self):
+        # Read from JSON file
+        # Global Vars, Paths, and QCAS datafile names
+        self.my_preferences = Preferences() 
+        
         ###############################################
         ## Files to Verify
         ## Modify the following files only
         ## 
         ## TSL files 
-        self.previous_TSLfile = "qcas_2017_09_v02.tsl"
-        self.TSLfile = "qcas_2017_10_v01.tsl"
+        self.previous_TSLfile = self.my_preferences.previous_TSLfile
+        self.TSLfile = self.my_preferences.TSLfile
         ## PSL files (hashes)
-        self.PSLfile = "qcas_2017_10_v03.psl"
-        self.nextMonth_PSLfile = "qcas_2017_11_v01.psl"
+        self.PSLfile = self.my_preferences.PSLfile
+        self.nextMonth_PSLfile = self.my_preferences.nextMonth_PSLfile
         ## MSL files (seeds)
-        self.MSLfile = "qcas_2017_10_v01.msl"
-        self.nextMonth_MSLfile = "qcas_2017_11_v01.msl"
+        self.MSLfile = self.my_preferences.MSLfile
+        self.nextMonth_MSLfile = self.my_preferences.nextMonth_MSLfile
         ##
         ###############################################
-        self.MID_LIST = [ '00', '01', '05', '07', '09', '12', '17']
         self.next_month = {'month': '', 'year':''} 
         self.this_month = {
             'month': datetime.now().month,
@@ -266,7 +321,7 @@ class QCASTestClient(unittest.TestCase):
         else:
             temp_manufacturer = manufacturer
 
-        if temp_manufacturer in set(MID_LIST):
+        if temp_manufacturer in set(self.my_preferences.mid_list):
             output =  True
         else:
             output = False
@@ -312,7 +367,6 @@ class QCASTestClient(unittest.TestCase):
 
     def check_year_field(self, year):
         today = datetime.now()
-        logging.debug("Year input: " + str(year), " Today.year is: " + str(today.year))
 
         if year == today.year or year == today.year + 1:
             return True
@@ -354,7 +408,7 @@ class QCASTestClient(unittest.TestCase):
 
     def check_valid_binimage_type(self, binimage_type):
         output = ''
-        if binimage_type in VALID_BIN_TYPE:
+        if binimage_type in self.my_preferences.valid_bin_types:
             output = True
         else:
             output = False
@@ -411,7 +465,7 @@ class QCASTestClient(unittest.TestCase):
     # input:    total path to BLNK file, MID and optional blocksize
     # output:   blnk hash result using seed. 
     def dobnk(self, blnk_file, seed, mid, blocksize=65534):
-        psl_cache_file = CacheFile() # use a Cachefile - all defaults
+        psl_cache_file = CacheFile(self.my_preferences.cache_filename) # use a Cachefile - all defaults
         oh = "0000000000000000000000000000000000000000"
 
         with open(blnk_file, 'r') as file:         # Read BNK file
@@ -421,7 +475,7 @@ class QCASTestClient(unittest.TestCase):
         
             for row in reader: 
                 if row['type'].upper() == 'SHA1':
-                    complete_path_to_file = os.path.join(PATH_TO_BINIMAGE,self.getMID_Directory(mid), str(row['fname']))    
+                    complete_path_to_file = os.path.join(self.my_preferences.path_to_binimage,self.getMID_Directory(mid), str(row['fname']))    
                     cachedhit = psl_cache_file.checkCacheFilename(complete_path_to_file, self.getQCAS_Expected_output(seed), row['type'].upper()) 
         
                     if cachedhit:
@@ -455,7 +509,7 @@ class QCASTestClient(unittest.TestCase):
                     oh = hex(int(oh,16) ^ int(str(localhash), 16)) # XOR
 
                 else: 
-                    print("Not processing any other file other than SHA1!")
+                    print(row['type'] + "  - Not processing any other file other than SHA1!")
                     sys.exit(1)    
         return oh
              
@@ -482,7 +536,7 @@ class QCASTestClient(unittest.TestCase):
         size = os.path.getsize(fname)
         # Read in chunksize blocks at a time
         with open(fname, 'rb') as f:
-            print("\nHashing: " + os.path.basename(fname) + "\tSeed:" + seed + "\t", end="")
+            #print("\nHashing: " + os.path.basename(fname) + "\tSeed:" + seed + "\t", end="")
             while True:
                 block = f.read(chunksize)
                 done += chunksize
@@ -499,7 +553,7 @@ class QCASTestClient(unittest.TestCase):
         elif bin_type.startswith('CR32'): 
             return "BIN"
         else: 
-            assert(bin_type in VALID_BIN_TYPE)
+            assert(bin_type in my_preferences.VALID_BIN_TYPE)
     
     # input:    string representation for Manufacturer ID
     # output:   MID directory name to be used in BINIMAGE 
@@ -513,7 +567,7 @@ class QCASTestClient(unittest.TestCase):
         elif (mid == '12'): manufacturer = 'AGT'
         elif (mid == '17'): manufacturer = 'VGT'
         else:
-            assert(mid in MID_LIST)
+            assert(mid in my_preferences.MID_LIST)
             
         return manufacturer
     
