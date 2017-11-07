@@ -48,16 +48,15 @@ class test_file_name_format(QCASTestClient):
         psl_version = self.get_filename_version(self.PSLfile)
         next_month_psl_version = self.get_filename_version(self.nextMonth_PSLfile)
 
-        # if month is the same, version should increment
         current_month = self.get_filename_month(self.PSLfile)
         next_month = self.get_filename_month(self.nextMonth_PSLfile)
-
-        #if self.is_new_month(self.PSLfile, self.nextMonth_PSLfile):
-        #    self.assertEqual(int(next_month_psl_version), 1) # New Month, version is v1                           
-        #else:
-             # next month version should always be greater than current month, unless it's a new month
-        #    self.assertTrue(int(next_month_psl_version) > int(psl_version))
-
+        
+        # if month is the same, version should increment
+        if current_month == next_month:
+            # next month version should always be greater than current month
+            self.assertTrue(int(next_month_psl_version) > int(psl_version))
+        else: 
+            self.assertEqual(int(next_month_psl_version), 1) # New Month, version is v1                           
         
     def test_PSL_filename_date(self):
         current_month = self.get_filename_month(self.PSLfile)
