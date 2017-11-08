@@ -6,18 +6,18 @@ Rationale: CHK01 is essentially a manual process to verify an automated procedur
 This script attempts to complete all CHK01 process as well as thoroughly check the outgoing Casino Datafiles for formating, naming convention and sanity checking. 
 
 To use in Windows: 
-1. Modify test_datafiles.py script by changing the following references: 
+1. Modify preferences.dat file and change the following references: 
 
  ```
-        # TSL files 
-        self.previous_TSLfile = "qcas_2017_09_v02.tsl"
-        self.TSLfile = "qcas_2017_10_v01.tsl"
-        # PSL files (hashes)
-        self.PSLfile = "qcas_2017_10_v03.psl"
-        self.nextMonth_PSLfile = "qcas_2017_11_v01.psl"
-        # MSL files (seeds)
-        self.MSLfile = "qcas_2017_10_v01.msl"
-        self.nextMonth_MSLfile = "qcas_2017_11_v01.msl"
+        "previous_TSLfile" : "qcas_2017_09_v02.tsl"
+        "TSLfile" : "qcas_2017_10_v01.tsl"
+        "PSLfile" : "qcas_2017_10_v03.psl"
+        "nextMonth_PSLfile" : "qcas_2017_11_v01.psl"
+        "MSLfile" :  "qcas_2017_10_v01.msl"
+        "nextMonth_MSLfile" : "qcas_2017_11_v01.msl"
+        
+        "path_to_binimage" : "\\\\Justice.qld.gov.au\\Data\\OLGR-TECHSERV\\BINIMAGE"
+        "epsig_log_file": "C:\\Users\\aceretjr\\Documents\\dev\\qcas-Datafiles-Unittest\\logs\\epsig.log",       
 ```
         
 2. On the command prompt (in Windows) use: `py -m unittest -v`

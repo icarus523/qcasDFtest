@@ -8,7 +8,6 @@ import sys
 import json
 import difflib
 from datetime import datetime
-from epsig2_gui import epsig2
 p_reset = "\x08"*8
 
 class Preferences: 
@@ -553,7 +552,7 @@ class QCASTestClient(unittest.TestCase):
         elif bin_type.startswith('CR32'): 
             return "BIN"
         else: 
-            assert(bin_type in my_preferences.VALID_BIN_TYPE)
+            assert(bin_type in self.my_preferences.valid_bin_types)
     
     # input:    string representation for Manufacturer ID
     # output:   MID directory name to be used in BINIMAGE 
@@ -567,7 +566,7 @@ class QCASTestClient(unittest.TestCase):
         elif (mid == '12'): manufacturer = 'AGT'
         elif (mid == '17'): manufacturer = 'VGT'
         else:
-            assert(mid in my_preferences.MID_LIST)
+            assert(mid in self.my_preferences.MID_LIST)
             
         return manufacturer
     
@@ -629,7 +628,7 @@ class QCASTestClient(unittest.TestCase):
             self.assertEqual(len(msl), 1)
             seed_list = msl[0].seed_list # expect one list
 
-            psl_entry = "%(game_name)-30s,%(mid)02d,%(year)4s,%(month)02d,%(ssan)010d," % {'game_name': TSL_object.game_name, 'mid': int(TSL_object.mid), 'year': msl[0].year, 'month': msl[0].month, 'ssan': TSL_object.ssan}
+            psl_entry = "%(game_name)-30s,%(mid)02d,%(year)4s,%(month)02d,%(ssan)010d," % {'game_name': TSL_object.game_name[:30], 'mid': int(TSL_object.mid), 'year': msl[0].year, 'month': msl[0].month, 'ssan': TSL_object.ssan}
 
             for seed in seed_list: 
                 # def dobnk(self, fname, seed, mid, blocksize:65534)
@@ -640,7 +639,7 @@ class QCASTestClient(unittest.TestCase):
             
                 psl_entry += self.getQCAS_Expected_output(tmpStr).upper() + ","
             
-            psl_entry_list.append(psl_entry)
+            psl_entry_list.append(psl_entry.rstrip(','))
                     
         return psl_entry_list
         

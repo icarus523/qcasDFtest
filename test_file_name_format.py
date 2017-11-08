@@ -12,7 +12,7 @@ class test_file_name_format(QCASTestClient):
         next_month = self.get_filename_month(self.nextMonth_MSLfile)
 
         # current month != next month
-        self.assertNotEqual(current_month, next_month)
+        self.assertNotEqual(current_month, next_month, msg="MSL files are the same")
 
         # year is to be same, unless current month = 12 (Dec)
         current_month_year = self.get_filename_year(self.MSLfile)
@@ -63,14 +63,15 @@ class test_file_name_format(QCASTestClient):
         next_month = self.get_filename_month(self.nextMonth_PSLfile)
 
         # current month != next month
-        self.assertNotEqual(current_month, next_month)
+        self.assertNotEqual(current_month, next_month, msg="PSL files are the same")
 
         # year is to be same, unless current month = 12 (Dec)
         current_month_year = self.get_filename_year(self.PSLfile)
         next_month_year = self.get_filename_year(self.nextMonth_PSLfile)
 
         if int(current_month) < 12 :
-            self.assertEqual(int(next_month_year), int(current_month_year)) # same year
+            self.assertEqual(int(next_month_year), int(current_month_year), 
+            	msg="current PSL Month is less than December, expect same year" ) # same year
 
         if int(next_month) == 12:
             self.assertNotEqual(int(current_month_year), int(next_month_year) + 1) # new year

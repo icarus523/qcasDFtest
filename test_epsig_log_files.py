@@ -10,6 +10,7 @@ VALID_EPSIG_VERSION = '3.5'
 #LOG_FILE = '/Users/james/Documents/dev/python/qcasDFtest/epsig.log'
 
 class EpsigLogFile(): 
+
     def __init__(self, data): 
         self.header = data[0] 
         self.version_number = self.header.split(' ')[2]
@@ -25,7 +26,8 @@ class EpsigLogFile():
 class test_epsig_log_files(QCASTestClient):
 
     def test_log_file_exist(self):
-        self.assertTrue(os.path.isfile(self.my_preferences.epsig_log_file))
+        self.assertTrue(os.path.isfile(self.my_preferences.epsig_log_file), 
+        	msg=self.my_preferences.epsig_log_file + ": File not found")
 
     def test_Epsig_Log_file(self): 
         # EPSIG.EXE Version 3.5 Copyright The State of Queensland 1999-2015
@@ -46,23 +48,27 @@ class test_epsig_log_files(QCASTestClient):
             log_file = EpsigLogFile(data)
             
             # Verify EPSIG version number. 
-            self.assertEqual(log_file.version_number, VALID_EPSIG_VERSION)
+            self.assertEqual(log_file.version_number, VALID_EPSIG_VERSION, 
+            	msg="EPSIG version not equal to: " + VALID_EPSIG_VERSION)
             
             # The dates and start and finish time of processing appear reasonable
             # Valid Start Date: Assume within 7 days from current date
             time_stamp_start_obj = datetime.strptime(log_file.time_stamp_start_str[13:], "%a %b %d %H:%M:%S %Y")
             time_delta = today - time_stamp_start_obj
-            print("Number of days since last epsig log started: " + str(time_delta.days))
-            self.assertTrue(time_delta.days < NUMBER_OF_VALID_DAYS_SINCE_START_OF_LOG) # less than NUMBER_OF_VALID_DAYS_SINCE_START_OF_LOG days
+            #print("Number of days since last epsig log started: " + str(time_delta.days))
+            self.assertTrue(time_delta.days < NUMBER_OF_VALID_DAYS_SINCE_START_OF_LOG, 
+            	msg="Number of days since last epsig log started is greater than " + str(NUMBER_OF_VALID_DAYS_SINCE_START_OF_LOG)) # less than NUMBER_OF_VALID_DAYS_SINCE_START_OF_LOG days
 
             if len(data) > 4: 
                 time_stamp_end_obj = datetime.strptime(log_file.time_stamp_end[13:], "%a %b %d %H:%M:%S %Y")
                 time_delta = today - time_stamp_end_obj
-                print("Number of days since last epsig log ended: " + str(time_delta.days))
-                self.assertTrue(time_delta.days < NUMBER_OF_VALID_DAYS_SINCE_START_OF_LOG) # less than NUMBER_OF_VALID_DAYS_SINCE_START_OF_LOG days
+                #print("Number of days since last epsig log ended: " + str(time_delta.days))
+                self.assertTrue(time_delta.days < NUMBER_OF_VALID_DAYS_SINCE_START_OF_LOG, 
+                	msg="Number of days since last epsig log started is greater than " + str(NUMBER_OF_VALID_DAYS_SINCE_START_OF_LOG)) # less than NUMBER_OF_VALID_DAYS_SINCE_START_OF_LOG days
                 
                 # The latest run Epsig error file is correct.(Ref WI01)      
-                self.assertEqual(log_file.footer_status, " with EXIT_SUCCESS")
+                self.assertEqual(log_file.footer_status, " with EXIT_SUCCESS", 
+                	msg="Epsig Log file did not end with 'EXIT_SUCCESS")
             else: 
                 print("#### WARNING: Last entry in EPSIG log indicates it has not finished. ####")
                 
