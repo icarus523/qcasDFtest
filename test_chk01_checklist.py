@@ -127,9 +127,10 @@ class test_chk01_checklist(QCASTestClient):
             # Choose a Random game from TSL file
             random_tsl_entry = random.choice(all_games)
             
-            if random_tsl_entry.bin_file != 'BLNK' and complete == True:
+            if random_tsl_entry.bin_type == 'BLNK' and complete == True:
                 break
-            else: 
+            
+            if random_tsl_entry.bin_type == 'BLNK': 
                 blnk_file = os.path.join(self.my_preferences.path_to_binimage, 
                     self.getMID_Directory(random_tsl_entry.mid), 
                     random_tsl_entry.bin_file.strip() + "." + 
@@ -141,3 +142,7 @@ class test_chk01_checklist(QCASTestClient):
                 self.assertEqual(len(psl_entry_list), 2, msg="Expected 2 PSL entries: " + ','.join(psl_entry_list)) # one PSL entry for each month       
                 self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[0], self.PSLfile), msg=psl_entry_list[0] + ", entry did not exist in " + self.PSLfile)
                 self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[1], self.nextMonth_PSLfile), msg=psl_entry_list[1] + ", entry did not exist in " + self.nextMonth_PSLfile)
+            else: 
+                print("Skipping: " + random_tsl_entry.bin_file + "." + random_tsl_entry.bin_type)
+                
+            
