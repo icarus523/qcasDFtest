@@ -1,7 +1,7 @@
 import subprocess
 import getpass
 from datetime import datetime
-from test_datafiles import Preferences
+from test_datafiles import Preferences, CacheFile
 
 my_preferences = Preferences()
 

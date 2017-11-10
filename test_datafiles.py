@@ -68,9 +68,11 @@ class Preferences:
 class CacheFile: 
 
     def __init__(self, fname): 
-        self.cache_file = fname
-        self.cache_dict = self.importCacheFile()
-                
+        if os.path.isfile(fname): 
+            self.cache_file = fname
+            self.sigsCacheFile = self.cache_file[:-4] + "sigs" # .json file renaming to .sigs file
+            self.cache_dict = self.importCacheFile()
+                    
     def importCacheFile(self):
         if os.path.isfile(self.cache_file): 
             # Verify Cache Integrity
@@ -93,9 +95,9 @@ class CacheFile:
                     sort_keys=True, 
                     indent=4, 
                     separators=(',', ': '))
-                print('Run script again, empty cache file created')
-                sys.exit(0)
-        
+                # print('Run script again, empty cache file created')
+                # sys.exit(0)
+            self.signCacheFile()
         return(cache_data)
 
     def checkCacheFilename(self, filename, seed_input, alg_input): # alg_input
@@ -111,27 +113,29 @@ class CacheFile:
             return 0
     
     def verifyCacheIntegrity(self, cache_location_sigs): 
+        hashm = {}
+        
         if os.path.isfile(cache_location_sigs): # Sigs file exist?
-            with open(cache_location_sigs, 'r') as sigs_file: 
+            with open(cache_location_sigs, 'rb') as sigs_file: 
                 cache_sigs_data = json.load(sigs_file)
                 hashm = cache_sigs_data['cachefile_hash']
                 #fname = cache_sigs_data['filename']
-                
-                generated_hash = QCASTestClient.dohash_sha256(self.cache_file, 8192)
-                if hashm == generated_hash: 
-                    return True
-                else: 
-                    return False     
         else: 
             # advise user
             logging.warning("\n**** WARNING **** Generating new Cache Sigs file\n") 
             self.signCacheFile() # Generate Cache Sigs file
+            
+        generated_hash = QCASTestClient.dohash_sha256(self.cache_file, 8192)
+        if hashm == generated_hash: 
+            return True
+        else: 
+            return False     
+        
         
     def signCacheFile(self):
-        sigsCacheFile = self.cache_file[:-4] + "sigs" # .json file renaming to .sigs file
         h = QCASTestClient.dohash_sha256(self.cache_file, 8192) # requires file name as input
         
-        with open(sigsCacheFile,'w') as sigs_file:    
+        with open(self.sigsCacheFile,'w+') as sigs_file:    
             timestamp = datetime.now()
             sigs_dict = { 'cachefile_hash' : h,
                           'filename': self.cache_file,
@@ -147,15 +151,13 @@ class CacheFile:
         
     def updateCacheFile(self):
         if os.path.isfile(self.cache_file):
-            with open(self.cache_file, 'w') as json_cachefile:
+            with open(self.cache_file, 'w+') as json_cachefile:
                 json.dump(self.cache_dict,
                           json_cachefile,
                           sort_keys=True,
                           indent=4,
                           separators=(',', ': '))
-            
-        # self.signCacheFile() # Sign Cache
-    
+                
 class PSLfile:
     # helper class for PSL file
     def __init__(self, line):
@@ -250,7 +252,9 @@ class TSLfile:
         
         self.bin_type = fields[4].strip()
         assert(self.bin_type in my_preferences.valid_bin_types)
-        
+    
+    def toJSON(self): 
+        return (json.dumps(self, default=lambda o: o.__dict__, sort_keys = True, indent=4))
         
 # Derived unittest.TestCase class used for unittest testing. 
 class QCASTestClient(unittest.TestCase):
@@ -292,6 +296,13 @@ class QCASTestClient(unittest.TestCase):
                 'month': int(self.this_month['month']) + 1,
                 'year': self.this_month['year']
             }
+
+        self.logger = logging.getLogger('qcas_datafile_test')
+        hdlr = logging.FileHandler('output.log')
+        formatter = logging.Formatter(' %(asctime)s - %(levelname)s- %(message)s')
+        hdlr.setFormatter(formatter)
+        self.logger.addHandler(hdlr)
+        self.logger.setLevel(logging.DEBUG)
 
     def is_new_month(self, file1, file2):
         # new month is when file 2 version is equal to v1 and is less than file1 version. 
@@ -444,19 +455,32 @@ class QCASTestClient(unittest.TestCase):
             else:
                 return False
 
+    def get_oldgames_to_be_removed(self): 
+        tsl_difference_games_removed = set()
+        game_list_to_be_removed = list()
+
+        with open(self.previous_TSLfile, 'r') as file1: 
+            with open(self.TSLfile, 'r') as file2: 
+                tsl_difference_games_removed = set(file1).difference(file2)        
+        
+        for game in list(game_list_to_be_removed): # Single Line
+            game_list_to_be_removed.append(TSLfile(game)) # Generate TSL object        
+        
+        return game_list_to_be_removed
+        
     def get_newgames_to_be_added(self): 
         game_list_to_be_added = list()
-        tsl_difference = set()
+        tsl_difference_games_added = set()
 
         with open(self.TSLfile, 'r') as file1:
             with open(self.previous_TSLfile, 'r') as file2:
-                tsl_difference = set(file1).difference(file2)
+                tsl_difference_games_added = set(file1).difference(file2)
         
-        self.assertTrue(len(tsl_difference) > 0) # TSL files must be contain a new game? 
+        self.assertTrue(len(tsl_difference_games_added) > 0) # TSL files must be contain a new game? 
         # print("\nNew Games added: \n" + "".join(list(tsl_difference)))
   
         # Differences are the new games to be added. 
-        for game in list(tsl_difference): # Single Line
+        for game in list(tsl_difference_games_added): # Single Line
             game_list_to_be_added.append(TSLfile(game)) # Generate TSL object
         
         return game_list_to_be_added
@@ -464,7 +488,6 @@ class QCASTestClient(unittest.TestCase):
     # input:    total path to BLNK file, MID and optional blocksize
     # output:   blnk hash result using seed. 
     def dobnk(self, blnk_file, seed, mid, blocksize=65534):
-        psl_cache_file = CacheFile(self.my_preferences.cache_filename) # use a Cachefile - all defaults
         oh = "0000000000000000000000000000000000000000"
 
         with open(blnk_file, 'r') as file:         # Read BNK file
@@ -473,9 +496,9 @@ class QCASTestClient(unittest.TestCase):
             # print(self.getQCAS_Expected_output(seed))
         
             for row in reader: 
-                if row['type'].upper() == 'SHA1':
+                if row['type'].upper() == 'SHA1': # To handle CR32, 0A4R, 0A4F
                     complete_path_to_file = os.path.join(self.my_preferences.path_to_binimage,self.getMID_Directory(mid), str(row['fname']))    
-                    cachedhit = psl_cache_file.checkCacheFilename(complete_path_to_file, self.getQCAS_Expected_output(seed), row['type'].upper()) 
+                    cachedhit = self.psl_cache_file.checkCacheFilename(complete_path_to_file, self.getQCAS_Expected_output(seed), row['type'].upper()) 
         
                     if cachedhit:
                         localhash = cachedhit # use cached data
@@ -491,25 +514,29 @@ class QCASTestClient(unittest.TestCase):
                             'hash': localhash 
                         }        
                         
-                        cache_entry_list = psl_cache_file.cache_dict.get(complete_path_to_file) # Should return a list. 
+                        cache_entry_list = self.psl_cache_file.cache_dict.get(complete_path_to_file) # Should return a list. 
                         
                         if cache_entry_list :   # File Entry Exists, append to list
                             cache_entry_list.append(cache_object) # print this
-                            psl_cache_file.cache_dict[complete_path_to_file] = cache_entry_list
+                            self.psl_cache_file.cache_dict[complete_path_to_file] = cache_entry_list
                         else:                   # No File Entry Exits generate new list entry in cache_dict
                             new_cache_list.append(cache_object)
-                            psl_cache_file.cache_dict[complete_path_to_file] = new_cache_list # keep unique
+                            self.psl_cache_file.cache_dict[complete_path_to_file] = new_cache_list # keep unique
                                                         
-                        psl_cache_file.updateCacheFile() # Update file cache
-    
+                        self.psl_cache_file.updateCacheFile() # Update file cache
+                        
                     if localhash == 0:
                         break
                         
                     oh = hex(int(oh,16) ^ int(str(localhash), 16)) # XOR
 
                 else: 
-                    print(row['type'] + "  - Not processing any other file other than SHA1!")
-                    sys.exit(1)    
+                    # print(row['type'] + "  - Not processing these Hash Types: CR32, 0A4R, 0A4F. Only supports .BNK files with SHA1: " + blnk_file)
+                    self.assertEqual(row['type'], "SHA1", msg=row['type'] + "  - Not processing these Hash Types: CR32, 0A4R, 0A4F. Only supports .BNK files with SHA1: " + blnk_file)
+                    
+        #psl_cache_file.updateCacheFile() # Update file cache
+        #psl_cache_file.signCacheFile() # Sign Cache file
+        
         return oh
              
     # input: file to be hashed using sha256()
@@ -528,17 +555,20 @@ class QCASTestClient(unittest.TestCase):
         
     # input: file to be hashed using hmac-sha1
     # output: hexdigest of input file    
-    def dohash_hmacsha1(self, fname, seed='00', chunksize=8192):
+    def dohash_hmacsha1(self, fname, seed='00', chunksize=32768):
         key = bytes.fromhex(seed)
         m = hmac.new(key, digestmod = hashlib.sha1) # change this if you want other hashing types for HMAC, e.g. hashlib.md5
         done = 0
         size = os.path.getsize(fname)
         # Read in chunksize blocks at a time
         with open(fname, 'rb') as f:
-            #print("\nHashing: " + os.path.basename(fname) + "\tSeed:" + seed + "\t", end="")
+            print("\nHashing: %(file_name)-30s\tSeed: %(seed)8s\t" % {'file_name' : os.path.basename(fname), 'seed': seed}, end="")
             while True:
                 block = f.read(chunksize)
-                done += chunksize
+                if done >= size: 
+                    done = size
+                else: 
+                    done += chunksize
                 sys.stdout.write("%7d" % (done*100/size) + "%" + p_reset)
                 if not block: break
                 m.update(block)      
@@ -619,7 +649,8 @@ class QCASTestClient(unittest.TestCase):
     def generate_PSL_entry(self, blnk_file, TSL_object):
         psl_entry = ''
         psl_entry_list = list()
-       
+        self.psl_cache_file = CacheFile(self.my_preferences.cache_filename) # use a Cachefile - all defaults
+
         msl_file_list = [self.MSLfile, self.nextMonth_MSLfile]
     
         for msl_file in msl_file_list: # Check both months
@@ -632,15 +663,17 @@ class QCASTestClient(unittest.TestCase):
 
             for seed in seed_list: 
                 # def dobnk(self, fname, seed, mid, blocksize:65534)
-                h = self.dobnk(blnk_file, seed, TSL_object.mid, blocksize=65534)
-            
+                h = self.dobnk(blnk_file, seed, TSL_object.mid, blocksize=131072)
+
                 tmpStr = str(h).lstrip('0X').zfill(40) # forces 40 characters with starting 0 characters. 
                 tmpStr = str(h).lstrip('0x').zfill(40)
             
                 psl_entry += self.getQCAS_Expected_output(tmpStr).upper() + ","
             
             psl_entry_list.append(psl_entry.rstrip(','))
-                    
+        
+        # self.psl_cache_file.signCacheFile()
+        
         return psl_entry_list
         
 if __name__ == '__main__':

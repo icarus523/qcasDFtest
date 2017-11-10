@@ -3,6 +3,7 @@ import csv
 import random
 import unittest
 import sys
+import json
 from test_datafiles import QCASTestClient, PSLfile, TSLfile, MSLfile
 
 class test_chk01_checklist(QCASTestClient):
@@ -19,6 +20,13 @@ class test_chk01_checklist(QCASTestClient):
                 
     def test_new_games_to_be_added_are_in_PSL_files(self):
         game_list_to_be_added = self.get_newgames_to_be_added()
+        
+        if len(game_list_to_be_added) > 0: 
+            print("New Games added: ")
+            for tsl_game_item in game_list_to_be_added:
+                print(tsl_game_item.toJSON())    
+        else: 
+            print("No new games added.")
             
         # Find these games in the both PSL files
         psl_file_list = [self.PSLfile, self.nextMonth_PSLfile] 
@@ -39,8 +47,7 @@ class test_chk01_checklist(QCASTestClient):
             self.assertTrue(set(verified_game).intersection(set(game_list_to_be_added)), 
             	msg="New PSL entry not found in PSL file") 
     
-    @unittest.skipUnless(os.path.isdir('\\\\Justice.qld.gov.au\\Data\\OLGR-TECHSERV\\BINIMAGE'), 
-    	"requires Binimage Path")
+    @unittest.skipUnless(os.path.isdir('\\\\Justice.qld.gov.au\\Data\\OLGR-TECHSERV\\BINIMAGE'), "requires Binimage Path")
     def test_TSL_entries_exist_in_PSL_files(self):        
         # Read TSL entry
         # Generate PSL entry with seeds
@@ -87,27 +94,38 @@ class test_chk01_checklist(QCASTestClient):
             self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[1], self.nextMonth_PSLfile), 
             	msg=psl_entry_list[1] + ", entry did not exist in " + self.nextMonth_PSLfile)
     
-    @unittest.skip("TODO: Not yet implemented")
+    #@unittest.skip("TODO: Not yet implemented")
     def test_Games_removed_from_PSL_files(self): 
         # generate a list of games removed. 
         # Difference from previous month PSL and this Months PSL files (multiple). 
-        psl_file_list1 = self.check_file_format(self.PSLfile, 'PSL')
-        psl_file_list2 = self.check_file_format(self.nextMonth_PSLfile, 'PSL')
+        #psl_file_list2 = self.check_file_format(self.PSLfile, 'PSL')
+        #psl_file_list1 = self.check_file_format(self.nextMonth_PSLfile, 'PSL')
 
-        psl_difference = list(set(psl_file_list1).intersection(set(psl_file_list2))) 
-    
+        #psl_difference = list(set(psl_file_list1).intersection(set(psl_file_list2))) 
+        games_to_be_removed = list() 
+        games_to_be_removed = self.get_oldgames_to_be_removed()
+        if len(games_to_be_removed) > 1: 
+            print("Identified Games removed: ")
+            for tsl_game_item in games_to_be_removed:
+                print(tsl_game_item.toJSON())
+        else:
+            print("No Games removed!", end="")
+            
     # Generate PSL entries for one randomly chosen new game in the new TSL file
     # Compare with PSL files and make sure that entries for both months matches 
-    @unittest.skipUnless(os.path.isdir('\\\\Justice.qld.gov.au\\Data\\OLGR-TECHSERV\\BINIMAGE'), 
-    	"requires Binimage Path")
+    @unittest.skipUnless(os.path.isdir('\\\\Justice.qld.gov.au\\Data\\OLGR-TECHSERV\\BINIMAGE'), "requires Binimage Path")
     def test_One_new_game_to_be_added_in_PSL_files(self):
         new_games_to_be_added = self.get_newgames_to_be_added()   # TSL object list
         random_tsl_entry = random.choice(new_games_to_be_added) 
         blnk_file = os.path.join(self.my_preferences.path_to_binimage, self.getMID_Directory(random_tsl_entry.mid), 
             random_tsl_entry.bin_file.strip() + "." + self.get_bin_type(random_tsl_entry.bin_type))
-        
+        print("\nGenerating PSL entry for one [NEW] approved game: " +  random_tsl_entry.game_name + "; MID: " + random_tsl_entry.mid)
+
         psl_entry_list = self.generate_PSL_entry(blnk_file, random_tsl_entry)
-                    
+
+        for psl_entry in psl_entry_list: 
+            print("\n" + psl_entry)
+        
         self.assertEqual(len(psl_entry_list), 2, 
         	msg="Expected 2 PSL entries: " + ','.join(psl_entry_list)) # one PSL entry for each month       
         self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[0], self.PSLfile), 
@@ -117,9 +135,8 @@ class test_chk01_checklist(QCASTestClient):
 
     # Generate PSL entries for one randomly chosen new game in the new TSL file (all games)
     # Compare with PSL files and make sure that entries for both months matches 
-    @unittest.skipUnless(os.path.isdir('\\\\Justice.qld.gov.au\\Data\\OLGR-TECHSERV\\BINIMAGE'), 
-    	"requires Binimage Path")
-    # @unittest.skip("Debug: Not testing")
+    @unittest.skipUnless(os.path.isdir('\\\\Justice.qld.gov.au\\Data\\OLGR-TECHSERV\\BINIMAGE'), "requires Binimage Path")
+    #unittest.skip("Debug: Not testing")
     def test_One_old_game_to_be_added_in_PSL_files(self): 
         all_games = self.check_file_format(self.TSLfile, 'TSL') 
         complete = False
@@ -136,13 +153,16 @@ class test_chk01_checklist(QCASTestClient):
                     random_tsl_entry.bin_file.strip() + "." + 
                     str(self.get_bin_type(random_tsl_entry.bin_type)))
                 complete = True
-                
+                print("\nGenerating PSL entry for one [OLD] approved game: " +  random_tsl_entry.game_name + "; MID: " + random_tsl_entry.mid)
+
                 psl_entry_list = self.generate_PSL_entry(blnk_file, random_tsl_entry)
+                for psl_entry in psl_entry_list: 
+                    print("\n" + psl_entry)    
                     
                 self.assertEqual(len(psl_entry_list), 2, msg="Expected 2 PSL entries: " + ','.join(psl_entry_list)) # one PSL entry for each month       
                 self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[0], self.PSLfile), msg=psl_entry_list[0] + ", entry did not exist in " + self.PSLfile)
                 self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[1], self.nextMonth_PSLfile), msg=psl_entry_list[1] + ", entry did not exist in " + self.nextMonth_PSLfile)
             else: 
-                print("Skipping: " + random_tsl_entry.bin_file + "." + random_tsl_entry.bin_type)
+                print("\nSkipping: " + random_tsl_entry.game_name + ". Reason: " + random_tsl_entry.bin_type + " file type")
                 
             
