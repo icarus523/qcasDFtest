@@ -7,6 +7,7 @@ import hashlib
 import sys
 import json
 import difflib
+import pickle
 from datetime import datetime
 p_reset = "\x08"*8
 
@@ -37,6 +38,7 @@ class Preferences:
                           'nextMonth_PSLfile': "qcas_2017_11_v01.psl", 
                           'MSLfile' : "qcas_2017_10_v01.msl",
                           'nextMonth_MSLfile' : "qcas_2017_11_v01.msl",
+                          'write_new_games_to_file': "new_games.json"
                         }
             self.writefile(preference_filename)
             
@@ -50,6 +52,7 @@ class Preferences:
             self.valid_bin_types = data['valid_bin_types']
             self.previous_TSLfile = data['previous_TSLfile']
             self.epsig_log_file = data['epsig_log_file']
+            self.write_new_games_to_file = data['write_new_games_to_file']
             
             # Datafiles 
             self.TSLfile = data['TSLfile']
@@ -285,6 +288,7 @@ class QCASTestClient(unittest.TestCase):
             'month': datetime.now().month,
             'year': datetime.now().year
         }
+        self.write_new_games_to_file = self.my_preferences.write_new_games_to_file
         
         if self.this_month['month'] == 12:
             self.next_month = {
@@ -467,7 +471,7 @@ class QCASTestClient(unittest.TestCase):
             game_list_to_be_removed.append(TSLfile(game)) # Generate TSL object        
         
         return game_list_to_be_removed
-        
+    
     def get_newgames_to_be_added(self): 
         game_list_to_be_added = list()
         tsl_difference_games_added = set()
@@ -482,7 +486,7 @@ class QCASTestClient(unittest.TestCase):
         # Differences are the new games to be added. 
         for game in list(tsl_difference_games_added): # Single Line
             game_list_to_be_added.append(TSLfile(game)) # Generate TSL object
-        
+               
         return game_list_to_be_added
     
     # input:    total path to BLNK file, MID and optional blocksize

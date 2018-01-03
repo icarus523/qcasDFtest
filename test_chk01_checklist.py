@@ -4,10 +4,16 @@ import random
 import unittest
 import sys
 import json
+import pickle
 from test_datafiles import QCASTestClient, PSLfile, TSLfile, MSLfile
 
 class test_chk01_checklist(QCASTestClient):
-   
+    
+    def write_to_file(self, fname, data):
+            with open(self.write_new_games_to_file, 'w+') as json_file:
+                pickle.dump(list(tsl_difference_games_added), outfile)
+                # json.dumps(data, json_file, sort_keys=True, indent=4, separators=(',',':'))
+
     def test_Generated_PSL_files_Differ(self):
         same = set()
         
@@ -22,11 +28,12 @@ class test_chk01_checklist(QCASTestClient):
         game_list_to_be_added = self.get_newgames_to_be_added()
         
         if len(game_list_to_be_added) > 0: 
-            print("New Games added: ")
+            print("\nNew Games added: ")
             for tsl_game_item in game_list_to_be_added:
                 print(tsl_game_item.toJSON())    
+
         else: 
-            print("No new games added.")
+            print("\nNo new games added.")
             
         # Find these games in the both PSL files
         psl_file_list = [self.PSLfile, self.nextMonth_PSLfile] 
@@ -35,7 +42,7 @@ class test_chk01_checklist(QCASTestClient):
         for psl_file in psl_file_list: 
             psl_entries_list = self.check_file_format(psl_file, 'PSL')       
             
-            for game in game_list_to_be_added:      #TSL entries
+            for game in game_list_to_be_added:      # TSL entries
                 for psl_entry in psl_entries_list: 
                     if game.ssan == psl_entry.ssan: # TSL entry SSAN == PSL entry SSAN
                         verified_game.append(game)  # List of TSL entries that have been verified. 
@@ -105,15 +112,16 @@ class test_chk01_checklist(QCASTestClient):
         games_to_be_removed = list() 
         games_to_be_removed = self.get_oldgames_to_be_removed()
         if len(games_to_be_removed) > 1: 
-            print("Identified Games removed: ")
+            print("\nIdentified Games removed: ")
             for tsl_game_item in games_to_be_removed:
                 print(tsl_game_item.toJSON())
         else:
-            print("No Games removed!", end="")
+            print("\nNo Games removed!", end="")
             
     # Generate PSL entries for one randomly chosen new game in the new TSL file
     # Compare with PSL files and make sure that entries for both months matches 
-    @unittest.skipUnless(os.path.isdir('\\\\Justice.qld.gov.au\\Data\\OLGR-TECHSERV\\BINIMAGE'), "requires Binimage Path")
+    #@unittest.skipUnless(os.path.isdir('\\\\Justice.qld.gov.au\\Data\\OLGR-TECHSERV\\BINIMAGE'), "requires Binimage Path")
+    @unittest.skip("Debug: Not testing")
     def test_One_new_game_to_be_added_in_PSL_files(self):
         new_games_to_be_added = self.get_newgames_to_be_added()   # TSL object list
         random_tsl_entry = random.choice(new_games_to_be_added) 
@@ -135,8 +143,8 @@ class test_chk01_checklist(QCASTestClient):
 
     # Generate PSL entries for one randomly chosen new game in the new TSL file (all games)
     # Compare with PSL files and make sure that entries for both months matches 
-    @unittest.skipUnless(os.path.isdir('\\\\Justice.qld.gov.au\\Data\\OLGR-TECHSERV\\BINIMAGE'), "requires Binimage Path")
-    #unittest.skip("Debug: Not testing")
+    #@unittest.skipUnless(os.path.isdir('\\\\Justice.qld.gov.au\\Data\\OLGR-TECHSERV\\BINIMAGE'), "requires Binimage Path")
+    @unittest.skip("Debug: Not testing")
     def test_One_old_game_to_be_added_in_PSL_files(self): 
         all_games = self.check_file_format(self.TSLfile, 'TSL') 
         complete = False
