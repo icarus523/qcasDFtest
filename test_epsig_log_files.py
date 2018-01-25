@@ -25,7 +25,7 @@ class EpsigLogFile():
 
 class test_epsig_log_files(QCASTestClient):
 
-    def test_log_file_exist(self):
+    def test_Read_Epsig_log_file_from_disk(self):
         self.assertTrue(os.path.isfile(self.my_preferences.epsig_log_file), 
         	msg=self.my_preferences.epsig_log_file + ": File not found")
 

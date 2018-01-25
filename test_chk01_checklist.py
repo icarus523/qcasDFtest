@@ -54,7 +54,7 @@ class test_chk01_checklist(QCASTestClient):
             self.assertTrue(set(verified_game).intersection(set(game_list_to_be_added)), 
             	msg="New PSL entry not found in PSL file") 
     
-    @unittest.skipUnless(os.path.isdir('\\\\Justice.qld.gov.au\\Data\\OLGR-TECHSERV\\BINIMAGE'), "requires Binimage Path")
+    #@unittest.skipUnless(os.path.isdir('\\\\Justice.qld.gov.au\\Data\\OLGR-TECHSERV\\BINIMAGE'), "requires Binimage Path")
     def test_TSL_entries_exist_in_PSL_files(self):        
         # Read TSL entry
         # Generate PSL entry with seeds
@@ -120,8 +120,8 @@ class test_chk01_checklist(QCASTestClient):
             
     # Generate PSL entries for one randomly chosen new game in the new TSL file
     # Compare with PSL files and make sure that entries for both months matches 
-    #@unittest.skipUnless(os.path.isdir('\\\\Justice.qld.gov.au\\Data\\OLGR-TECHSERV\\BINIMAGE'), "requires Binimage Path")
-    @unittest.skip("Debug: Not testing")
+    @unittest.skipUnless(os.path.isdir('\\\\Justice.qld.gov.au\\Data\\OLGR-TECHSERV\\BINIMAGE'), "requires Binimage Path")
+    #@unittest.skip("Debug: Not testing")
     def test_One_new_game_to_be_added_in_PSL_files(self):
         new_games_to_be_added = self.get_newgames_to_be_added()   # TSL object list
         random_tsl_entry = random.choice(new_games_to_be_added) 
@@ -143,8 +143,8 @@ class test_chk01_checklist(QCASTestClient):
 
     # Generate PSL entries for one randomly chosen new game in the new TSL file (all games)
     # Compare with PSL files and make sure that entries for both months matches 
-    #@unittest.skipUnless(os.path.isdir('\\\\Justice.qld.gov.au\\Data\\OLGR-TECHSERV\\BINIMAGE'), "requires Binimage Path")
-    @unittest.skip("Debug: Not testing")
+    @unittest.skipUnless(os.path.isdir('\\\\Justice.qld.gov.au\\Data\\OLGR-TECHSERV\\BINIMAGE'), "requires Binimage Path")
+    #@unittest.skip("Debug: Not testing")
     def test_One_old_game_to_be_added_in_PSL_files(self): 
         all_games = self.check_file_format(self.TSLfile, 'TSL') 
         complete = False
