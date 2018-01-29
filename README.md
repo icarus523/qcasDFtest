@@ -26,9 +26,30 @@ Will run all unit test scripts. To specify a specifc unit test use: `py -m unitt
 ---
 # Unit Test Module Details
 ## Module: `test_datafiles.py`
-Main class (QCASTestClient) derived from unittest.TestCase, includes the following helper class files: `PSLfile`, `MSLfile`, `TSLfile` and `CacheFile`. 
+Main class (QCASTestClient) derived from unittest.TestCase. The QCASTestClient includes all modules that have common test procedures, it includes the following helper class files: `PSLfile`, `MSLfile`, `TSLfile`. 
 
-The QCASTestClient includes all modules that have common test procedures. 
+#### Class Helper Files: MSLfile
+Reads the text file and creates an Object, it also performs the following sanity checks: 
+- verify year field is 2017 to 9999
+- verify months fields is 1 to 12
+- verify 31 seeds in file
+- verify each seed is 8 characters long. 
+
+#### Class Helper Files: PSLfile
+- verify year field is 2017 to 9999 (and that it is only 4 characters)
+- verify months fields is 1 to 12 (and that it is only 2 characters) 
+- verify game name is less than 31 characters
+- verify MID field is valid
+- verify SSAN is only 10 characters
+- verify that there is 31 hashes in for each PSL entry
+
+#### Class Helper Files: TSLfile
+- verify MID field is valid
+- verify SSAN is only 10 characters
+- verify game name is less than 61 characters
+- verify BIN filename is less than 21 characters
+- verify BIN Type is a valid type: Only "BLNK","PS32","SHA1" can be processed. 
+
 
 ## CHK01: Datafiles Checklist Module: `test_chk01_checklist.py`
 Mirrors the checks specified in CHK01 Casino Datafiles checklist, the following unit tests are performed in this test: 
