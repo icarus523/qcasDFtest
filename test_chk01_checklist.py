@@ -196,7 +196,7 @@ class test_chk01_checklist(QCASTestClient):
             # Will skip if files being hashed in the BLNK is not SHA1, e.g.  CR32, 0A4R, 0A4F 
             if self.check_game_type(random_tsl_entry) == True: 
                 for msl in msl_file_list:
-                    random_seed_idx =  random.randint(1,31) # Choose a random day for the month
+                    random_seed_idx =  random.randint(0,30) # Choose a random day for the month
                     mslfile = self.check_file_format(msl, 'MSL')
                     random_seed = mslfile[0].seed_list[random_seed_idx]         
                     hash_list_idx = mslfile[0].seed_list.index(random_seed)
@@ -264,7 +264,7 @@ class test_chk01_checklist(QCASTestClient):
             # Will skip if files being hashed in the BLNK is not SHA1, e.g.  CR32, 0A4R, 0A4F 
             if self.check_game_type(random_tsl_entry) == True: 
                 for msl in msl_file_list:
-                    random_seed_idx =  random.randint(1,31) # Choose a random day for the month
+                    random_seed_idx =  random.randint(0,30) # Choose a random day for the month
                     mslfile = self.check_file_format(msl, 'MSL')
                     random_seed = mslfile[0].seed_list[random_seed_idx]  
                     print("random_seed_idx: " +  str(random_seed_idx))
