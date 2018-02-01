@@ -17,11 +17,27 @@ To use in Windows:
         "nextMonth_MSLfile" : "qcas_2017_11_v01.msl"
         
         "path_to_binimage" : "\\\\Justice.qld.gov.au\\Data\\OLGR-TECHSERV\\BINIMAGE"
-        "epsig_log_file": "C:\\Users\\aceretjr\\Documents\\dev\\qcas-Datafiles-Unittest\\logs\\epsig.log",       
+        "epsig_log_file": "\\\\Justice.qld.gov.au\\Data\\OLGR-TECHSERV\\OLGR-TECHSERV\\MISC\\BINIMAGE\\qcas\\log\\epsig.log"  
 ```
         
 2. On the command prompt (in Windows) use: `py -m unittest -v`
 Will run all unit test scripts. To specify a specifc unit test use: `py -m unittest test_chk01_checklist.py`
+
+Otherwise you can use the helper script named: `__start_qcas_unittesting_script.py`
+
+3. Skipping tests
+There is an option in the preferences.dat file to skip lengthy checks. 
+
+```
+    "skip_lengthy_validations": "false"
+```
+
+Change the above variable to `"skip_lengthy_validations": "true"` and the script will avoid any lengthy tests. These include: 
+
+`test_new_games_to_be_added_are_in_PSL_files()`
+`test_One_old_game_to_be_added_in_PSL_files_full()`
+`test_One_new_game_to_be_added_in_PSL_files_full()`
+`test_TSL_entries_exist_in_PSL_files()`
 
 ---
 # Unit Test Module Details

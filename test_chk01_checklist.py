@@ -5,9 +5,13 @@ import unittest
 import sys
 import json
 import pickle
-from test_datafiles import QCASTestClient, PSLfile, TSLfile, MSLfile
+from test_datafiles import QCASTestClient, PSLfile, TSLfile, MSLfile, Preferences
 
-class test_chk01_checklist(QCASTestClient):
+def skipping_length_tests(): 
+    my_preferences = Preferences()
+    return my_preferences.will_skip_lengthy_validations()
+
+class test_chk01_checklist(QCASTestClient):      
     
     def write_to_file(self, fname, data):
             with open(self.write_new_games_to_file, 'w+') as json_file:
@@ -23,17 +27,17 @@ class test_chk01_checklist(QCASTestClient):
    
         self.assertFalse(len(same) > 0, 
         	msg=self.PSLfile + " is the same as: " + self.nextMonth_PSLfile)
-                
+    
+    @unittest.skipIf(skipping_length_tests(), "Skipping Lengthy Validations")            
     def test_new_games_to_be_added_are_in_PSL_files(self):
         game_list_to_be_added = self.get_newgames_to_be_added()
         
         if len(game_list_to_be_added) > 0: 
-            print("\nNew Games added: ")
+            print("\n ==== New Games added ====\n")
             for tsl_game_item in game_list_to_be_added:
                 print(tsl_game_item.toJSON())    
-
         else: 
-            print("\nNo new games added.")
+            print("\n ==== No new games added ==== \n")
             
         # Find these games in the both PSL files
         psl_file_list = [self.PSLfile, self.nextMonth_PSLfile] 
@@ -55,6 +59,7 @@ class test_chk01_checklist(QCASTestClient):
             	msg="New PSL entry not found in PSL file") 
     
     @unittest.skipUnless(os.path.isdir('\\\\Justice.qld.gov.au\\Data\\OLGR-TECHSERV\\BINIMAGE'), "requires Binimage Path")
+    @unittest.skipIf(skipping_length_tests(), "Skipping Lengthy Validations")            
     def test_TSL_entries_exist_in_PSL_files(self):        
         # Read TSL entry
         # Generate PSL entry with seeds
@@ -101,7 +106,7 @@ class test_chk01_checklist(QCASTestClient):
             self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[1], self.nextMonth_PSLfile), 
             	msg=psl_entry_list[1] + ", entry did not exist in " + self.nextMonth_PSLfile)
     
-    #@unittest.skip("TODO: Not yet implemented")
+    @unittest.skip("TODO: Not yet implemented")
     def test_Games_removed_from_PSL_files(self): 
         # generate a list of games removed. 
         # Difference from previous month PSL and this Months PSL files (multiple). 
@@ -120,9 +125,9 @@ class test_chk01_checklist(QCASTestClient):
             
     # Generate PSL entries for one randomly chosen new game in the new TSL file
     # Compare with PSL files and make sure that entries for both months matches 
-    #@unittest.skipUnless(os.path.isdir('\\\\Justice.qld.gov.au\\Data\\OLGR-TECHSERV\\BINIMAGE'), "requires Binimage Path")
-    @unittest.skip("Debug: Not testing")
-    def test_One_new_game_to_be_added_in_PSL_files(self):
+    @unittest.skipUnless(os.path.isdir('\\\\Justice.qld.gov.au\\Data\\OLGR-TECHSERV\\BINIMAGE'), "requires Binimage Path")
+    @unittest.skipIf(skipping_length_tests(), "Skipping Lengthy Validations")            
+    def test_One_new_game_to_be_added_in_PSL_files_full(self):
         new_games_to_be_added = self.get_newgames_to_be_added()   # TSL object list
         random_tsl_entry = random.choice(new_games_to_be_added) 
         blnk_file = os.path.join(self.my_preferences.path_to_binimage, 
@@ -145,8 +150,8 @@ class test_chk01_checklist(QCASTestClient):
     # Generate PSL entries for one randomly chosen new game in the new TSL file (all games)
     # Compare with PSL files and make sure that entries for both months matches 
     @unittest.skipUnless(os.path.isdir('\\\\Justice.qld.gov.au\\Data\\OLGR-TECHSERV\\BINIMAGE'), "requires Binimage Path")
-    #@unittest.skip("Debug: Not testing")
-    def test_One_old_game_to_be_added_in_PSL_files(self): 
+    @unittest.skipIf(skipping_length_tests(), "Skipping Lengthy Validations")            
+    def test_One_old_game_to_be_added_in_PSL_files_full(self): 
         all_games = self.check_file_format(self.TSLfile, 'TSL') 
         complete = False
         while True: 
@@ -164,7 +169,7 @@ class test_chk01_checklist(QCASTestClient):
                 complete = True
                 print("\nGenerating PSL entry for one [OLD] approved game: " +  random_tsl_entry.game_name + "; MID: " + random_tsl_entry.mid)
 
-                psl_entry_list = self.generate_PSL_entry(blnk_file, random_tsl_entry)
+                psl_entry_list = self.generate_PSL_entry(blnk_file, random_tsl_entry) # Slow process
                 for psl_entry in psl_entry_list: 
                     print("\n" + psl_entry)    
                     
@@ -176,46 +181,65 @@ class test_chk01_checklist(QCASTestClient):
                 
     
     # Unit test to address complaints about verifying a complete PSL entry being too slow
-    # Note only checks current month
-    # @unittest.skipUnless(os.path.isdir('\\\\Justice.qld.gov.au\\Data\\OLGR-TECHSERV\\BINIMAGE'), "requires Binimage Path")
-    def test_One_old_game_with_one_seed_in_PSL_file(self): 
+    # Note checks both month's MSL and PSL files; only verifies BLNK files. 
+    @unittest.skipUnless(os.path.isdir('\\\\Justice.qld.gov.au\\Data\\OLGR-TECHSERV\\BINIMAGE'), "requires Binimage Path")
+    def test_One_OLD_game_with_one_seed_in_PSL_file(self): 
         all_games = self.check_file_format(self.TSLfile, 'TSL')
-
         msl_file_list = [self.MSLfile, self.nextMonth_MSLfile] 
-
-        random_seed_idx =  random.randint(1,31) # Choose a random day for the month
-        mslfile = self.check_file_format(self.MSLfile, 'MSL') 
-        random_seed = mslfile[0].seed_list[random_seed_idx]
 
         complete = False
         
         while True: 
             # Choose a Random game from TSL file
             random_tsl_entry = random.choice(all_games) # same for both months
-
             # Test that "BLNK" file contents can be processed, ie. HMAC-SHA1 or SHA1 only. 
+            # Will skip if files being hashed in the BLNK is not SHA1, e.g.  CR32, 0A4R, 0A4F 
             if self.check_game_type(random_tsl_entry) == True: 
-                print("\nTSL entry randomly chosen is: " + random_tsl_entry.toJSON())
-                
-                blnk_file = os.path.join(self.my_preferences.path_to_binimage, 
-                        self.getMID_Directory(random_tsl_entry.mid), 
-                        random_tsl_entry.bin_file.strip() 
-                        + "." + str(self.get_bin_type(random_tsl_entry.bin_type)))
+                for msl in msl_file_list:
+                    random_seed_idx =  random.randint(1,31) # Choose a random day for the month
+                    mslfile = self.check_file_format(msl, 'MSL')
+                    random_seed = mslfile[0].seed_list[random_seed_idx]         
+                    hash_list_idx = mslfile[0].seed_list.index(random_seed)
 
-                localhash = self.dohash_hmacsha1(blnk_file, random_seed) # generate hash x2 for each month
-
-                # Compare Hash with PSL Entry
-                psl_entries_list = self.check_file_format(self.PSLfile, 'PSL')  # generate PSL object list 
-
-                for psl_entry in psl_entries_list: 
-                    if random_tsl_entry.ssan == psl_entry.ssan: 
-                        psl_from_file = psl_entry
-                        break # not expecting any other matches. 
-
-                # Compare generated hash against the hash from PSL file. 
-                self.assertEqual(localhash, psl_from_file.hash_list[random_seed_idx])
+                    print("\n\n MSLfile: " + msl + " \n ==== Old TSL entry randomly chosen is: ==== \n"+ random_tsl_entry.toJSON())
                     
-                complete = True # set the flag.
+                    #blnk_file = os.path.join(self.my_preferences.path_to_binimage, 
+                    #        self.getMID_Directory(random_tsl_entry.mid), 
+                    #        random_tsl_entry.bin_file.strip() 
+                    #        + "." + str(self.get_bin_type(random_tsl_entry.bin_type)))
+
+                    blnk_file = os.path.join(self.my_preferences.path_to_binimage, 
+                    self.getMID_Directory(random_tsl_entry.mid), random_tsl_entry.bin_file.strip() + "." + 
+                    self.get_bin_type(random_tsl_entry.bin_type))
+                    
+                    # IMPORTANT currently only verifies BLNK files
+                    if random_tsl_entry.bin_type == "BLNK": 
+                        localhash = self.dobnk(blnk_file, random_seed, random_seed_idx, random_tsl_entry.mid, blocksize=65535)
+                    else:
+                        print("Trying to Process BLNK file") # Shouldn't get here
+                        sys.exit(1) 
+                    
+                    # Need to format Hashes
+                    tmpStr = str(localhash).lstrip('0X').zfill(40) # forces 40 characters with starting 0 characters. 
+                    tmpStr = str(localhash).lstrip('0x').zfill(40)
+                    localhash = self.getQCAS_Expected_output(tmpStr).upper() # format it
+                    
+                    psl_entries_list = list() 
+                    # Compare Hash with PSL Entry
+                    if msl == self.nextMonth_MSLfile: 
+                        psl_entries_list = self.check_file_format(self.nextMonth_PSLfile, 'PSL')  # generate PSL object list for next month (Important) 
+                    elif msl == self.MSLfile: 
+                        psl_entries_list = self.check_file_format(self.PSLfile, 'PSL')  # generate PSL object list for next month (Important) 
+
+                    for psl_entry in psl_entries_list: 
+                        if random_tsl_entry.ssan == psl_entry.ssan: 
+                            psl_from_file = psl_entry
+                            break # not expecting any other matches. 
+
+                    # Compare generated hash against the hash from PSL file. 
+                    self.assertEqual(localhash, psl_from_file.hash_list[hash_list_idx], msg="seed: " + random_seed + " idx=" + str(hash_list_idx))
+                        
+                    complete = True # set the flag.
 
             else: 
                 print("\nSkipping: " + random_tsl_entry.game_name + ". Reason: " 
@@ -224,4 +248,67 @@ class test_chk01_checklist(QCASTestClient):
             if complete == True: 
                 break
 
+    # Unit test to address complaints about verifying a complete PSL entry being too slow
+    # Note check's both month's PSL and MSL, and only verifies BLNK files. 
+    @unittest.skipUnless(os.path.isdir('\\\\Justice.qld.gov.au\\Data\\OLGR-TECHSERV\\BINIMAGE'), "requires Binimage Path")
+    def test_One_NEW_game_with_one_seed_in_PSL_file(self): 
+        new_games = self.get_newgames_to_be_added()
+        msl_file_list = [self.MSLfile, self.nextMonth_MSLfile] 
 
+        complete = False
+        
+        while True: 
+            # Choose a Random game from TSL file
+            random_tsl_entry = random.choice(new_games) # same for both months
+            # Test that "BLNK" file contents can be processed, ie. HMAC-SHA1 or SHA1 only. 
+            # Will skip if files being hashed in the BLNK is not SHA1, e.g.  CR32, 0A4R, 0A4F 
+            if self.check_game_type(random_tsl_entry) == True: 
+                for msl in msl_file_list:
+                    random_seed_idx =  random.randint(1,31) # Choose a random day for the month
+                    mslfile = self.check_file_format(msl, 'MSL')
+                    random_seed = mslfile[0].seed_list[random_seed_idx]  
+                    print("random_seed_idx: " +  str(random_seed_idx))
+                    hash_list_idx = mslfile[0].seed_list.index(random_seed)
+
+                    print("\n\n MSLfile: " + msl + " \n ==== New TSL entry randomly chosen is: ==== \n"+ random_tsl_entry.toJSON())
+            
+
+                    blnk_file = os.path.join(self.my_preferences.path_to_binimage, 
+                    self.getMID_Directory(random_tsl_entry.mid), random_tsl_entry.bin_file.strip() + "." + 
+                    self.get_bin_type(random_tsl_entry.bin_type))
+                    
+                    # IMPORTANT currently only verifies BLNK files
+                    if random_tsl_entry.bin_type == "BLNK": 
+                        localhash = self.dobnk(blnk_file, random_seed, random_seed_idx, random_tsl_entry.mid, blocksize=65535)
+                    else:
+                        print("Trying to Process BLNK file") # Shouldn't get here
+                        sys.exit(1) 
+                    
+                    # Need to format Hashes
+                    tmpStr = str(localhash).lstrip('0X').zfill(40) # forces 40 characters with starting 0 characters. 
+                    tmpStr = str(localhash).lstrip('0x').zfill(40)
+                    localhash = self.getQCAS_Expected_output(tmpStr).upper() # format it
+                    
+                    psl_entries_list = list() 
+                    # Compare Hash with PSL Entry
+                    if msl == self.nextMonth_MSLfile: 
+                        psl_entries_list = self.check_file_format(self.nextMonth_PSLfile, 'PSL')  # generate PSL object list for next month (Important) 
+                    elif msl == self.MSLfile: 
+                        psl_entries_list = self.check_file_format(self.PSLfile, 'PSL')  # generate PSL object list for next month (Important) 
+
+                    for psl_entry in psl_entries_list: 
+                        if random_tsl_entry.ssan == psl_entry.ssan: 
+                            psl_from_file = psl_entry
+                            break # not expecting any other matches. 
+
+                    # Compare generated hash against the hash from PSL file. 
+                    self.assertEqual(localhash, psl_from_file.hash_list[hash_list_idx], msg="seed: " + random_seed + " idx=" + str(hash_list_idx))
+                        
+                    complete = True # set the flag.
+
+            else: 
+                print("\nSkipping: " + random_tsl_entry.game_name + ". Reason: " 
+                    + random_tsl_entry.bin_type + " file type, can't be processed at this time")
+
+            if complete == True: 
+                break
