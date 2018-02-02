@@ -201,13 +201,9 @@ class test_chk01_checklist(QCASTestClient):
                     random_seed = mslfile[0].seed_list[random_seed_idx]         
                     hash_list_idx = mslfile[0].seed_list.index(random_seed)
 
-                    print("\n\n MSLfile: " + msl + " \n ==== Old TSL entry randomly chosen is: ==== \n"+ random_tsl_entry.toJSON())
+                    print("\n\n ==== Old TSL entry randomly chosen, with MSLfile: [" 
+                        + os.path.basename(msl) + "] ==== \n"+ random_tsl_entry.toJSON())
                     
-                    #blnk_file = os.path.join(self.my_preferences.path_to_binimage, 
-                    #        self.getMID_Directory(random_tsl_entry.mid), 
-                    #        random_tsl_entry.bin_file.strip() 
-                    #        + "." + str(self.get_bin_type(random_tsl_entry.bin_type)))
-
                     blnk_file = os.path.join(self.my_preferences.path_to_binimage, 
                     self.getMID_Directory(random_tsl_entry.mid), random_tsl_entry.bin_file.strip() + "." + 
                     self.get_bin_type(random_tsl_entry.bin_type))
@@ -267,10 +263,10 @@ class test_chk01_checklist(QCASTestClient):
                     random_seed_idx =  random.randint(0,30) # Choose a random day for the month
                     mslfile = self.check_file_format(msl, 'MSL')
                     random_seed = mslfile[0].seed_list[random_seed_idx]  
-                    print("random_seed_idx: " +  str(random_seed_idx))
                     hash_list_idx = mslfile[0].seed_list.index(random_seed)
 
-                    print("\n\n MSLfile: " + msl + " \n ==== New TSL entry randomly chosen is: ==== \n"+ random_tsl_entry.toJSON())
+                    print("\n\n ==== New TSL entry randomly chosen, with MSLfile: [" 
+                        + os.path.basename(msl) + "] ==== \n"+ random_tsl_entry.toJSON())
             
 
                     blnk_file = os.path.join(self.my_preferences.path_to_binimage, 

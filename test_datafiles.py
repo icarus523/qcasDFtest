@@ -139,6 +139,9 @@ class CacheMemory:
                     return(str(item['hash'])) # return Hash result
         else:
             return 0
+    
+    def toJSON(self): 
+        return (json.dumps(self, default=lambda o: o.__dict__, sort_keys = True, indent=4))
 
 class CacheFile:
 
@@ -698,7 +701,7 @@ class QCASTestClient(unittest.TestCase):
         size = os.path.getsize(fname)
         # Read in chunksize blocks at a time
         with open(fname, 'rb') as f:
-            print("\nHashing: %(file_name)-30s\tSeed[%(s_index)2s]: %(seed)8s [in file: %(reversed)8s]\t" % 
+            print("\nHashing: %(file_name)-30s\tSeed[%(s_index)2s]: %(seed)8s [in MSLfile as: %(reversed)8s]\t" % 
                 {   'file_name' : os.path.basename(fname), 
                     's_index': seed_index+1, 
                     'seed': seed,
@@ -718,6 +721,7 @@ class QCASTestClient(unittest.TestCase):
                 else:
                     sys.stdout.write("%7d" % 100 + "%" + p_reset)
 
+            
         return m.hexdigest()
         
     def get_bin_type(self, bin_type):
