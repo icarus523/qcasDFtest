@@ -586,6 +586,9 @@ class QCASTestClient(unittest.TestCase):
         timestamp = str(datetime.now())
         # month = datetime.now().strftime("%B")
         
+        # sort tsl_game_list by manufacturer
+        tsl_game_list_sorted = sorted(tsl_game_list, key=lambda tsl_game_list: tsl_game_list.mid)
+        
         today = datetime.now()
         this_month = today
         next_month = today + timedelta(days=31) 
