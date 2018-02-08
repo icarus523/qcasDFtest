@@ -34,7 +34,6 @@ class Preferences:
             # default values
             self.data = { 'path_to_binimage' : self.path_to_binimage,
                           'mid_list' : self.mid_list,
-                          'cache_filename' : self.cache_filename,
                           'valid_bin_types' : self.valid_bin_types,
                           'epsig_log_file' : self.epsig_log_file,
                           'previous_TSLfile' : "qcas_2017_09_v02.tsl", 
@@ -54,7 +53,6 @@ class Preferences:
             # data file preferences
             self.path_to_binimage = data['path_to_binimage']
             self.mid_list = data['mid_list']
-            #self.cache_filename = data['cache_filename']
             self.valid_bin_types = data['valid_bin_types']
             self.previous_TSLfile = data['previous_TSLfile']
             self.epsig_log_file = data['epsig_log_file']
@@ -847,7 +845,7 @@ class QCASTestClient(unittest.TestCase):
             with open(blnk_file, 'r') as file:         # Read BNK file
                 field_names = ['fname', 'type', 'blah']
                 reader = csv.DictReader(file, delimiter=' ', fieldnames=field_names)
-                
+
                 for row in reader: 
                     if row['type'].upper() == 'SHA1': # To handle CR32, 0A4R, 0A4F
                         rv = True
@@ -858,9 +856,7 @@ class QCASTestClient(unittest.TestCase):
             rv = False
 
         return rv
-
     
-        
         
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG, format=' %(asctime)s - %(levelname)s- %(message)s')
