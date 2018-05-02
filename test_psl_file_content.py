@@ -13,6 +13,15 @@ class test_PSLfile_content(QCASTestClient):
             # is approximately 1055KB as at July 2013.
             self.assertTrue(size_in_bytes.st_size > 1055000)
     
+    def test_psl_size_reduction()
+        psl_files = [self.PSLfile, self.nextMonth_PSLfile] 
+
+        PSLfile_size_in_bytes = os.stat(self.PSLfile)
+        nextMonth_PSLfile_size_in_bytes = os.stat(self.nextMonth_PSLfile)
+        
+        # VS request: 10.	The reduction of size of the PSL file from its previous version is not highlighted / checked.
+        self.assertTrue(nextMonth_PSLfile_size_in_bytes > PSLfile_size_in_bytes) 
+    
     def test_PSL_content_can_be_parsed(self):
         pslfile_list = [self.PSLfile, self.nextMonth_PSLfile] # test both months
 
