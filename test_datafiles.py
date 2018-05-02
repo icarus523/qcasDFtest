@@ -10,6 +10,8 @@ import difflib
 import pickle
 import getpass
 from datetime import datetime, timedelta
+from time import sleep
+
 p_reset = "\x08"*8
 
 class Preferences: 
@@ -775,17 +777,17 @@ class QCASTestClient(unittest.TestCase):
     # input: epsig command_str as represented in the log
     # output: none, function verifies the fields used in command string
     def verify_epsig_command_used(self, command_str): 
-        command_str = command_str.lstrip()
-        self.assertTrue(command_str.startswith("D:\OLGR-TECHSERV\MISC\BINIMAGE\qcas\epsigQCAS3_5.exe"))
+        command_str = command_str[2:].lstrip() # strip drive
+        self.assertTrue(command_str.startswith("\OLGR-TECHSERV\MISC\BINIMAGE\qcas\epsigQCAS3_5.exe"))
 
         fields = command_str.split(' ')
         # assert(len(fields) == 5)
         
         command = fields[0]
-        self.assertTrue(command == "D:\OLGR-TECHSERV\MISC\BINIMAGE\qcas\epsigQCAS3_5.exe")
+        self.assertTrue(command[2:] == "\OLGR-TECHSERV\MISC\BINIMAGE\qcas\epsigQCAS3_5.exe")
         
         path = fields[1]
-        self.assertTrue(path == "d:\OLGR-TECHSERV\BINIMAGE\*.*")
+        self.assertTrue(path[2:] == "\OLGR-TECHSERV\BINIMAGE\*.*")
         
         msl = fields[2]
         msl_list = [self.MSLfile, self.nextMonth_MSLfile]
@@ -859,6 +861,29 @@ class QCASTestClient(unittest.TestCase):
             rv = False
 
         return rv
+       
+    # Print iterations progress
+    # Source: https://stackoverflow.com/questions/3173320/text-progress-bar-in-the-console
+    def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█'):
+        """
+        Call in a loop to create terminal progress bar
+        @params:
+            iteration   - Required  : current iteration (Int)
+            total       - Required  : total iterations (Int)
+            prefix      - Optional  : prefix string (Str)
+            suffix      - Optional  : suffix string (Str)
+            decimals    - Optional  : positive number of decimals in percent complete (Int)
+            length      - Optional  : character length of bar (Int)
+            fill        - Optional  : bar fill character (Str)
+        """
+        percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
+        filledLength = int(length * iteration // total)
+        bar = fill * filledLength + '-' * (length - filledLength)
+        print('\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix), end = '\r')
+        # Print New Line on Complete
+        if iteration == total: 
+            print()
+    
     
         
 if __name__ == '__main__':
