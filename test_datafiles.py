@@ -605,9 +605,9 @@ class QCASTestClient(unittest.TestCase):
             file.writelines("Please find attached the MSL/PSL files for " 
                 + this_month.strftime("%B %Y") + " and " + next_month.strftime("%B %Y") + "\n")
             file.writelines("\nAdditions: \n\n")
-            for game in tsl_game_list: 
-                file.writelines(self.get_manufacturer_name(game.mid) + ":\t" 
-                    + game.game_name + "\tSSAN:" + str(game.ssan) + "\n")
+            for game in tsl_game_list_sorted: 
+                file.writelines(self.get_manufacturer_name(game.mid) + ":\t\t" 
+                    + game.game_name + "\t\tSSAN:" + str(game.ssan) + "\n")
             
             file.writelines("\nRemovals: \n\n")
             file.writelines("Please acknowledge the receipt of the attached MSL/PSL files via a return email within the next two (2) business days.\n")
