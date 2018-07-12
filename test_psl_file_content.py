@@ -1,6 +1,70 @@
+import os
+import unittest
 from test_datafiles import QCASTestClient, PSLfile
 
 class test_PSLfile_content(QCASTestClient): 
+
+    def test_psl_size_is_reasonable(self): 
+        psl_files = [self.PSLfile, self.nextMonth_PSLfile] 
+        for psl_file in psl_files: 
+            size_in_bytes = os.stat(psl_file).st_size # filesize
+            
+            # Verify that the size of the PSL files is reasonable. 
+            # (The size range generally grows a few Kilobytes per run) and 
+            # is approximately 1055KB as at July 2013.
+            self.assertTrue(size_in_bytes > 1055000)
+    
+    # @unittest.expectedFailure
+    def test_psl_size_reduction(self):
+        psl_files = [self.PSLfile, self.nextMonth_PSLfile] 
+
+        PSLfile_size_in_bytes = os.stat(self.PSLfile).st_size # filesize
+        nextMonth_PSLfile_size_in_bytes = os.stat(self.nextMonth_PSLfile).st_size # filesize
+        
+        # +/-10% of the current PSL size is acceptable. 
+        acceptable_size = float(PSLfile_size_in_bytes) * self.my_preferences.percent_changed_acceptable # 0.10
+        
+        warning_string_upper = "expected: " + str(float(PSLfile_size_in_bytes) + acceptable_size) + " bytes, calculated: " + str(nextMonth_PSLfile_size_in_bytes)
+        warning_string_lower = "expected: " + str(float(PSLfile_size_in_bytes) - acceptable_size) + " bytes, calculated: " + str(nextMonth_PSLfile_size_in_bytes)
+        
+        self.assertTrue(nextMonth_PSLfile_size_in_bytes < (float(PSLfile_size_in_bytes) + acceptable_size), warning_string_upper) 
+        self.assertTrue(nextMonth_PSLfile_size_in_bytes > (float(PSLfile_size_in_bytes) - acceptable_size), warning_string_lower)  
+        
+        # VS request: 10.	The reduction of size of the PSL file from its previous version is not highlighted / checked.
+        #self.assertTrue(nextMonth_PSLfile_size_in_bytes > PSLfile_size_in_bytes) 
+    
+    def test_PSL_content_can_be_parsed(self):
+        pslfile_list = [self.PSLfile, self.nextMonth_PSLfile] # test both months
+
+        for pslfile in pslfile_list: 
+            # Check for PSL File Format by Instantiating an object of PSL type
+            game_list = self.check_file_format(pslfile, 'PSL')
+
+            for game in game_list:
+                # Check for PSL manufacturer field
+                self.assertTrue(self.check_manufacturer(game.manufacturer))
+
+                # Check for PSL Game name field
+                self.assertTrue(self.check_game_name(game.game_name))
+
+                # Check for PSL year field
+                self.assertTrue(self.check_year_field(game.year))
+                
+                # Check for PSL month field
+                self.assertTrue(self.check_month_field(game.month))
+
+                # Check Hash List for each day of the month, with the seed. 
+                # self.assertTrue(self.check_hash_list(game.hash_list))
+
+            with open(pslfile) as f:
+                psl_file_num_lines = len(f.readlines()) # read number of lines in text file
+        
+            self.assertTrue(len(game_list) == psl_file_num_lines) # Check the number of lines equal
+
+
+    def test_Read_PSL_file_from_disk(self):
+        self.assertTrue(os.path.isfile(self.PSLfile))
+        self.assertTrue(os.path.isfile(self.nextMonth_PSLfile))
     
     # Verify that valid MIDs have PSL entries. 
     def test_valid_MIDs_have_PSL_entries(self): 
@@ -52,4 +116,5 @@ class test_PSLfile_content(QCASTestClient):
                 self.assertEqual(int(game.year), int(self.get_filename_year(pslfile)))
 
         
-        
+
+            

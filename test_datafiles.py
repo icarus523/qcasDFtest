@@ -7,7 +7,11 @@ import hashlib
 import sys
 import json
 import difflib
-from datetime import datetime
+import pickle
+import getpass
+from datetime import datetime, timedelta
+from time import sleep
+
 p_reset = "\x08"*8
 
 class Preferences: 
@@ -15,20 +19,23 @@ class Preferences:
     def __init__(self): 
         preference_filename = 'preferences.dat'
         self.data = dict()
+
+        self.psl_file_list = list()
+        self.msl_file_list = list()
+        self.tsl_file_list = list() 
         
         if os.path.isfile(preference_filename): 
             self.readfile(preference_filename)
         else: 
             self.path_to_binimage = '\\\Justice.qld.gov.au\\Data\\OLGR-TECHSERV\\BINIMAGE'
             self.mid_list = [ '00', '01', '05', '07', '09', '12', '17']
-            self.cache_filename = 'qcas_df_cache_file.json'
+            #self.cache_filename = 'qcas_df_cache_file.json'
             self.valid_bin_types = VALID_BIN_TYPE = ['BLNK','PS32','SHA1']
             self.epsig_log_file = 'G:\\OLGR-TECHSERV\\MISC\\BINIMAGE\\qcas\\log\\epsig.log'
             
             # default values
             self.data = { 'path_to_binimage' : self.path_to_binimage,
                           'mid_list' : self.mid_list,
-                          'cache_filename' : self.cache_filename,
                           'valid_bin_types' : self.valid_bin_types,
                           'epsig_log_file' : self.epsig_log_file,
                           'previous_TSLfile' : "qcas_2017_09_v02.tsl", 
@@ -37,6 +44,9 @@ class Preferences:
                           'nextMonth_PSLfile': "qcas_2017_11_v01.psl", 
                           'MSLfile' : "qcas_2017_10_v01.msl",
                           'nextMonth_MSLfile' : "qcas_2017_11_v01.msl",
+                          'write_new_games_to_file': "new_games.json",
+                          'skip_lengthy_validations': "true",
+                          'percent_changed_acceptable' : 0.10
                         }
             self.writefile(preference_filename)
             
@@ -46,10 +56,12 @@ class Preferences:
             # data file preferences
             self.path_to_binimage = data['path_to_binimage']
             self.mid_list = data['mid_list']
-            self.cache_filename = data['cache_filename']
             self.valid_bin_types = data['valid_bin_types']
             self.previous_TSLfile = data['previous_TSLfile']
             self.epsig_log_file = data['epsig_log_file']
+            self.write_new_games_to_file = data['write_new_games_to_file']
+            self.skip_lengthy_validations = data['skip_lengthy_validations']
+            self.percent_changed_acceptable = data['percent_changed_acceptable']
             
             # Datafiles 
             self.TSLfile = data['TSLfile']
@@ -58,31 +70,106 @@ class Preferences:
             self.MSLfile = data['MSLfile']
             self.nextMonth_MSLfile = data['nextMonth_MSLfile']
             
+    def scan_datafiles(self): 
+        df_list = dict([(f, None) for f in os.listdir(".")])
+
+        for file in df_list: 
+            if file.upper().endswith('.PSL'):
+                self.psl_file_list.append(file)
+            elif file.upper().endswith('.MSL'): 
+                self.msl_file_list.append(file)
+            elif file.upper().endswith('.TSL'): 
+                self.tsl_file_list.append(file)
+            else: 
+                pass # don't care about other files
+
+        # expect two files 
+        assert(len(self.psl_file_list) == 2) 
+        # 'PSLfile' : "qcas_2017_10_v03.psl", 
+        # 'nextMonth_PSLfile': "qcas_2017_11_v01.psl",    
+    
+        ordered_psl_file = self.identify_datafiles(self.psl_file_list)
+
+        print("Sorted PSL file: " + ",".join(ordered_psl_file))
+    
+    def identify_datafiles(self, datafile): 
+        # Verify Year 
+        if QCASTestClient.get_filename_year(datafile[0]) == QCASTestClient.get_filename_year(datafile[1]): 
+            # Same Year: Verify Month
+            if QCASTestClient.get_filename_month(filename=datafile[0]) ==  QCASTestClient.get_filename_month(filename=datafile[1]): 
+                # Same Year & Month, Verify Version
+                if QCASTestClient.get_filename_version(filename=datafile[0]) < QCASTestClient.get_filename_version(filename=datafile[1]): 
+                    return [datafile[0], datafile[1]]
+                else: 
+                    return [datafile[1], datafile[0]]
+            elif QCASTestClient.get_filename_month(filename=datafile[0]) <  QCASTestClient.get_filename_month(filename=datafile[1]): 
+                return [datafile[0], datafile[1]]
+            else: 
+                return [datafile[1], datafile[0]]
+                
+        elif QCASTestClient.get_filename_year(filename=datafile[0]) < QCASTestClient.get_filename_year(filename=datafile[1]): 
+            return [datafile[0], datafile[1]]
+        else: 
+            return [datafile[1], datafile[0]]
+            
     def toJSON(self): 
         return (json.dumps(self, default=lambda o: o.__dict__, sort_keys = True, indent=4))
     
     def writefile(self, fname): 
         with open(fname, 'w') as outfile: 
             json.dump(self.data, outfile,sort_keys=False, indent=4, separators=(',', ': '))
-        
-class CacheFile: 
+    
+    def will_skip_lengthy_validations(self):   
+        if self.skip_lengthy_validations == "true": 
+            return True
+        else:
+            return False
+
+class CacheMemory: 
+
+    def __init__(self):
+        self.cache_dict = {} 
+
+    def checkCacheFilename(self, filename, seed_input, alg_input): # alg_input
+        # For filename_seed, concatenate to form unique string. 
+        if filename in self.cache_dict.keys(): # a hit?
+            data = self.cache_dict.get(filename) # now a list
+            for item in data:
+                # Check if Seed and Algorithm matches. 
+                if item['seed'] == seed_input and item['alg'] == alg_input: 
+                    verified_time = item['verify'] 
+                    return(str(item['hash'])) # return Hash result
+        else:
+            return 0
+    
+    def toJSON(self): 
+        return (json.dumps(self, default=lambda o: o.__dict__, sort_keys = True, indent=4))
+
+class CacheFile:
 
     def __init__(self, fname): 
-        self.cache_file = fname
-        self.cache_dict = self.importCacheFile()
-                
+        if os.path.isfile(fname): 
+            self.cache_file = fname
+            self.sigsCacheFile = self.cache_file[:-4] + "sigs" # .json file renaming to .sigs file
+            # no File Cache
+            # self.cache_dict = self.importCacheFile()
+            self.cache_dict = {} 
+                    
     def importCacheFile(self):
+        cache_data = {} 
+
         if os.path.isfile(self.cache_file): 
             # Verify Cache Integrity
-            #cache_file_sigs_filename = self.cache_file[:-4] + ".sigs"
-            #if self.verifyCacheIntegrity(cache_file_sigs_filename): 
-            with open(self.cache_file,'r') as json_cachefile: 
-                cache_data = json.load(json_cachefile)
-            #else: 
-            #    logging.warning("**** WARNING **** File Cache integrity issue: " +
-            #           " Cannot Verify signature")
-            #    logging.info("Generating new File Cache file:" + self.cache_file)
-            #    cache_data = {} # return empty cache
+            cache_file_sigs_filename = self.cache_file[:-4] + ".sigs"
+            
+            if self.verifyCacheIntegrity(cache_file_sigs_filename): 
+                with open(self.cache_file,'r') as json_cachefile: 
+                    cache_data = json.load(json_cachefile)
+            else: 
+                logging.warning("**** WARNING **** File Cache integrity issue: " +
+                       " Cannot Verify signature")
+                logging.info("Generating new File Cache file:" + self.cache_file)
+                cache_data = {} # return empty cache
         else:
             logging.info(self.cache_file + 
                 " cannot be found. Generating default file...")
@@ -94,8 +181,11 @@ class CacheFile:
                     indent=4, 
                     separators=(',', ': '))
                 print('Run script again, empty cache file created')
+                self.signCacheFile()
                 sys.exit(0)
         
+        self.signCacheFile()
+
         return(cache_data)
 
     def checkCacheFilename(self, filename, seed_input, alg_input): # alg_input
@@ -111,27 +201,30 @@ class CacheFile:
             return 0
     
     def verifyCacheIntegrity(self, cache_location_sigs): 
+        hashm = {}
+        
         if os.path.isfile(cache_location_sigs): # Sigs file exist?
-            with open(cache_location_sigs, 'r') as sigs_file: 
+            with open(cache_location_sigs, 'rb') as sigs_file: 
                 cache_sigs_data = json.load(sigs_file)
                 hashm = cache_sigs_data['cachefile_hash']
                 #fname = cache_sigs_data['filename']
-                
-                generated_hash = QCASTestClient.dohash_sha256(self.cache_file, 8192)
-                if hashm == generated_hash: 
-                    return True
-                else: 
-                    return False     
         else: 
             # advise user
             logging.warning("\n**** WARNING **** Generating new Cache Sigs file\n") 
             self.signCacheFile() # Generate Cache Sigs file
+            
+        generated_hash = QCASTestClient.dohash_sha256(self.cache_file, 8192)
+        
+        if hashm == generated_hash: 
+            return True
+        else: 
+            return False     
+        
         
     def signCacheFile(self):
-        sigsCacheFile = self.cache_file[:-4] + "sigs" # .json file renaming to .sigs file
         h = QCASTestClient.dohash_sha256(self.cache_file, 8192) # requires file name as input
         
-        with open(sigsCacheFile,'w') as sigs_file:    
+        with open(self.sigsCacheFile,'w+') as sigs_file:    
             timestamp = datetime.now()
             sigs_dict = { 'cachefile_hash' : h,
                           'filename': self.cache_file,
@@ -147,15 +240,13 @@ class CacheFile:
         
     def updateCacheFile(self):
         if os.path.isfile(self.cache_file):
-            with open(self.cache_file, 'w') as json_cachefile:
+            with open(self.cache_file, 'w+') as json_cachefile:
                 json.dump(self.cache_dict,
                           json_cachefile,
                           sort_keys=True,
                           indent=4,
                           separators=(',', ': '))
-            
-        # self.signCacheFile() # Sign Cache
-    
+                
 class PSLfile:
     # helper class for PSL file
     def __init__(self, line):
@@ -210,7 +301,10 @@ class PSLfile:
                 elif s[0]=='+':
                     print(u'Add "{}" to position {}'.format(s[-1],i))    
             print()
-
+    
+    def toJSON(self): 
+        return (json.dumps(self, default=lambda o: o.__dict__, sort_keys = True, indent=4))
+        
 class MSLfile:
     # helper class for MSL file
     def __init__(self, line):
@@ -250,7 +344,9 @@ class TSLfile:
         
         self.bin_type = fields[4].strip()
         assert(self.bin_type in my_preferences.valid_bin_types)
-        
+    
+    def toJSON(self): 
+        return (json.dumps(self, default=lambda o: o.__dict__, sort_keys = True, indent=4))
         
 # Derived unittest.TestCase class used for unittest testing. 
 class QCASTestClient(unittest.TestCase):
@@ -260,7 +356,9 @@ class QCASTestClient(unittest.TestCase):
         # Read from JSON file
         # Global Vars, Paths, and QCAS datafile names
         self.my_preferences = Preferences() 
-        
+        self.psl_cache_file = CacheMemory() ## Use a cache memory 
+        # self.psl_cache_file = CacheFile(self.my_preferences.cache_filename) # use a Cachefile - all defaults
+
         ###############################################
         ## Files to Verify
         ## Modify the following files only
@@ -281,6 +379,7 @@ class QCASTestClient(unittest.TestCase):
             'month': datetime.now().month,
             'year': datetime.now().year
         }
+        self.write_new_games_to_file = self.my_preferences.write_new_games_to_file
         
         if self.this_month['month'] == 12:
             self.next_month = {
@@ -292,6 +391,14 @@ class QCASTestClient(unittest.TestCase):
                 'month': int(self.this_month['month']) + 1,
                 'year': self.this_month['year']
             }
+
+        ## Configure logger
+        self.logger = logging.getLogger('qcas_datafile_test')
+        hdlr = logging.FileHandler('output.log')
+        formatter = logging.Formatter(' %(asctime)s - %(levelname)s- %(message)s')
+        hdlr.setFormatter(formatter)
+        self.logger.addHandler(hdlr)
+        self.logger.setLevel(logging.DEBUG)
 
     def is_new_month(self, file1, file2):
         # new month is when file 2 version is equal to v1 and is less than file1 version. 
@@ -444,27 +551,91 @@ class QCASTestClient(unittest.TestCase):
             else:
                 return False
 
+    def get_oldgames_to_be_removed(self): 
+        tsl_difference_games_removed = set()
+        game_list_to_be_removed = list()
+
+        with open(self.previous_TSLfile, 'r') as file1: 
+            with open(self.TSLfile, 'r') as file2: 
+                tsl_difference_games_removed = set(file1).difference(file2)        
+        
+        for game in list(game_list_to_be_removed): # Single Line
+            game_list_to_be_removed.append(TSLfile(game)) # Generate TSL object        
+        
+        return game_list_to_be_removed
+    
     def get_newgames_to_be_added(self): 
         game_list_to_be_added = list()
-        tsl_difference = set()
+        tsl_difference_games_added = set()
 
         with open(self.TSLfile, 'r') as file1:
             with open(self.previous_TSLfile, 'r') as file2:
-                tsl_difference = set(file1).difference(file2)
+                tsl_difference_games_added = set(file1).difference(file2)
         
-        self.assertTrue(len(tsl_difference) > 0) # TSL files must be contain a new game? 
+        self.assertTrue(len(tsl_difference_games_added) > 0) # TSL files must be contain a new game? 
         # print("\nNew Games added: \n" + "".join(list(tsl_difference)))
   
         # Differences are the new games to be added. 
-        for game in list(tsl_difference): # Single Line
+        for game in list(tsl_difference_games_added): # Single Line
             game_list_to_be_added.append(TSLfile(game)) # Generate TSL object
+        
+        self.save_game_list_to_disk(game_list_to_be_added)  # write file to disk. 
         
         return game_list_to_be_added
     
+    # input: tsl object game list
+    # output: none
+    # writes to file new games
+    def save_game_list_to_disk(self, tsl_game_list): 
+        timestamp = str(datetime.now())
+        # month = datetime.now().strftime("%B")
+        
+        # sort tsl_game_list by manufacturer
+        tsl_game_list_sorted = sorted(tsl_game_list, key=lambda tsl_game_list: tsl_game_list.mid)
+        
+        today = datetime.now()
+        this_month = today
+        next_month = today + timedelta(days=31) 
+        # nextmonth = datetime.date(today.year, today.month+1, today.day)
+        # nextmonth = datetime.date(today.year + today.month+1, today.day) # datetime.timedelta(days=31)
+        
+        # json.dump(self.data, outfile,sort_keys=False, indent=4, separators=(',', ': '))
+
+        with open(self.write_new_games_to_file, 'w+') as file: 
+            file.writelines("==== Generated by: " + getpass.getuser() + "; Timestamp: " + timestamp + " ====\n")
+            file.writelines("\nTo Whom it may concern,\n\n")
+            file.writelines("Please find attached the MSL/PSL files for " 
+                + this_month.strftime("%B %Y") + " and " + next_month.strftime("%B %Y") + "\n")
+            file.writelines("\nAdditions: \n\n")
+            for game in tsl_game_list_sorted: 
+                file.writelines(self.get_manufacturer_name(game.mid) + ":\t\t" 
+                    + game.game_name + "\t\tSSAN:" + str(game.ssan) + "\n")
+            
+            file.writelines("\nRemovals: \n\n")
+            file.writelines("Please acknowledge the receipt of the attached MSL/PSL files via a return email within the next two (2) business days.\n")
+            file.writelines("<REMOVE>NOTE: VERIFY THAT THIS EMAIL CONTAINS ALL CORRECT TO: ADDRESSES PRIOR TO SENDING. <REMOVE>")
+
+    def get_manufacturer_name(self, s): 
+        if s == '00': 
+            return "Aristocrat"
+        elif s == '01': 
+            return "IGT"
+        elif s == '05': 
+            return "Aruze"
+        elif s == '07': 
+            return "Bally/SG Gaming"
+        elif s == '09':
+            return "Konami"
+        elif s == '12': 
+            return "AGT"
+        elif s == '17':
+            return "QGS"
+        else: 
+            return "Unknown Manufacturer: " + s
+    
     # input:    total path to BLNK file, MID and optional blocksize
     # output:   blnk hash result using seed. 
-    def dobnk(self, blnk_file, seed, mid, blocksize=65534):
-        psl_cache_file = CacheFile(self.my_preferences.cache_filename) # use a Cachefile - all defaults
+    def dobnk(self, blnk_file, seed, s_index, mid, blocksize=65534):
         oh = "0000000000000000000000000000000000000000"
 
         with open(blnk_file, 'r') as file:         # Read BNK file
@@ -473,15 +644,15 @@ class QCASTestClient(unittest.TestCase):
             # print(self.getQCAS_Expected_output(seed))
         
             for row in reader: 
-                if row['type'].upper() == 'SHA1':
+                if row['type'].upper() == 'SHA1': # To handle CR32, 0A4R, 0A4F
                     complete_path_to_file = os.path.join(self.my_preferences.path_to_binimage,self.getMID_Directory(mid), str(row['fname']))    
-                    cachedhit = psl_cache_file.checkCacheFilename(complete_path_to_file, self.getQCAS_Expected_output(seed), row['type'].upper()) 
+                    cachedhit = self.psl_cache_file.checkCacheFilename(complete_path_to_file, self.getQCAS_Expected_output(seed), row['type'].upper()) 
         
                     if cachedhit:
                         localhash = cachedhit # use cached data
                     else: 
                         new_cache_list = list()
-                        localhash = self.dohash_hmacsha1(complete_path_to_file, self.getQCAS_Expected_output(seed), blocksize) 
+                        localhash = self.dohash_hmacsha1(complete_path_to_file, s_index, self.getQCAS_Expected_output(seed), blocksize) 
                     
                         # create cache object
                         cache_object = { 
@@ -491,25 +662,25 @@ class QCASTestClient(unittest.TestCase):
                             'hash': localhash 
                         }        
                         
-                        cache_entry_list = psl_cache_file.cache_dict.get(complete_path_to_file) # Should return a list. 
+                        cache_entry_list = self.psl_cache_file.cache_dict.get(complete_path_to_file) # Should return a list. 
                         
                         if cache_entry_list :   # File Entry Exists, append to list
                             cache_entry_list.append(cache_object) # print this
-                            psl_cache_file.cache_dict[complete_path_to_file] = cache_entry_list
-                        else:                   # No File Entry Exits generate new list entry in cache_dict
+                            self.psl_cache_file.cache_dict[complete_path_to_file] = cache_entry_list
+                        else:        
+                            # No File Entry Exits generate new list entry in cache_dict
                             new_cache_list.append(cache_object)
-                            psl_cache_file.cache_dict[complete_path_to_file] = new_cache_list # keep unique
-                                                        
-                        psl_cache_file.updateCacheFile() # Update file cache
-    
+                            self.psl_cache_file.cache_dict[complete_path_to_file] = new_cache_list # keep unique
+                                                                                
                     if localhash == 0:
                         break
-                        
+                      
                     oh = hex(int(oh,16) ^ int(str(localhash), 16)) # XOR
 
                 else: 
-                    print(row['type'] + "  - Not processing any other file other than SHA1!")
-                    sys.exit(1)    
+                    # print(row['type'] + "  - Not processing these Hash Types: CR32, 0A4R, 0A4F. Only supports .BNK files with SHA1: " + blnk_file)
+                    self.assertEqual(row['type'], "SHA1", msg=row['type'] + "  - Not processing these Hash Types: CR32, 0A4R, 0A4F. Only supports .BNK files with SHA1: " + blnk_file)
+                           
         return oh
              
     # input: file to be hashed using sha256()
@@ -528,20 +699,34 @@ class QCASTestClient(unittest.TestCase):
         
     # input: file to be hashed using hmac-sha1
     # output: hexdigest of input file    
-    def dohash_hmacsha1(self, fname, seed='00', chunksize=8192):
+    def dohash_hmacsha1(self, fname, seed_index, seed='00', chunksize=32768):
         key = bytes.fromhex(seed)
         m = hmac.new(key, digestmod = hashlib.sha1) # change this if you want other hashing types for HMAC, e.g. hashlib.md5
         done = 0
         size = os.path.getsize(fname)
         # Read in chunksize blocks at a time
         with open(fname, 'rb') as f:
-            #print("\nHashing: " + os.path.basename(fname) + "\tSeed:" + seed + "\t", end="")
+            print("\nHashing: %(file_name)-40s\tSeed[%(s_index)2s]: %(seed)8s [in MSLfile as: %(reversed)8s]\t" % 
+                {   'file_name' : os.path.basename(fname), 
+                    's_index': seed_index+1, 
+                    'seed': seed,
+                    'reversed': self.getQCAS_Expected_output(seed)
+                }, end="")
             while True:
                 block = f.read(chunksize)
-                done += chunksize
-                sys.stdout.write("%7d" % (done*100/size) + "%" + p_reset)
+                if done >= size: 
+                    done = size
+                else: 
+                    done += chunksize
                 if not block: break
                 m.update(block)      
+                
+                if (done*100/size) < 100: 
+                    sys.stdout.write("%7d" % (done*100/size) + "%" + p_reset)
+                else:
+                    sys.stdout.write("%7d" % 100 + "%" + p_reset)
+
+            
         return m.hexdigest()
         
     def get_bin_type(self, bin_type):
@@ -550,6 +735,8 @@ class QCASTestClient(unittest.TestCase):
         elif bin_type.startswith('SHA1'): 
             return "BIN"
         elif bin_type.startswith('CR32'): 
+            return "BIN"
+        elif bin_type.startswith('PS32'):
             return "BIN"
         else: 
             assert(bin_type in self.my_preferences.valid_bin_types)
@@ -564,12 +751,13 @@ class QCASTestClient(unittest.TestCase):
         elif (mid == '07'): manufacturer = 'VID'
         elif (mid == '09'): manufacturer = 'KONAMI'
         elif (mid == '12'): manufacturer = 'AGT'
-        elif (mid == '17'): manufacturer = 'VGT'
+        elif (mid == '17'): manufacturer = 'QGS'
         else:
             assert(mid in self.my_preferences.MID_LIST)
             
         return manufacturer
     
+
     # input:    string
     # output:   QCAS Expected output, i.e. 8 characters reversed
     def getQCAS_Expected_output(self, text):
@@ -590,36 +778,43 @@ class QCASTestClient(unittest.TestCase):
     
     # input: epsig command_str as represented in the log
     # output: none, function verifies the fields used in command string
+    # Z:\OLGR-TECHSERV\MISC\BINIMAGE\qcas\epsigQCAS3_5.exe z:\OLGR-TECHSERV\BINIMAGE\*.* qcas_2018_08_v01.msl qcas_2018_07_v02.tsl qcas_2018_08_v01.psl 
     def verify_epsig_command_used(self, command_str): 
-        command_str = command_str.lstrip()
-        self.assertTrue(command_str.startswith("D:\OLGR-TECHSERV\MISC\BINIMAGE\qcas\epsigQCAS3_5.exe"))
+        command_str = command_str.lstrip()[2:] # strip drive
+        
+        self.assertTrue(command_str.startswith("\OLGR-TECHSERV\MISC\BINIMAGE\qcas\epsigQCAS3_5.exe"))
 
         fields = command_str.split(' ')
         # assert(len(fields) == 5)
         
-        command = fields[0]
-        self.assertTrue(command == "D:\OLGR-TECHSERV\MISC\BINIMAGE\qcas\epsigQCAS3_5.exe")
+        command = fields[0].strip()
+        self.assertTrue(command == "\OLGR-TECHSERV\MISC\BINIMAGE\qcas\epsigQCAS3_5.exe")
         
-        path = fields[1]
-        self.assertTrue(path == "d:\OLGR-TECHSERV\BINIMAGE\*.*")
+        path = fields[1].strip()
+        self.assertTrue(path[2:] == "\OLGR-TECHSERV\BINIMAGE\*.*")
         
-        msl = fields[2]
+        msl = fields[2].strip()
         msl_list = [self.MSLfile, self.nextMonth_MSLfile]
         self.assertTrue(any(msl in x for x in msl_list)) 
         
-        tsl = fields[3]
+        tsl = fields[3].strip()
         tsl_list = [self.TSLfile, self.previous_TSLfile]
         self.assertTrue(any(tsl in x for x in tsl_list))
         
-        psl = fields[4]
-        self.assertTrue(psl in [self.PSLfile, self.nextMonth_PSLfile])
+        psl = fields[4].strip()
+        
+        # remove paths
+        head, psl_tail = os.path.split(self.PSLfile)
+        head, psl_tail2 = os.path.split(self.nextMonth_PSLfile)
+
+        self.assertTrue(psl in [psl_tail, psl_tail2])
 
     # input:    complete path to blnk file, TSL game object to for blnk file
     # output:   list containing two (2) PSL entries (text) for two months for the TSL game object
     def generate_PSL_entry(self, blnk_file, TSL_object):
         psl_entry = ''
         psl_entry_list = list()
-       
+
         msl_file_list = [self.MSLfile, self.nextMonth_MSLfile]
     
         for msl_file in msl_file_list: # Check both months
@@ -632,16 +827,73 @@ class QCASTestClient(unittest.TestCase):
 
             for seed in seed_list: 
                 # def dobnk(self, fname, seed, mid, blocksize:65534)
-                h = self.dobnk(blnk_file, seed, TSL_object.mid, blocksize=65534)
-            
+                h = self.dobnk(blnk_file, seed, seed_list.index(seed), TSL_object.mid, blocksize=65535)
+
                 tmpStr = str(h).lstrip('0X').zfill(40) # forces 40 characters with starting 0 characters. 
                 tmpStr = str(h).lstrip('0x').zfill(40)
             
                 psl_entry += self.getQCAS_Expected_output(tmpStr).upper() + ","
             
             psl_entry_list.append(psl_entry.rstrip(','))
-                    
+        
+        # self.psl_cache_file.signCacheFile()
+        
         return psl_entry_list
+    
+    # Confirm whether this game can be processed by this script.
+    # Returns: Boolean
+    # Input: TSL game object
+    def check_game_type(self, tsl_entry_object): 
+        rv = None
+
+        if tsl_entry_object.bin_type == 'BLNK':  # Check only BLNK files 
+
+            # Check the contents of the BLNK file to make sure that 
+            # 0A4R, 0A4F types are handled. 
+
+            blnk_file = os.path.join(self.my_preferences.path_to_binimage, 
+                self.getMID_Directory(tsl_entry_object.mid), 
+                tsl_entry_object.bin_file.strip() + "." + self.get_bin_type(tsl_entry_object.bin_type))
+
+            # inspect the bin file
+            with open(blnk_file, 'r') as file:         # Read BNK file
+                field_names = ['fname', 'type', 'blah']
+                reader = csv.DictReader(file, delimiter=' ', fieldnames=field_names)
+
+                for row in reader: 
+                    if row['type'].upper() == 'SHA1': # To handle CR32, 0A4R, 0A4F
+                        rv = True
+                    else: 
+                        rv = False # Everything other than SHA1 in BLNK files are invalid. 
+
+        else: 
+            rv = False
+
+        return rv
+       
+    # Print iterations progress
+    # Source: https://stackoverflow.com/questions/3173320/text-progress-bar-in-the-console
+    def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█'):
+        """
+        Call in a loop to create terminal progress bar
+        @params:
+            iteration   - Required  : current iteration (Int)
+            total       - Required  : total iterations (Int)
+            prefix      - Optional  : prefix string (Str)
+            suffix      - Optional  : suffix string (Str)
+            decimals    - Optional  : positive number of decimals in percent complete (Int)
+            length      - Optional  : character length of bar (Int)
+            fill        - Optional  : bar fill character (Str)
+        """
+        percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
+        filledLength = int(length * iteration // total)
+        bar = fill * filledLength + '-' * (length - filledLength)
+        print('\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix), end = '\r')
+        # Print New Line on Complete
+        if iteration == total: 
+            print()
+    
+    
         
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG, format=' %(asctime)s - %(levelname)s- %(message)s')

@@ -27,7 +27,6 @@ class test_file_name_format(QCASTestClient):
         if self.is_new_year(self.MSLfile):
             self.assertEqual(int(next_month_year), 1)
 
-
     def test_MSL_filename_version(self):
         version = self.get_filename_version(self.MSLfile)
         nextmonth_version = self.get_filename_version(self.nextMonth_MSLfile)
