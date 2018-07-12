@@ -45,7 +45,8 @@ class Preferences:
                           'MSLfile' : "qcas_2017_10_v01.msl",
                           'nextMonth_MSLfile' : "qcas_2017_11_v01.msl",
                           'write_new_games_to_file': "new_games.json",
-                          'skip_lengthy_validations': "true"
+                          'skip_lengthy_validations': "true",
+                          'percent_changed_acceptable' : 0.10
                         }
             self.writefile(preference_filename)
             
@@ -60,6 +61,7 @@ class Preferences:
             self.epsig_log_file = data['epsig_log_file']
             self.write_new_games_to_file = data['write_new_games_to_file']
             self.skip_lengthy_validations = data['skip_lengthy_validations']
+            self.percent_changed_acceptable = data['percent_changed_acceptable']
             
             # Datafiles 
             self.TSLfile = data['TSLfile']
@@ -627,7 +629,7 @@ class QCASTestClient(unittest.TestCase):
         elif s == '12': 
             return "AGT"
         elif s == '17':
-            return "VGT"
+            return "QGS"
         else: 
             return "Unknown Manufacturer: " + s
     
@@ -704,7 +706,7 @@ class QCASTestClient(unittest.TestCase):
         size = os.path.getsize(fname)
         # Read in chunksize blocks at a time
         with open(fname, 'rb') as f:
-            print("\nHashing: %(file_name)-30s\tSeed[%(s_index)2s]: %(seed)8s [in MSLfile as: %(reversed)8s]\t" % 
+            print("\nHashing: %(file_name)-40s\tSeed[%(s_index)2s]: %(seed)8s [in MSLfile as: %(reversed)8s]\t" % 
                 {   'file_name' : os.path.basename(fname), 
                     's_index': seed_index+1, 
                     'seed': seed,
@@ -749,7 +751,7 @@ class QCASTestClient(unittest.TestCase):
         elif (mid == '07'): manufacturer = 'VID'
         elif (mid == '09'): manufacturer = 'KONAMI'
         elif (mid == '12'): manufacturer = 'AGT'
-        elif (mid == '17'): manufacturer = 'VGT'
+        elif (mid == '17'): manufacturer = 'QGS'
         else:
             assert(mid in self.my_preferences.MID_LIST)
             
@@ -776,29 +778,36 @@ class QCASTestClient(unittest.TestCase):
     
     # input: epsig command_str as represented in the log
     # output: none, function verifies the fields used in command string
+    # Z:\OLGR-TECHSERV\MISC\BINIMAGE\qcas\epsigQCAS3_5.exe z:\OLGR-TECHSERV\BINIMAGE\*.* qcas_2018_08_v01.msl qcas_2018_07_v02.tsl qcas_2018_08_v01.psl 
     def verify_epsig_command_used(self, command_str): 
-        command_str = command_str[2:].lstrip() # strip drive
+        command_str = command_str.lstrip()[2:] # strip drive
+        
         self.assertTrue(command_str.startswith("\OLGR-TECHSERV\MISC\BINIMAGE\qcas\epsigQCAS3_5.exe"))
 
         fields = command_str.split(' ')
         # assert(len(fields) == 5)
         
-        command = fields[0]
-        self.assertTrue(command[2:] == "\OLGR-TECHSERV\MISC\BINIMAGE\qcas\epsigQCAS3_5.exe")
+        command = fields[0].strip()
+        self.assertTrue(command == "\OLGR-TECHSERV\MISC\BINIMAGE\qcas\epsigQCAS3_5.exe")
         
-        path = fields[1]
+        path = fields[1].strip()
         self.assertTrue(path[2:] == "\OLGR-TECHSERV\BINIMAGE\*.*")
         
-        msl = fields[2]
+        msl = fields[2].strip()
         msl_list = [self.MSLfile, self.nextMonth_MSLfile]
         self.assertTrue(any(msl in x for x in msl_list)) 
         
-        tsl = fields[3]
+        tsl = fields[3].strip()
         tsl_list = [self.TSLfile, self.previous_TSLfile]
         self.assertTrue(any(tsl in x for x in tsl_list))
         
-        psl = fields[4]
-        self.assertTrue(psl in [self.PSLfile, self.nextMonth_PSLfile])
+        psl = fields[4].strip()
+        
+        # remove paths
+        head, psl_tail = os.path.split(self.PSLfile)
+        head, psl_tail2 = os.path.split(self.nextMonth_PSLfile)
+
+        self.assertTrue(psl in [psl_tail, psl_tail2])
 
     # input:    complete path to blnk file, TSL game object to for blnk file
     # output:   list containing two (2) PSL entries (text) for two months for the TSL game object
