@@ -219,7 +219,8 @@ class test_chk01_checklist(QCASTestClient):
                     tmpStr = str(localhash).lstrip('0X').zfill(40) # forces 40 characters with starting 0 characters. 
                     tmpStr = str(localhash).lstrip('0x').zfill(40)
                     localhash = self.getQCAS_Expected_output(tmpStr).upper() # format it
-                    
+                    print("\nHash Generated for: " + os.path.basename(blnk_file) + " = [" + localhash + "]")
+
                     psl_entries_list = list() 
                     # Compare Hash with PSL Entry
                     if msl == self.nextMonth_MSLfile: 
@@ -284,6 +285,7 @@ class test_chk01_checklist(QCASTestClient):
                     tmpStr = str(localhash).lstrip('0X').zfill(40) # forces 40 characters with starting 0 characters. 
                     tmpStr = str(localhash).lstrip('0x').zfill(40)
                     localhash = self.getQCAS_Expected_output(tmpStr).upper() # format it
+                    print("\nHash Generated for: " + os.path.basename(blnk_file) + " = [" + localhash + "]")
                     
                     psl_entries_list = list() 
                     # Compare Hash with PSL Entry

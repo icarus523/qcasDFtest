@@ -1,0 +1,27 @@
+{
+    "MSLfile": "G:\\OLGR-TECHSERV\\MISC\\BINIMAGE\\qcas\\qcas_2018_07_v01.msl",
+    "PSLfile": "G:\\OLGR-TECHSERV\\MISC\\BINIMAGE\\qcas\\qcas_2018_07_v03.psl",
+    "TSLfile": "G:\\OLGR-TECHSERV\\MISC\\BINIMAGE\\qcas\\qcas_2018_07_v02.tsl",
+    "epsig_log_file": "G:\\OLGR-TECHSERV\\MISC\\BINIMAGE\\qcas\\log\\epsig.log",
+    "mid_list": [
+        "00",
+        "01",
+        "05",
+        "07",
+        "09",
+        "12",
+        "17"
+    ],
+    "nextMonth_MSLfile": "G:\\OLGR-TECHSERV\\MISC\\BINIMAGE\\qcas\\qcas_2018_08_v01.msl",
+    "nextMonth_PSLfile": "G:\\OLGR-TECHSERV\\MISC\\BINIMAGE\\qcas\\qcas_2018_08_v01.psl",
+    "path_to_binimage": "\\\\Justice.qld.gov.au\\Data\\OLGR-TECHSERV\\BINIMAGE",
+    "previous_TSLfile": "G:\\OLGR-TECHSERV\\MISC\\BINIMAGE\\qcas\\qcas_2018_06_v03.tsl",
+    "write_new_games_to_file": "new_games.json",
+    "valid_bin_types": [
+        "BLNK",
+        "PS32",
+        "SHA1"
+    ],
+    "skip_lengthy_validations": "true",
+    "percent_changed_acceptable" : 0.10
+}

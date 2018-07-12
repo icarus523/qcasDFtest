@@ -4,7 +4,9 @@ import glob
 import os
 import hashlib
 from datetime import datetime
-from test_datafiles import Preferences, CacheFile
+from test_datafiles import Preferences
+
+os.system('mode con: cols=150 lines=2500')
 
 # input: file to be hashed using sha256()
 # output: hexdigest of input file    
@@ -21,6 +23,7 @@ def dohash_sha256(fname, chunksize=8192):
     return m.hexdigest()
 
 my_preferences = Preferences()
+
 if my_preferences.will_skip_lengthy_validations():
     print("\n ==== QCAS Unit Testing started on: " + str(datetime.now()) + " by: " + getpass.getuser() + " SKIPPING LENGTHY VALIDATIONS! ====\n")
 else: 
