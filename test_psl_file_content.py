@@ -27,11 +27,10 @@ class test_PSLfile_content(QCASTestClient):
         warning_string_upper = "expected: " + str(float(PSLfile_size_in_bytes) + acceptable_size) + " bytes, calculated: " + str(nextMonth_PSLfile_size_in_bytes)
         warning_string_lower = "expected: " + str(float(PSLfile_size_in_bytes) - acceptable_size) + " bytes, calculated: " + str(nextMonth_PSLfile_size_in_bytes)
         
+        # VS request: 10.	The reduction of size of the PSL file from its previous version is not highlighted / checked.
         self.assertTrue(nextMonth_PSLfile_size_in_bytes < (float(PSLfile_size_in_bytes) + acceptable_size), warning_string_upper) 
         self.assertTrue(nextMonth_PSLfile_size_in_bytes > (float(PSLfile_size_in_bytes) - acceptable_size), warning_string_lower)  
         
-        # VS request: 10.	The reduction of size of the PSL file from its previous version is not highlighted / checked.
-        #self.assertTrue(nextMonth_PSLfile_size_in_bytes > PSLfile_size_in_bytes) 
     
     def test_PSL_content_can_be_parsed(self):
         pslfile_list = [self.PSLfile, self.nextMonth_PSLfile] # test both months
@@ -87,7 +86,7 @@ class test_PSLfile_content(QCASTestClient):
             #   print("verified_manufacturer.sort(): " + ",".join(sorted_verified_mid))
             #   print("self.manufacturer_id_list.sort(): " + ",".join(self.manufacturer_id_list))
             
-            self.assertTrue(sorted_verified_mid, self.my_preferences.mid_list.sort())
+            self.assertEqual(sorted_verified_mid, self.my_preferences.mid_list)
                   
     
     def test_date_field_in_PSL_entry_equals_date_field_in_filename(self): 
