@@ -246,16 +246,66 @@ class CacheFile:
                           sort_keys=True,
                           indent=4,
                           separators=(',', ': '))
-                
+
+# PSLEntry with only one hash (random)
+class PSLEntry_OneHash: 
+    # helper class for PSL file
+    def __init__(self, line):
+        my_preferences = Preferences()
+        fields = str(line).split(',')
+            
+        self.game_name = fields[0].strip() # strip spaces
+        assert(len(self.game_name) < 31)
+       
+        self.manufacturer = fields[1]
+        assert(self.manufacturer in my_preferences.mid_list)
+        
+        self.year = int(fields[2])
+        valid_year = list(range(2017,9999))
+        assert(len(fields[2]) == 4)
+        assert(self.year in valid_year)
+        
+        self.month = int(fields[3])
+        valid_months = list(range(1,13))
+        assert(self.month in valid_months)
+        
+        assert(len(fields[4].strip()) == 10)
+        self.ssan = int(fields[4].strip())
+
+        self.hash = fields[5].strip()       
+        
+    def toString(self): 
+        self.psl_entry_str = "%(game_name)-30s,%(mid)02d,%(year)4s,%(month)02d,%(ssan)010d,%(hash)08s" % {'game_name': self.game_name, 'mid': int(self.manufacturer), 'year': self.year, 'month': int(self.month), 'ssan': int(self.ssan), 'hash': self.hash}
+
+        return self.psl_entry_str.strip(',')
+        
+    def identifyDifference(self, str1, str2): 
+        cases = [(str1, str2)] 
+        for a,b in cases:     
+            print('{} => {}'.format(a,b))  
+            for i,s in enumerate(difflib.ndiff(a, b)):
+                if s[0]==' ': continue
+                elif s[0]=='-':
+                    print(u'Delete "{}" from position {}'.format(s[-1],i))
+                elif s[0]=='+':
+                    print(u'Add "{}" to position {}'.format(s[-1],i))    
+            print()
+    
+    def toJSON(self): 
+        return (json.dumps(self, default=lambda o: o.__dict__, sort_keys = True, indent=4))
+                          
 class PSLfile:
     # helper class for PSL file
     def __init__(self, line):
         my_preferences = Preferences()
         fields = str(line).split(',')
-        input_line = line.strip(',') # remove trailing comma
-        
+        input_line = str(line).strip(',') # remove trailing comma
+
         self.game_name = fields[0].strip() # strip spaces
-        # print(len(self.game_name))
+        if len(self.game_name) > 31:
+            for item in fields: 
+                print(item)
+        
         assert(len(self.game_name) < 31)
        
         self.manufacturer = fields[1]
@@ -414,7 +464,7 @@ class QCASTestClient(unittest.TestCase):
             return False
 
     def check_game_name(self, game_name):
-        if len(game_name) > 1:
+        if len(game_name) > 1 and len(game_name) < 31:
             return True
         else:
             return False
@@ -608,8 +658,15 @@ class QCASTestClient(unittest.TestCase):
                 + this_month.strftime("%B %Y") + " and " + next_month.strftime("%B %Y") + "\n")
             file.writelines("\nAdditions: \n\n")
             for game in tsl_game_list_sorted: 
-                file.writelines(self.get_manufacturer_name(game.mid) + ":\t\t" 
-                    + game.game_name + "\t\tSSAN:" + str(game.ssan) + "\n")
+                str1 = str("\n%(man)15s\t%(game_name)40s\tSSAN: %(ssan)-10s" %
+                { 'man' : self.get_manufacturer_name(game.mid),
+                    'game_name' : game.game_name,
+                    'ssan': str(game.ssan)
+                })
+                file.writelines(str1)
+              
+                #self.get_manufacturer_name(game.mid) + ":\t\t" 
+                #    + game.game_name + "\t\tSSAN:" + str(game.ssan) + "\n")
             
             file.writelines("\nRemovals: \n\n")
             file.writelines("Please acknowledge the receipt of the attached MSL/PSL files via a return email within the next two (2) business days.\n")
@@ -839,6 +896,24 @@ class QCASTestClient(unittest.TestCase):
         # self.psl_cache_file.signCacheFile()
         
         return psl_entry_list
+    
+    def generate_PSL_entry_one_seed(self, blnk_file, TSL_object, seed, random_seed_idx):
+        psl_entry = ''
+        psl_entry_list = list()
+    
+        msl = self.check_file_format(self.MSLfile, 'MSL')
+        
+        psl_entry = "%(game_name)-30s,%(mid)02d,%(year)4s,%(month)02d,%(ssan)010d," % {'game_name': TSL_object.game_name[:30], 'mid': int(TSL_object.mid), 'year': msl[0].year, 'month': msl[0].month, 'ssan': TSL_object.ssan}
+
+        # def dobnk(self, fname, seed, mid, blocksize:65534)
+        h = self.dobnk(blnk_file, seed, random_seed_idx, TSL_object.mid, blocksize=65535)
+
+        tmpStr = str(h).lstrip('0X').zfill(40) # forces 40 characters with starting 0 characters. 
+        tmpStr = str(h).lstrip('0x').zfill(40)
+    
+        psl_entry += self.getQCAS_Expected_output(tmpStr).upper() + ","
+                
+        return psl_entry
     
     # Confirm whether this game can be processed by this script.
     # Returns: Boolean

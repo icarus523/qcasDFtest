@@ -5,7 +5,7 @@ import unittest
 import sys
 import json
 import pickle
-from test_datafiles import QCASTestClient, PSLfile, TSLfile, MSLfile, Preferences
+from test_datafiles import QCASTestClient, PSLfile, PSLEntry_OneHash, TSLfile, MSLfile, Preferences
 
 def skipping_length_tests(): 
     my_preferences = Preferences()
@@ -28,16 +28,15 @@ class test_chk01_checklist(QCASTestClient):
         self.assertFalse(len(same) > 0, 
         	msg=self.PSLfile + " is the same as: " + self.nextMonth_PSLfile)
     
-    @unittest.skipIf(skipping_length_tests(), "Skipping Lengthy Validations")            
     def test_new_games_to_be_added_are_in_PSL_files(self):
         game_list_to_be_added = self.get_newgames_to_be_added()
         
         if len(game_list_to_be_added) > 0: 
-            print("\n ==== New Games added ====\n")
+            print("\n\n ==== New Games added ====\n")
             for tsl_game_item in game_list_to_be_added:
                 print(tsl_game_item.toJSON())    
         else: 
-            print("\n ==== No new games added ==== \n")
+            print("\n\n ==== No new games added ==== \n")
             
         # Find these games in the both PSL files
         psl_file_list = [self.PSLfile, self.nextMonth_PSLfile] 
@@ -50,17 +49,21 @@ class test_chk01_checklist(QCASTestClient):
                 for psl_entry in psl_entries_list: 
                     if game.ssan == psl_entry.ssan: # TSL entry SSAN == PSL entry SSAN
                         verified_game.append(game)  # List of TSL entries that have been verified. 
+                        break
             
-            # TSL lists            
-            psl_difference = list(set(verified_game).intersection(set(game_list_to_be_added))) 
+            psl_same = list(set(verified_game).intersection(set(game_list_to_be_added))) 
             
             # For each PSL file does verified_game match game_list_to_be_added? 
-            self.assertTrue(set(verified_game).intersection(set(game_list_to_be_added)), 
-            	msg="New PSL entry not found in PSL file") 
+            self.assertTrue(set(verified_game) == set(game_list_to_be_added))
+            
+            #self.assertTrue(set(verified_game).intersection(set(game_list_to_be_added)), 
+            #	msg="New PSL entry not found in PSL file") 
+    
+            
     
     @unittest.skipUnless(os.path.isdir('\\\\Justice.qld.gov.au\\Data\\OLGR-TECHSERV\\BINIMAGE'), "requires Binimage Path")
-    @unittest.skipIf(skipping_length_tests(), "Skipping Lengthy Validations")            
-    def test_TSL_entries_exist_in_PSL_files(self):        
+    @unittest.skipIf(skipping_length_tests(), "Skipping Lengthy Validations")        
+    def test_TSL_entries_exist_in_PSL_files_full(self):        
         # Read TSL entry
         # Generate PSL entry with seeds
         # Find that this PSL entry exits in PSL file. 
@@ -200,7 +203,8 @@ class test_chk01_checklist(QCASTestClient):
                     mslfile = self.check_file_format(msl, 'MSL')
                     random_seed = mslfile[0].seed_list[random_seed_idx]         
                     hash_list_idx = mslfile[0].seed_list.index(random_seed)
-
+                    print("\nRandom Seed index is: " + str(random_seed_idx) + " Random Seed: " + str(random_seed))
+                    
                     print("\n\n ==== Old TSL entry randomly chosen, with MSLfile: [" 
                         + os.path.basename(msl) + "] ==== \n"+ random_tsl_entry.toJSON())
                     
@@ -240,7 +244,8 @@ class test_chk01_checklist(QCASTestClient):
 
             else: 
                 print("\nSkipping: " + random_tsl_entry.game_name + ". Reason: " 
-                    + random_tsl_entry.bin_type + " file type, can't be processed at this time")
+                    + random_tsl_entry.bin_type + " TSL file type, unsupported")
+                complete = False
 
             if complete == True: 
                 break
@@ -306,7 +311,7 @@ class test_chk01_checklist(QCASTestClient):
 
             else: 
                 print("\nSkipping: " + random_tsl_entry.game_name + ". Reason: " 
-                    + random_tsl_entry.bin_type + " file type, can't be processed at this time")
+                    + random_tsl_entry.bin_type + " TSL file type, unsupported")
 
             if complete == True: 
                 break
