@@ -33,11 +33,26 @@ There is an option in the preferences.dat file to skip lengthy checks.
 ```
 
 Change the above variable to `"skip_lengthy_validations": "true"` and the script will avoid any lengthy tests. These include: 
+```
+test_new_games_to_be_added_are_in_PSL_files()
+test_One_old_game_to_be_added_in_PSL_files_full()
+test_One_new_game_to_be_added_in_PSL_files_full()
+test_TSL_entries_exist_in_PSL_files()
+```
 
-`test_new_games_to_be_added_are_in_PSL_files()`
-`test_One_old_game_to_be_added_in_PSL_files_full()`
-`test_One_new_game_to_be_added_in_PSL_files_full()`
-`test_TSL_entries_exist_in_PSL_files()`
+4. Other configurations
+Refer to `preferences.dat` file and change the following to suit
+
+```
+"percent_changed_acceptable" : 0.10,
+```
+This parameter is related to the PSL change in file size, i.e. 10% expected file size will be acceptable. 
+
+```
+"verbose_mode" : "false"
+```
+This parameter will display more "output" onscreen, including the generation of hashes for each component in a BLNK file. 
+Can slow the script down. 
 
 ---
 # Unit Test Module Details
@@ -105,15 +120,17 @@ This test script verifies the expected output of the EPSIG log.
 #### `test_Read_Epsig_log_file_from_disk()`
 - Verifies self.my_preferences.epsig_log_file can be read from disk
 
-#### `test_Epsig_Log_file()`
+#### `test_epsig_log_file_last_four_entries_are_valid_for_psl_versions()`
 - Verifies the last entry of the Epsig log file
 - Verifies the version of EPSIG being used (expected: v3.5)
 - Verifies that the time stamp for when EPSIG last ran is reasonable (within 7 days)
 - Verifies that the time stamp for when EPSIG last completed is reasonable (within 7 days)
 - Verifies that the end of the Epsig Log File indicates: "with EXIT_SUCCESS"
+- Verifies that the PSL versions per month are incremented by 1. 
+
+### `test_epsig_log_file_last_two_entries_command_str_is_valid`
+- Verifies for the last two entries in the epsig log file are complete
 - Verifies that the command that was used for Epsig is correct. (Correct Epsig Binary used; Correct BINIMAGE Path used: i.e. G:\; Correct Datafiles referenced, i.e. MSL file is `self.MSLfile or self.nextMonth_MSLfile`; TSL file is `self.TSLfile`; PSL file is `self.PSLfile or self.nextMonth_PSLfile`
-
-
 
 ## Filename Test Module: `test_file_name_format.py`
 Generic test scripts for correct file name format and conventions. 
