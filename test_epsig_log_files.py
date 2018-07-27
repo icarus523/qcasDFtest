@@ -54,7 +54,7 @@ class test_epsig_log_files(QCASTestClient):
     def test_Read_Epsig_log_file_from_disk(self):
         self.assertTrue(os.path.isfile(self.my_preferences.epsig_log_file), 
         	msg=self.my_preferences.epsig_log_file + ": File not found")
-
+            
     def test_epsig_log_file_last_four_entries_are_valid_for_psl_versions(self): 
         # EPSIG.EXE Version 3.5 Copyright The State of Queensland 1999-2015
         # Started at   Fri Oct 06 08:41:37 2017
@@ -94,7 +94,6 @@ class test_epsig_log_files(QCASTestClient):
                 # Valid Start Date: Assume within 7 days from current date
                 time_stamp_start_obj = datetime.strptime(log_file.time_stamp_start_str[13:], "%a %b %d %H:%M:%S %Y")
                 time_delta = today - time_stamp_start_obj
-                #print("Number of days since last epsig log started: " + str(time_delta.days))
                 self.assertTrue(time_delta.days < NUMBER_OF_VALID_DAYS_SINCE_START_OF_LOG, 
                     msg="Number of days since last epsig log started is greater than " + str(NUMBER_OF_VALID_DAYS_SINCE_START_OF_LOG)) # less than NUMBER_OF_VALID_DAYS_SINCE_START_OF_LOG days
 
@@ -109,7 +108,8 @@ class test_epsig_log_files(QCASTestClient):
                     self.assertEqual(log_file.footer_status, " with EXIT_SUCCESS", 
                         msg="Epsig Log file did not end with 'EXIT_SUCCESS")
                 else: 
-                    print("#### WARNING: Entry in EPSIG log indicates it has not finished. ####")
+                    if self.my_preferences.verbose_mode == "true": 
+                        print("#### WARNING: Entry in EPSIG log indicates it has not finished. ####")
 
                 # Need to Verify PSL files used in the last 4 Entries are correct
                 psl_files = list()

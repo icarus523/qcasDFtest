@@ -31,13 +31,14 @@ class test_chk01_checklist(QCASTestClient):
     def test_new_games_to_be_added_are_in_PSL_files(self):
         game_list_to_be_added = self.get_newgames_to_be_added()
         
-        if len(game_list_to_be_added) > 0: 
-            print("\n\n ==== New Games added ====\n")
-            for tsl_game_item in game_list_to_be_added:
-                print(tsl_game_item.toJSON())    
-        else: 
-            print("\n\n ==== No new games added ==== \n")
-            
+        if self.my_preferences.verbose_mode == "true": 
+            if len(game_list_to_be_added) > 0: 
+                print("\n\n ==== New Games added ====\n")
+                for tsl_game_item in game_list_to_be_added:
+                    print(tsl_game_item.toJSON())    
+            else: 
+                print("\n\n ==== No new games added ==== \n")
+                
         # Find these games in the both PSL files
         psl_file_list = [self.PSLfile, self.nextMonth_PSLfile] 
         verified_game = list()
@@ -119,12 +120,13 @@ class test_chk01_checklist(QCASTestClient):
         #psl_difference = list(set(psl_file_list1).intersection(set(psl_file_list2))) 
         games_to_be_removed = list() 
         games_to_be_removed = self.get_oldgames_to_be_removed()
-        if len(games_to_be_removed) > 1: 
-            print("\nIdentified Games removed: ")
-            for tsl_game_item in games_to_be_removed:
-                print(tsl_game_item.toJSON())
-        else:
-            print("\nNo Games removed!", end="")
+        if self.my_preferences.verbose_mode == "true": 
+            if len(games_to_be_removed) > 1: 
+                print("\nIdentified Games removed: ")
+                for tsl_game_item in games_to_be_removed:
+                    print(tsl_game_item.toJSON())
+            else:
+                print("\nNo Games removed!", end="")
             
     # Generate PSL entries for one randomly chosen new game in the new TSL file
     # Compare with PSL files and make sure that entries for both months matches 
@@ -136,12 +138,14 @@ class test_chk01_checklist(QCASTestClient):
         blnk_file = os.path.join(self.my_preferences.path_to_binimage, 
             self.getMID_Directory(random_tsl_entry.mid), 
             random_tsl_entry.bin_file.strip() + "." + self.get_bin_type(random_tsl_entry.bin_type))
-        print("\nGenerating PSL entry for one [NEW] approved game: " +  random_tsl_entry.game_name + "; MID: " + random_tsl_entry.mid)
+        if self.my_preferences.verbose_mode == "true": 
+            print("\nGenerating PSL entry for one [NEW] approved game: " +  random_tsl_entry.game_name + "; MID: " + random_tsl_entry.mid)
 
         psl_entry_list = self.generate_PSL_entry(blnk_file, random_tsl_entry)
 
-        for psl_entry in psl_entry_list: 
-            print("\n" + psl_entry)
+        if self.my_preferences.verbose_mode == "true": 
+            for psl_entry in psl_entry_list: 
+                print("\n" + psl_entry)
         
         self.assertEqual(len(psl_entry_list), 2, 
         	msg="Expected 2 PSL entries: " + ','.join(psl_entry_list)) # one PSL entry for each month       
@@ -170,17 +174,21 @@ class test_chk01_checklist(QCASTestClient):
                     random_tsl_entry.bin_file.strip() + "." + 
                     str(self.get_bin_type(random_tsl_entry.bin_type)))
                 complete = True
-                print("\nGenerating PSL entry for one [OLD] approved game: " +  random_tsl_entry.game_name + "; MID: " + random_tsl_entry.mid)
+                if self.my_preferences.verbose_mode == "true": 
+                    print("\nGenerating PSL entry for one [OLD] approved game: " +  random_tsl_entry.game_name + "; MID: " + random_tsl_entry.mid)
 
                 psl_entry_list = self.generate_PSL_entry(blnk_file, random_tsl_entry) # Slow process
-                for psl_entry in psl_entry_list: 
-                    print("\n" + psl_entry)    
+
+                if self.my_preferences.verbose_mode == "true": 
+                    for psl_entry in psl_entry_list: 
+                        print("\n" + psl_entry)    
                     
                 self.assertEqual(len(psl_entry_list), 2, msg="Expected 2 PSL entries: " + ','.join(psl_entry_list)) # one PSL entry for each month       
                 self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[0], self.PSLfile), msg=psl_entry_list[0] + ", entry did not exist in " + self.PSLfile)
                 self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[1], self.nextMonth_PSLfile), msg=psl_entry_list[1] + ", entry did not exist in " + self.nextMonth_PSLfile)
             else: 
-                print("\nSkipping: " + random_tsl_entry.game_name + ". Reason: " + random_tsl_entry.bin_type + " file type")
+                if self.my_preferences.verbose_mode == "true": 
+                    print("\nSkipping: " + random_tsl_entry.game_name + ". Reason: " + random_tsl_entry.bin_type + " file type")
                 
     
     # Unit test to address complaints about verifying a complete PSL entry being too slow
@@ -204,9 +212,10 @@ class test_chk01_checklist(QCASTestClient):
                     random_seed = mslfile[0].seed_list[random_seed_idx]         
                     hash_list_idx = mslfile[0].seed_list.index(random_seed)
                     
-                    print("\n\n ==== Old TSL entry randomly chosen, with MSLfile: [" 
-                        + os.path.basename(msl) + "] ==== \n"+ random_tsl_entry.toJSON())
-                    
+                    if self.my_preferences.verbose_mode == "true": 
+                        print("\n\n ==== Old TSL entry randomly chosen, with MSLfile: [" 
+                            + os.path.basename(msl) + "] ==== \n"+ random_tsl_entry.toJSON())
+                        
                     blnk_file = os.path.join(self.my_preferences.path_to_binimage, 
                     self.getMID_Directory(random_tsl_entry.mid), random_tsl_entry.bin_file.strip() + "." + 
                     self.get_bin_type(random_tsl_entry.bin_type))
@@ -222,7 +231,9 @@ class test_chk01_checklist(QCASTestClient):
                     tmpStr = str(localhash).lstrip('0X').zfill(40) # forces 40 characters with starting 0 characters. 
                     tmpStr = str(localhash).lstrip('0x').zfill(40)
                     localhash = self.getQCAS_Expected_output(tmpStr).upper() # format it
-                    print("\nHash Generated for: " + os.path.basename(blnk_file) + " = [" + localhash + "]")
+                    
+                    if self.my_preferences.verbose_mode == "true": 
+                        print("\nHash Generated for: " + os.path.basename(blnk_file) + " = [" + localhash + "]")
 
                     psl_entries_list = list() 
                     # Compare Hash with PSL Entry
@@ -242,8 +253,9 @@ class test_chk01_checklist(QCASTestClient):
                     complete = True # set the flag.
 
             else: 
-                print("\nSkipping: " + random_tsl_entry.game_name + ". Reason: " 
-                    + random_tsl_entry.bin_type + " TSL file type, unsupported")
+                if self.my_preferences.verbose_mode == "true": 
+                    print("\nSkipping: " + random_tsl_entry.game_name + ". Reason: " 
+                        + random_tsl_entry.bin_type + " TSL file type, unsupported")
                 complete = False
 
             if complete == True: 
@@ -270,10 +282,10 @@ class test_chk01_checklist(QCASTestClient):
                     random_seed = mslfile[0].seed_list[random_seed_idx]  
                     hash_list_idx = mslfile[0].seed_list.index(random_seed)
 
-                    print("\n\n ==== New TSL entry randomly chosen, with MSLfile: [" 
-                        + os.path.basename(msl) + "] ==== \n"+ random_tsl_entry.toJSON())
-            
-
+                    if self.my_preferences.verbose_mode == "true": 
+                        print("\n\n ==== New TSL entry randomly chosen, with MSLfile: [" 
+                            + os.path.basename(msl) + "] ==== \n"+ random_tsl_entry.toJSON())
+                
                     blnk_file = os.path.join(self.my_preferences.path_to_binimage, 
                     self.getMID_Directory(random_tsl_entry.mid), random_tsl_entry.bin_file.strip() + "." + 
                     self.get_bin_type(random_tsl_entry.bin_type))
@@ -289,7 +301,9 @@ class test_chk01_checklist(QCASTestClient):
                     tmpStr = str(localhash).lstrip('0X').zfill(40) # forces 40 characters with starting 0 characters. 
                     tmpStr = str(localhash).lstrip('0x').zfill(40)
                     localhash = self.getQCAS_Expected_output(tmpStr).upper() # format it
-                    print("\nHash Generated for: " + os.path.basename(blnk_file) + " = [" + localhash + "]")
+                    
+                    if self.my_preferences.verbose_mode == "true": 
+                        print("\nHash Generated for: " + os.path.basename(blnk_file) + " = [" + localhash + "]")
                     
                     psl_entries_list = list() 
                     # Compare Hash with PSL Entry
@@ -309,8 +323,9 @@ class test_chk01_checklist(QCASTestClient):
                     complete = True # set the flag.
 
             else: 
-                print("\nSkipping: " + random_tsl_entry.game_name + ". Reason: " 
-                    + random_tsl_entry.bin_type + " TSL file type, unsupported")
+                if self.my_preferences.verbose_mode == "true": 
+                    print("\nSkipping: " + random_tsl_entry.game_name + ". Reason: " 
+                        + random_tsl_entry.bin_type + " TSL file type, unsupported")
 
             if complete == True: 
                 break

@@ -46,7 +46,8 @@ class Preferences:
                           'nextMonth_MSLfile' : "qcas_2017_11_v01.msl",
                           'write_new_games_to_file': "new_games.json",
                           'skip_lengthy_validations': "true",
-                          'percent_changed_acceptable' : 0.10
+                          'percent_changed_acceptable' : 0.10,
+                          'verbose_mode': "true" 
                         }
             self.writefile(preference_filename)
             
@@ -62,6 +63,7 @@ class Preferences:
             self.write_new_games_to_file = data['write_new_games_to_file']
             self.skip_lengthy_validations = data['skip_lengthy_validations']
             self.percent_changed_acceptable = data['percent_changed_acceptable']
+            self.verbose_mode = data['verbose_mode']
             
             # Datafiles 
             self.TSLfile = data['TSLfile']
@@ -90,7 +92,8 @@ class Preferences:
     
         ordered_psl_file = self.identify_datafiles(self.psl_file_list)
 
-        print("Sorted PSL file: " + ",".join(ordered_psl_file))
+        if self.my_preferences.verbose_mode == "true": 
+            print("Sorted PSL file: " + ",".join(ordered_psl_file))
     
     def identify_datafiles(self, datafile): 
         # Verify Year 
@@ -302,9 +305,6 @@ class PSLfile:
         input_line = str(line).strip(',') # remove trailing comma
 
         self.game_name = fields[0].strip() # strip spaces
-        if len(self.game_name) > 31:
-            for item in fields: 
-                print(item)
         
         assert(len(self.game_name) < 31)
        
@@ -707,7 +707,6 @@ class QCASTestClient(unittest.TestCase):
         with open(blnk_file, 'r') as file:         # Read BNK file
             field_names = ['fname', 'type', 'blah']
             reader = csv.DictReader(file, delimiter=' ', fieldnames=field_names)
-            # print(self.getQCAS_Expected_output(seed))
         
             for row in reader: 
                 if row['type'].upper() == 'SHA1': # To handle CR32, 0A4R, 0A4F
@@ -744,7 +743,6 @@ class QCASTestClient(unittest.TestCase):
                     oh = hex(int(oh,16) ^ int(str(localhash), 16)) # XOR
 
                 else: 
-                    # print(row['type'] + "  - Not processing these Hash Types: CR32, 0A4R, 0A4F. Only supports .BNK files with SHA1: " + blnk_file)
                     self.assertEqual(row['type'], "SHA1", msg=row['type'] + "  - Not processing these Hash Types: CR32, 0A4R, 0A4F. Only supports .BNK files with SHA1: " + blnk_file)
                            
         return oh
@@ -772,12 +770,14 @@ class QCASTestClient(unittest.TestCase):
         size = os.path.getsize(fname)
         # Read in chunksize blocks at a time
         with open(fname, 'rb') as f:
-            print("\nHashing: %(file_name)-40s\tSeed[%(s_index)2s]: %(seed)8s [in MSLfile as: %(reversed)8s]\t" % 
-                {   'file_name' : os.path.basename(fname), 
-                    's_index': seed_index+1, 
-                    'seed': seed,
-                    'reversed': self.getQCAS_Expected_output(seed)
-                }, end="")
+            if self.my_preferences.verbose_mode == "true": 
+                print("\nHashing: %(file_name)-40s\tSeed[%(s_index)2s]: %(seed)8s [in MSLfile as: %(reversed)8s]\t" % 
+                    {   'file_name' : os.path.basename(fname), 
+                        's_index': seed_index+1, 
+                        'seed': seed,
+                        'reversed': self.getQCAS_Expected_output(seed)
+                    }, end="")
+                    
             while True:
                 block = f.read(chunksize)
                 if done >= size: 
@@ -787,10 +787,11 @@ class QCASTestClient(unittest.TestCase):
                 if not block: break
                 m.update(block)      
                 
-                if (done*100/size) < 100: 
-                    sys.stdout.write("%7d" % (done*100/size) + "%" + p_reset)
-                else:
-                    sys.stdout.write("%7d" % 100 + "%" + p_reset)
+                if self.my_preferences.verbose_mode == "true": 
+                    if (done*100/size) < 100: 
+                        sys.stdout.write("%7d" % (done*100/size) + "%" + p_reset)
+                    else:
+                        sys.stdout.write("%7d" % 100 + "%" + p_reset)
 
             
         return m.hexdigest()
