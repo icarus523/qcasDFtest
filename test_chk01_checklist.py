@@ -203,7 +203,6 @@ class test_chk01_checklist(QCASTestClient):
                     mslfile = self.check_file_format(msl, 'MSL')
                     random_seed = mslfile[0].seed_list[random_seed_idx]         
                     hash_list_idx = mslfile[0].seed_list.index(random_seed)
-                    print("\nRandom Seed index is: " + str(random_seed_idx) + " Random Seed: " + str(random_seed))
                     
                     print("\n\n ==== Old TSL entry randomly chosen, with MSLfile: [" 
                         + os.path.basename(msl) + "] ==== \n"+ random_tsl_entry.toJSON())

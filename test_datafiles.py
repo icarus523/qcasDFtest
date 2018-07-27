@@ -450,6 +450,15 @@ class QCASTestClient(unittest.TestCase):
         self.logger.addHandler(hdlr)
         self.logger.setLevel(logging.DEBUG)
 
+    # input: num : number
+    # output: s : string formatted i.e. 01-09
+    def format_twoDigit(self, num):
+        if num < 10:
+            return("0" + str(num))
+        else:
+            return str(num)
+        
+        
     def is_new_month(self, file1, file2):
         # new month is when file 2 version is equal to v1 and is less than file1 version. 
         if int(self.get_filename_month(file2)) == 1 and int(self.get_filename_month(file1)) == 1:
