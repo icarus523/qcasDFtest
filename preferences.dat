@@ -23,5 +23,6 @@
         "SHA1"
     ],
     "skip_lengthy_validations": "true",
-    "percent_changed_acceptable" : 0.10
+    "percent_changed_acceptable" : 0.10,
+    "verbose_mode" : "false"
 }
