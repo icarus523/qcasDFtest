@@ -1,5 +1,6 @@
 import os
 from test_datafiles import QCASTestClient, PSLfile
+from tkinter import filedialog
 
 class test_file_name_format(QCASTestClient): 
 
@@ -50,12 +51,53 @@ class test_file_name_format(QCASTestClient):
         current_month = self.get_filename_month(self.PSLfile)
         next_month = self.get_filename_month(self.nextMonth_PSLfile)
         
+        # "PSLfile": "G:\\OLGR-TECHSERV\\MISC\\BINIMAGE\\qcas\\qcas_2018_07_v04.psl",
+        # "nextMonth_PSLfile": "G:\\OLGR-TECHSERV\\MISC\\BINIMAGE\\qcas\\qcas_2018_08_v02.psl",
+
+        
         # if month is the same, version should increment
         if current_month == next_month:
             # next month version should always be greater than current month
             self.assertTrue(int(next_month_psl_version) > int(psl_version))
-        else: 
-            self.assertEqual(int(next_month_psl_version), 1) # New Month, version is v1                           
+        else:
+            # Months are not equal, therefore versions can be anything
+            # without knowing what the previous current month file was 
+            # can't assume that the next month psl version is equal to 1.
+
+            # Assume the previous PSL file and previous nextMonthPSL file
+            previous_PSLfile = "qcas_" + self.get_filename_year(self.PSLfile) + "_" + current_month + "_v" + self.format_twoDigit(int(psl_version) - 1) + ".psl"
+            previous_nextMonth_PSLfile = "qcas_" + self.get_filename_year(self.nextMonth_PSLfile) + "_" + next_month + "_v" + self.format_twoDigit(int(next_month_psl_version) - 1) + ".psl"
+            path = os.path.dirname(self.PSLfile)
+            previous_PSLfile = os.path.join(path, previous_PSLfile)
+            previous_nextMonth_PSLfile = os.path.join(path, previous_nextMonth_PSLfile)
+            
+            # test these files exists, if they exist then the format of the files they were derived from (PSLfile and nextMonth PSLfile) is correct
+            self.assertTrue(os.path.isfile(previous_PSLfile))
+            self.assertTrue(os.path.isfile(previous_nextMonth_PSLfile))
+            
+            # Additional Validations for the assumed PSL files: 
+            # Parse the PSL files
+            pslfile_list = [previous_PSLfile, previous_nextMonth_PSLfile] # test both months
+
+            for pslfile in pslfile_list: 
+            # Check for PSL File Format by Instantiating an object of PSL type
+                game_list = self.check_file_format(pslfile, 'PSL')
+
+                for game in game_list:
+                    # Check for PSL manufacturer field
+                    self.assertTrue(self.check_manufacturer(game.manufacturer))
+
+                    # Check for PSL Game name field
+                    self.assertTrue(self.check_game_name(game.game_name))
+
+                    # Check for PSL year field
+                    self.assertTrue(self.check_year_field(game.year))
+                    
+                    # Check for PSL month field
+                    self.assertTrue(self.check_month_field(game.month))
+            
+        #else: 
+        #    self.assertEqual(int(next_month_psl_version), 1) # New Month, version is v1                           
         
     def test_PSL_filename_date(self):
         current_month = self.get_filename_month(self.PSLfile)
