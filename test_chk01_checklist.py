@@ -10,7 +10,7 @@ from test_datafiles import QCASTestClient, PSLfile, PSLEntry_OneHash, TSLfile, M
 def skipping_length_tests(): 
     my_preferences = Preferences()
     return my_preferences.will_skip_lengthy_validations()
-
+   
 class test_chk01_checklist(QCASTestClient):      
     
     def write_to_file(self, fname, data):
