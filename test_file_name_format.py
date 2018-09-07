@@ -1,13 +1,13 @@
 import os
 import unittest
-from test_datafiles import QCASTestClient, PSLfile, CHECK_ONE_FILE_ONLY_FLG
+from test_datafiles import QCASTestClient, PSLfile, skipping_PSL_comparison_tests
 
 class test_file_name_format(QCASTestClient): 
 
     def test_MSL_filename_ends_with_MSL(self):
         assert(str(self.MSLfile).upper().endswith("MSL"))
         
-        if not CHECK_ONE_FILE_ONLY_FLG: # Do Assert only for Both Months
+        if not skipping_PSL_comparison_tests(): # Do Assert only for Both Months
             assert(str(self.nextMonth_MSLfile).upper().endswith("MSL"))
 
     def test_MSL_filename_date(self):
@@ -15,7 +15,7 @@ class test_file_name_format(QCASTestClient):
         # year is to be same, unless current month = 12 (Dec)
         current_month_year = self.get_filename_year(self.MSLfile)
         
-        if not CHECK_ONE_FILE_ONLY_FLG:
+        if not skipping_PSL_comparison_tests():
             next_month = self.get_filename_month(self.nextMonth_MSLfile)
 
             # current month != next month
@@ -36,7 +36,7 @@ class test_file_name_format(QCASTestClient):
         version = self.get_filename_version(self.MSLfile)
         self.assertEqual(int(version), 1) # version must always be v1.
         
-        if not CHECK_ONE_FILE_ONLY_FLG:
+        if not skipping_PSL_comparison_tests():
             nextmonth_version = self.get_filename_version(self.nextMonth_MSLfile)
             self.assertEqual(int(nextmonth_version), 1) # version must always be v1.
 
@@ -47,7 +47,7 @@ class test_file_name_format(QCASTestClient):
     def test_PSLfile_ends_with_PSL(self):
         assert(str(self.PSLfile).upper().endswith("PSL"))
         
-        if not CHECK_ONE_FILE_ONLY_FLG:
+        if not skipping_PSL_comparison_tests():
             assert(str(self.nextMonth_PSLfile).upper().endswith("PSL"))
     
     ## @unittest.skip("Skipping PSL version inc tests")        
@@ -55,7 +55,7 @@ class test_file_name_format(QCASTestClient):
         psl_version = self.get_filename_version(self.PSLfile)
         current_month = self.get_filename_month(self.PSLfile)
         
-        if not CHECK_ONE_FILE_ONLY_FLG:
+        if not skipping_PSL_comparison_tests():
             next_month_psl_version = self.get_filename_version(self.nextMonth_PSLfile)
             next_month = self.get_filename_month(self.nextMonth_PSLfile)
 
@@ -112,7 +112,7 @@ class test_file_name_format(QCASTestClient):
         current_month = self.get_filename_month(self.PSLfile)
         current_month_year = self.get_filename_year(self.PSLfile)
         
-        if not CHECK_ONE_FILE_ONLY_FLG:
+        if not skipping_PSL_comparison_tests():
             next_month = self.get_filename_month(self.nextMonth_PSLfile)
 
             # current month != next month

@@ -899,7 +899,10 @@ class QCASTestClient(unittest.TestCase):
         psl_entry = ''
         psl_entry_list = list()
 
-        msl_file_list = [self.MSLfile, self.nextMonth_MSLfile]
+        if skipping_PSL_comparison_tests(): 
+            msl_file_list = [self.MSLfile]
+        else: 
+            msl_file_list = [self.MSLfile, self.nextMonth_MSLfile]
     
         for msl_file in msl_file_list: # Check both months
             msl = self.check_file_format(msl_file, 'MSL')
