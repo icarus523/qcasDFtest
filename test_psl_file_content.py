@@ -71,7 +71,7 @@ class test_PSLfile_content(QCASTestClient):
     def test_Read_PSL_file_from_disk(self):
         self.assertTrue(os.path.isfile(self.PSLfile))
         
-        if skipping_PSL_comparison_tests() == False:
+        if not skipping_PSL_comparison_tests():
             self.assertTrue(os.path.isfile(self.nextMonth_PSLfile))
     
     # Verify that valid MIDs have PSL entries. 

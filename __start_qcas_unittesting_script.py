@@ -4,7 +4,7 @@ import glob
 import os
 import hashlib
 from datetime import datetime
-from test_datafiles import Preferences, CHECK_ONE_FILE_ONLY_FLG
+from test_datafiles import Preferences, skipping_PSL_comparison_tests
 
 os.system('mode con: cols=150 lines=2500')
 
@@ -23,14 +23,23 @@ def dohash_sha256(fname, chunksize=8192):
     return m.hexdigest()
 
 my_preferences = Preferences()
-def_str = "\n ==== QCAS Unit Testing started on: " + str(datetime.now()) + " by: " + getpass.getuser()
+def_str = "\n ==== QCAS Unit Testing started on: " + str(datetime.now()) + " by: " + getpass.getuser()  + " ====\n"
+print(def_str) 
 
-if my_preferences.will_skip_lengthy_validations() and my_preferences.nextMonth_MSLfile == CHECK_ONE_FILE_ONLY_FLG:
-    print(def_str + " SKIPPING LENGTHY VALIDATIONS! with One Month Only ====\n")
-elif my_preferences.will_skip_lengthy_validations():
-    print(def_str + " SKIPPING LENGTHY VALIDATIONS!")
-else: 
-    print(def_str + "\n")
+print("\nUnit Test Configuration: ") 
+if my_preferences.will_skip_lengthy_validations():
+    print("\tSKIPPING LENGTHY VALIDATIONS!") 
+    
+if skipping_PSL_comparison_tests(): 
+    print("\tONE MONTH VALIDATIONS!")
+    
+if my_preferences.verbose_mode.upper() == "TRUE":
+    print("\tVERBOSE MODE = TRUE") 
+else:
+    print("\tVERBOSE MODE = FALSE") 
+
+
+    
 
 print("\nQCAS Unit Testing Configuration: " + my_preferences.toJSON() + "\n")
 

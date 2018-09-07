@@ -1,6 +1,6 @@
 import os
 import csv
-from test_datafiles import QCASTestClient, PSLfile, TSLfile, MSLfile, CHECK_ONE_FILE_ONLY_FLG
+from test_datafiles import QCASTestClient, PSLfile, TSLfile, MSLfile, skipping_PSL_comparison_tests
 
 class test_MSL_files(QCASTestClient):
 
@@ -9,7 +9,7 @@ class test_MSL_files(QCASTestClient):
     def test_MSL_size_is_reasonable(self): 
         msl_files = list() 
         
-        if self.nextMonth_MSLfile == CHECK_ONE_FILE_ONLY_FLG: 
+        if skipping_PSL_comparison_tests():
             msl_files = [self.MSLfile] 
         else:            
             msl_files = [self.MSLfile, self.nextMonth_MSLfile] 
@@ -24,7 +24,7 @@ class test_MSL_files(QCASTestClient):
     def test_MSL_content_can_be_parsed(self): 
         msl_files = list() 
         
-        if self.nextMonth_MSLfile == CHECK_ONE_FILE_ONLY_FLG: 
+        if skipping_PSL_comparison_tests(): 
             msl_files = [self.MSLfile] 
         else:
             msl_files = [self.MSLfile, self.nextMonth_MSLfile] 
@@ -38,7 +38,7 @@ class test_MSL_files(QCASTestClient):
     def test_MSL_file_one_row(self):
         msl_files = list() 
         
-        if self.nextMonth_MSLfile == CHECK_ONE_FILE_ONLY_FLG: 
+        if skipping_PSL_comparison_tests(): 
             msl_files = [self.MSLfile] 
         else:            
             msl_files = [self.MSLfile, self.nextMonth_MSLfile] 
@@ -51,13 +51,13 @@ class test_MSL_files(QCASTestClient):
     def test_Read_MSL_file_from_disk(self):
         self.assertTrue(os.path.isfile(self.MSLfile))
         
-        if not self.nextMonth_MSLfile == CHECK_ONE_FILE_ONLY_FLG: 
+        if not skipping_PSL_comparison_tests():
             self.assertTrue(os.path.isfile(self.nextMonth_MSLfile))
             
     def test_MSL_fields_sanity_checks(self):
         mslfile_list = list() 
         
-        if self.nextMonth_MSLfile == CHECK_ONE_FILE_ONLY_FLG: 
+        if skipping_PSL_comparison_tests():
             mslfile_list = [self.MSLfile] 
         else:            
             mslfile_list = [self.MSLfile, self.nextMonth_MSLfile] 
