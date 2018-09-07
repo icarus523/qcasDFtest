@@ -1,11 +1,15 @@
 import os
 import unittest
-from test_datafiles import QCASTestClient, PSLfile
+from test_datafiles import QCASTestClient, PSLfile, CHECK_ONE_FILE_ONLY_FLG, skipping_PSL_comparison_tests
 
 class test_PSLfile_content(QCASTestClient): 
 
     def test_psl_size_is_reasonable(self): 
-        psl_files = [self.PSLfile, self.nextMonth_PSLfile] 
+        if skipping_PSL_comparison_tests() == True: 
+            psl_files = [self.PSLfile] 
+        else: 
+            psl_files = [self.PSLfile, self.nextMonth_PSLfile] 
+            
         for psl_file in psl_files: 
             size_in_bytes = os.stat(psl_file).st_size # filesize
             
@@ -14,10 +18,8 @@ class test_PSLfile_content(QCASTestClient):
             # is approximately 1055KB as at July 2013.
             self.assertTrue(size_in_bytes > 1055000)
     
-    # @unittest.expectedFailure
+    @unittest.skipIf(skipping_PSL_comparison_tests(), "Single PSL Validation only") 
     def test_psl_size_reduction(self):
-        psl_files = [self.PSLfile, self.nextMonth_PSLfile] 
-
         PSLfile_size_in_bytes = os.stat(self.PSLfile).st_size # filesize
         nextMonth_PSLfile_size_in_bytes = os.stat(self.nextMonth_PSLfile).st_size # filesize
         
@@ -33,8 +35,11 @@ class test_PSLfile_content(QCASTestClient):
         
     
     def test_PSL_content_can_be_parsed(self):
-        pslfile_list = [self.PSLfile, self.nextMonth_PSLfile] # test both months
-
+        if skipping_PSL_comparison_tests() == True: 
+            pslfile_list = [self.PSLfile] 
+        else: 
+            pslfile_list = [self.PSLfile, self.nextMonth_PSLfile] 
+            
         for pslfile in pslfile_list: 
             # Check for PSL File Format by Instantiating an object of PSL type
             game_list = self.check_file_format(pslfile, 'PSL')
@@ -52,8 +57,10 @@ class test_PSLfile_content(QCASTestClient):
                 # Check for PSL month field
                 self.assertTrue(self.check_month_field(game.month))
 
-                # Check Hash List for each day of the month, with the seed. 
-                # self.assertTrue(self.check_hash_list(game.hash_list))
+                # Check Hash List size 
+                self.assertTrue(self.check_hash_list_size(game.hash_list))
+                
+                # TODO: Check Hashlist for each day of the month, with the seed. 
 
             with open(pslfile) as f:
                 psl_file_num_lines = len(f.readlines()) # read number of lines in text file
@@ -63,12 +70,19 @@ class test_PSLfile_content(QCASTestClient):
 
     def test_Read_PSL_file_from_disk(self):
         self.assertTrue(os.path.isfile(self.PSLfile))
-        self.assertTrue(os.path.isfile(self.nextMonth_PSLfile))
+        
+        if skipping_PSL_comparison_tests() == False:
+            self.assertTrue(os.path.isfile(self.nextMonth_PSLfile))
     
     # Verify that valid MIDs have PSL entries. 
     def test_valid_MIDs_have_PSL_entries(self): 
         verified_manufacturer = list()
-        pslfile_list = [self.PSLfile, self.nextMonth_PSLfile] # test both months
+        pslfile_list = list() 
+        
+        if skipping_PSL_comparison_tests() == True: 
+            pslfile_list = [self.PSLfile] 
+        else: 
+            pslfile_list = [self.PSLfile, self.nextMonth_PSLfile] 
         
         for pslfile in pslfile_list: 
             # Check for PSL File Format by Instantiating an object of PSL type
@@ -90,7 +104,12 @@ class test_PSLfile_content(QCASTestClient):
                   
     
     def test_date_field_in_PSL_entry_equals_date_field_in_filename(self): 
-        pslfile_list = [self.PSLfile, self.nextMonth_PSLfile] # test both months
+        pslfile_list = list() 
+        if skipping_PSL_comparison_tests() == True: 
+            pslfile_list = [self.PSLfile] 
+        else: 
+            pslfile_list = [self.PSLfile, self.nextMonth_PSLfile] 
+            
         psl_field_month = ''
         psl_field_year = ''
         
@@ -113,7 +132,3 @@ class test_PSLfile_content(QCASTestClient):
                 
                 # Check Year PSL field matches filename
                 self.assertEqual(int(game.year), int(self.get_filename_year(pslfile)))
-
-        
-
-            

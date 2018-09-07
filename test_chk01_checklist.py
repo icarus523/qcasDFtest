@@ -5,12 +5,12 @@ import unittest
 import sys
 import json
 import pickle
-from test_datafiles import QCASTestClient, PSLfile, PSLEntry_OneHash, TSLfile, MSLfile, Preferences
+from test_datafiles import QCASTestClient, PSLfile, PSLEntry_OneHash, TSLfile, MSLfile, Preferences, CHECK_ONE_FILE_ONLY_FLG, skipping_PSL_comparison_tests
 
 def skipping_length_tests(): 
     my_preferences = Preferences()
     return my_preferences.will_skip_lengthy_validations()
-   
+
 class test_chk01_checklist(QCASTestClient):      
     
     def write_to_file(self, fname, data):
@@ -18,6 +18,7 @@ class test_chk01_checklist(QCASTestClient):
                 pickle.dump(list(tsl_difference_games_added), outfile)
                 # json.dumps(data, json_file, sort_keys=True, indent=4, separators=(',',':'))
 
+    @unittest.skipIf(skipping_PSL_comparison_tests(), "Single PSL Validation only") 
     def test_Generated_PSL_files_Differ(self):
         same = set()
         
@@ -40,7 +41,11 @@ class test_chk01_checklist(QCASTestClient):
                 print("\n\n ==== No new games added ==== \n")
                 
         # Find these games in the both PSL files
-        psl_file_list = [self.PSLfile, self.nextMonth_PSLfile] 
+        if self.nextMonth_PSLfile == CHECK_ONE_FILE_ONLY_FLG: 
+            psl_file_list = [self.PSLfile] 
+        else: 
+            psl_file_list = [self.PSLfile, self.nextMonth_PSLfile] 
+        
         verified_game = list()
         
         for psl_file in psl_file_list: 
@@ -196,8 +201,12 @@ class test_chk01_checklist(QCASTestClient):
     @unittest.skipUnless(os.path.isdir('\\\\Justice.qld.gov.au\\Data\\OLGR-TECHSERV\\BINIMAGE'), "requires Binimage Path")
     def test_One_OLD_game_with_one_seed_in_PSL_file(self): 
         all_games = self.check_file_format(self.TSLfile, 'TSL')
-        msl_file_list = [self.MSLfile, self.nextMonth_MSLfile] 
-
+        msl_file_list = list() 
+        if self.nextMonth_MSLfile == CHECK_ONE_FILE_ONLY_FLG: 
+            msl_file_list = [self.MSLfile] 
+        else:            
+            msl_file_list = [self.MSLfile, self.nextMonth_MSLfile] 
+            
         complete = False
         
         while True: 
@@ -266,8 +275,12 @@ class test_chk01_checklist(QCASTestClient):
     @unittest.skipUnless(os.path.isdir('\\\\Justice.qld.gov.au\\Data\\OLGR-TECHSERV\\BINIMAGE'), "requires Binimage Path")
     def test_One_NEW_game_with_one_seed_in_PSL_file(self): 
         new_games = self.get_newgames_to_be_added()
-        msl_file_list = [self.MSLfile, self.nextMonth_MSLfile] 
-
+        msl_file_list = list() 
+        if self.nextMonth_MSLfile == CHECK_ONE_FILE_ONLY_FLG: 
+            msl_file_list = [self.MSLfile] 
+        else:            
+            msl_file_list = [self.MSLfile, self.nextMonth_MSLfile] 
+            
         complete = False
         
         while True: 

@@ -1,40 +1,44 @@
 import os
 import unittest
-from test_datafiles import QCASTestClient, PSLfile
+from test_datafiles import QCASTestClient, PSLfile, CHECK_ONE_FILE_ONLY_FLG
 
 class test_file_name_format(QCASTestClient): 
 
     def test_MSL_filename_ends_with_MSL(self):
         assert(str(self.MSLfile).upper().endswith("MSL"))
-        assert(str(self.nextMonth_MSLfile).upper().endswith("MSL"))
+        
+        if not CHECK_ONE_FILE_ONLY_FLG: # Do Assert only for Both Months
+            assert(str(self.nextMonth_MSLfile).upper().endswith("MSL"))
 
     def test_MSL_filename_date(self):
         current_month = self.get_filename_month(self.MSLfile)
-        next_month = self.get_filename_month(self.nextMonth_MSLfile)
-
-        # current month != next month
-        self.assertNotEqual(current_month, next_month, msg="MSL files are the same")
-
         # year is to be same, unless current month = 12 (Dec)
         current_month_year = self.get_filename_year(self.MSLfile)
-        next_month_year = self.get_filename_year(self.nextMonth_MSLfile)
+        
+        if not CHECK_ONE_FILE_ONLY_FLG:
+            next_month = self.get_filename_month(self.nextMonth_MSLfile)
 
-        if int(current_month) < 12 :
-            self.assertEqual(int(next_month_year), int(current_month_year)) # same year
+            # current month != next month
+            self.assertNotEqual(current_month, next_month, msg="MSL files are the same")
 
-        if int(next_month) == 12:
-            self.assertNotEqual(int(current_month_year), int(next_month_year) + 1) # new year
+            next_month_year = self.get_filename_year(self.nextMonth_MSLfile)
 
-        if self.is_new_year(self.MSLfile):
-            self.assertEqual(int(next_month_year), 1)
+            if int(current_month) < 12 :
+                self.assertEqual(int(next_month_year), int(current_month_year)) # same year
+
+            if int(next_month) == 12:
+                self.assertNotEqual(int(current_month_year), int(next_month_year) + 1) # new year
+
+            if self.is_new_year(self.MSLfile):
+                self.assertEqual(int(next_month_year), 1)
 
     def test_MSL_filename_version(self):
         version = self.get_filename_version(self.MSLfile)
-        nextmonth_version = self.get_filename_version(self.nextMonth_MSLfile)
-
-        # version must always be v1.
-        self.assertEqual(int(version), 1)
-        self.assertEqual(int(nextmonth_version), 1)
+        self.assertEqual(int(version), 1) # version must always be v1.
+        
+        if not CHECK_ONE_FILE_ONLY_FLG:
+            nextmonth_version = self.get_filename_version(self.nextMonth_MSLfile)
+            self.assertEqual(int(nextmonth_version), 1) # version must always be v1.
 
     def test_TSLfile_ends_with_TSL(self):
         assert(str(self.TSLfile).upper().endswith("TSL")) # only 1 TSL file
@@ -42,24 +46,28 @@ class test_file_name_format(QCASTestClient):
     ### PSL file name format tests
     def test_PSLfile_ends_with_PSL(self):
         assert(str(self.PSLfile).upper().endswith("PSL"))
-        assert(str(self.nextMonth_PSLfile).upper().endswith("PSL"))
+        
+        if not CHECK_ONE_FILE_ONLY_FLG:
+            assert(str(self.nextMonth_PSLfile).upper().endswith("PSL"))
     
     ## @unittest.skip("Skipping PSL version inc tests")        
     def test_PSL_file_version_increment(self):
         psl_version = self.get_filename_version(self.PSLfile)
-        next_month_psl_version = self.get_filename_version(self.nextMonth_PSLfile)
-
         current_month = self.get_filename_month(self.PSLfile)
-        next_month = self.get_filename_month(self.nextMonth_PSLfile)
+        
+        if not CHECK_ONE_FILE_ONLY_FLG:
+            next_month_psl_version = self.get_filename_version(self.nextMonth_PSLfile)
+            next_month = self.get_filename_month(self.nextMonth_PSLfile)
+
         
         # "PSLfile": "G:\\OLGR-TECHSERV\\MISC\\BINIMAGE\\qcas\\qcas_2018_07_v04.psl",
         # "nextMonth_PSLfile": "G:\\OLGR-TECHSERV\\MISC\\BINIMAGE\\qcas\\qcas_2018_08_v02.psl",
 
         # if month is the same, version should increment
         # This is the only thing we can reliably test. 
-        if current_month == next_month:
-            # next month version should always be greater than current month
-            self.assertTrue(int(next_month_psl_version) > int(psl_version))
+            if current_month == next_month:
+                # next month version should always be greater than current month
+                self.assertTrue(int(next_month_psl_version) > int(psl_version))
         # else:
             # # Months are not equal, therefore versions can be anything
             # # without knowing what the previous current month file was 
@@ -102,19 +110,21 @@ class test_file_name_format(QCASTestClient):
         
     def test_PSL_filename_date(self):
         current_month = self.get_filename_month(self.PSLfile)
-        next_month = self.get_filename_month(self.nextMonth_PSLfile)
-
-        # current month != next month
-        self.assertNotEqual(current_month, next_month, msg="PSL files are the same")
-
-        # year is to be same, unless current month = 12 (Dec)
         current_month_year = self.get_filename_year(self.PSLfile)
-        next_month_year = self.get_filename_year(self.nextMonth_PSLfile)
+        
+        if not CHECK_ONE_FILE_ONLY_FLG:
+            next_month = self.get_filename_month(self.nextMonth_PSLfile)
 
-        if int(current_month) < 12 :
-            self.assertEqual(int(next_month_year), int(current_month_year), 
-            	msg="current PSL Month is less than December, expect same year" ) # same year
+            # current month != next month
+            self.assertNotEqual(current_month, next_month, msg="PSL files are the same")
 
-        if int(next_month) == 12:
-            self.assertNotEqual(int(current_month_year), int(next_month_year) + 1) # new year
+            # year is to be same, unless current month = 12 (Dec)
+            next_month_year = self.get_filename_year(self.nextMonth_PSLfile)
+
+            if int(current_month) < 12 :
+                self.assertEqual(int(next_month_year), int(current_month_year), 
+                    msg="current PSL Month is less than December, expect same year" ) # same year
+
+            if int(next_month) == 12:
+                self.assertNotEqual(int(current_month_year), int(next_month_year) + 1) # new year
         

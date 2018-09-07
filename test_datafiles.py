@@ -13,7 +13,18 @@ from datetime import datetime, timedelta
 from time import sleep
 
 p_reset = "\x08"*8
+CHECK_ONE_FILE_ONLY_FLG = "ONE_MONTH_ONLY"
 
+def skipping_PSL_comparison_tests(): 
+    my_preferences = Preferences()
+    nextMonth_PSLfile = my_preferences.nextMonth_PSLfile
+    nextMonth_MSLfile = my_preferences.nextMonth_MSLfile
+
+    if nextMonth_PSLfile == CHECK_ONE_FILE_ONLY_FLG and nextMonth_MSLfile == CHECK_ONE_FILE_ONLY_FLG: 
+        return True
+    else:
+        return False
+    
 class Preferences: 
 
     def __init__(self): 
@@ -545,11 +556,17 @@ class QCASTestClient(unittest.TestCase):
         else:
             return False
 
-    def check_hash_list(self, hash_list):
+    def check_hash_list_size(self, hash_list):
+       
+        if len(hash_list) == 31:
+           return True 
+        else:
+           return False
+    
+    def check_hash_list(self, msl_file, hash_list): 
         # To do:
         # Generate hash using MSL file, and compare result in hash_list
         # must equal
-        
         return False
 
     def get_filename_version(self, filename):
