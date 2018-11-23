@@ -10,8 +10,28 @@ import difflib
 import pickle
 import getpass
 import operator
+import random
+
 from datetime import datetime, timedelta
 from time import sleep
+
+logging.basicConfig(level=logging.DEBUG,
+        format='%(asctime)s - %(levelname)-8s %(message)s',
+        datefmt='%d-%m-%y %H:%M',
+        filename='qcas_test.log',
+        filemode='w')
+        
+## Configure logger
+logger = logging.getLogger()
+logger.level = logging.DEBUG
+stream_handler = logging.StreamHandler(sys.stdout)
+logger.addHandler(stream_handler)
+
+file_handler = logging.FileHandler("qcas_test.log")
+
+#file_handler.setFormatter(formatter)
+logger.addHandler(stream_handler)
+logger.addHandler(file_handler)
 
 p_reset = "\x08"*8
 CHECK_ONE_FILE_ONLY_FLG = "ONE_MONTH_ONLY"
@@ -25,7 +45,12 @@ def skipping_PSL_comparison_tests():
         return True
     else:
         return False
-    
+
+def binimage_path_exists(): 
+    my_preferences = Preferences()
+
+    return os.path.isdir(my_preferences.path_to_binimage)        
+       
 class Preferences: 
 
     def __init__(self): 
@@ -59,30 +84,33 @@ class Preferences:
                           'write_new_games_to_file': "new_games.json",
                           'skip_lengthy_validations': "true",
                           'percent_changed_acceptable' : 0.10,
-                          'verbose_mode': "true" 
+                          'verbose_mode': "true",
+                          'number_of_random_games': 4
                         }
             self.writefile(preference_filename)
             
     def readfile(self, filename): 
         with open(filename, 'r') as jsonfile: 
-            data = json.load(jsonfile)
+            self.data = json.load(jsonfile)
             # data file preferences
-            self.path_to_binimage = data['path_to_binimage']
-            self.mid_list = data['mid_list']
-            self.valid_bin_types = data['valid_bin_types']
-            self.previous_TSLfile = data['previous_TSLfile']
-            self.epsig_log_file = data['epsig_log_file']
-            self.write_new_games_to_file = data['write_new_games_to_file']
-            self.skip_lengthy_validations = data['skip_lengthy_validations']
-            self.percent_changed_acceptable = data['percent_changed_acceptable']
-            self.verbose_mode = data['verbose_mode']
+            self.path_to_binimage = self.data['path_to_binimage']
+            self.mid_list = self.data['mid_list']
+            self.valid_bin_types = self.data['valid_bin_types']
+            self.previous_TSLfile = self.data['previous_TSLfile']
+            self.epsig_log_file = self.data['epsig_log_file']
+            self.write_new_games_to_file = self.data['write_new_games_to_file']
+            self.skip_lengthy_validations = self.data['skip_lengthy_validations']
+            self.percent_changed_acceptable = self.data['percent_changed_acceptable']
+            self.verbose_mode = self.data['verbose_mode']
+            self.number_of_random_games = self.data['number_of_random_games']
             
             # Datafiles 
-            self.TSLfile = data['TSLfile']
-            self.PSLfile = data['PSLfile']
-            self.nextMonth_PSLfile = data['nextMonth_PSLfile']
-            self.MSLfile = data['MSLfile']
-            self.nextMonth_MSLfile = data['nextMonth_MSLfile']
+            self.TSLfile = self.data['TSLfile']
+            self.PSLfile = self.data['PSLfile']
+            self.nextMonth_PSLfile = self.data['nextMonth_PSLfile']
+            self.MSLfile = self.data['MSLfile']
+            self.nextMonth_MSLfile = self.data['nextMonth_MSLfile']
+                        
             
     def scan_datafiles(self): 
         df_list = dict([(f, None) for f in os.listdir(".")])
@@ -105,7 +133,7 @@ class Preferences:
         ordered_psl_file = self.identify_datafiles(self.psl_file_list)
 
         if self.my_preferences.verbose_mode == "true": 
-            print("Sorted PSL file: " + ",".join(ordered_psl_file))
+            logging.getLogger().debug("Sorted PSL file: " + ",".join(ordered_psl_file))
     
     def identify_datafiles(self, datafile): 
         # Verify Year 
@@ -131,15 +159,38 @@ class Preferences:
         return (json.dumps(self, default=lambda o: o.__dict__, sort_keys = True, indent=4))
     
     def writefile(self, fname): 
+        # data file preferences
+        self.data['path_to_binimage'] = self.path_to_binimage
+        self.data['mid_list'] = self.mid_list
+        self.data['valid_bin_types'] = self.valid_bin_types
+        self.data['previous_TSLfile'] = self.previous_TSLfile
+        
+        self.data['epsig_log_file'] = self.epsig_log_file
+        self.data['write_new_games_to_file'] = self.write_new_games_to_file
+        self.data['skip_lengthy_validations'] = self.skip_lengthy_validations
+        self.data['percent_changed_acceptable'] = self.percent_changed_acceptable
+        self.data['verbose_mode'] = self.verbose_mode 
+        self.data['number_of_random_games'] = self.number_of_random_games
+    
+        # Datafiles 
+        self.data['TSLfile'] = self.TSLfile
+        self.data['PSLfile'] = self.PSLfile
+        self.data['nextMonth_PSLfile'] = self.nextMonth_PSLfile
+        self.data['MSLfile'] = self.MSLfile
+        self.data['nextMonth_MSLfile'] = self.nextMonth_MSLfile
+    
         with open(fname, 'w') as outfile: 
-            json.dump(self.data, outfile,sort_keys=False, indent=4, separators=(',', ': '))
+            json.dump(self.data, outfile,sort_keys=True, indent=4, separators=(',', ': '))
     
     def will_skip_lengthy_validations(self):   
         if self.skip_lengthy_validations == "true": 
             return True
         else:
             return False
-
+    
+    def getData(self): 
+        return self.data
+            
 class CacheMemory: 
 
     def __init__(self):
@@ -195,7 +246,7 @@ class CacheFile:
                     sort_keys=True, 
                     indent=4, 
                     separators=(',', ': '))
-                print('Run script again, empty cache file created')
+                logging.getLogger().warning('Run script again, empty cache file created')
                 self.signCacheFile()
                 sys.exit(0)
         
@@ -362,7 +413,6 @@ class PSLfile:
                     print(u'Delete "{}" from position {}'.format(s[-1],i))
                 elif s[0]=='+':
                     print(u'Add "{}" to position {}'.format(s[-1],i))    
-            print()
     
     def toJSON(self): 
         return (json.dumps(self, default=lambda o: o.__dict__, sort_keys = True, indent=4))
@@ -409,12 +459,15 @@ class TSLfile:
     
     def toJSON(self): 
         return (json.dumps(self, default=lambda o: o.__dict__, sort_keys = True, indent=4))
+
+    def toJSON_oneline(self): 
+        return (json.dumps(self, default=lambda o: o.__dict__, sort_keys = True))
         
 # Derived unittest.TestCase class used for unittest testing. 
 class QCASTestClient(unittest.TestCase):
     # common test behaviours
     
-    def setUp(self):
+    def setUp(self):                  
         # Read from JSON file
         # Global Vars, Paths, and QCAS datafile names
         self.my_preferences = Preferences() 
@@ -454,14 +507,18 @@ class QCASTestClient(unittest.TestCase):
                 'year': self.this_month['year']
             }
 
-        ## Configure logger
-        self.logger = logging.getLogger('qcas_datafile_test')
-        hdlr = logging.FileHandler('output.log')
-        formatter = logging.Formatter(' %(asctime)s - %(levelname)s- %(message)s')
-        hdlr.setFormatter(formatter)
-        self.logger.addHandler(hdlr)
-        self.logger.setLevel(logging.DEBUG)
-
+    def tearDown(self): 
+        err_msg = ""
+        
+            
+    def generate_seed_list_for_test(self): 
+        seedlist = list() 
+        for i in range(1, self.my_preferences.number_of_random_games): 
+            random_seed_idx =  random.randint(0,30) # Choose a random day for the month
+            seedlist.append(random_seed_idx)
+        
+        return seedlist
+        
     # input: num : number
     # output: s : string formatted i.e. 01-09
     def format_twoDigit(self, num):
@@ -616,13 +673,13 @@ class QCASTestClient(unittest.TestCase):
                     if count > 1:
                         duplicate_entries.append(field_str.strip())
             else:
-                print("unknown flag type")
+                logging.getLogger().error("unknown flag type")
                 sys.exit(1)
 
         if count == 1:
             return True
         else:
-            print("Not Unique, counted : " + str(count) + " ,".join(duplicate_entries))
+            logging.getLogger().debug("Not Unique, counted : " + str(count) + " ,".join(duplicate_entries))
             if '0201230' in duplicate_entries: # handle this duplicate entry
                 return True
             else:
@@ -650,7 +707,6 @@ class QCASTestClient(unittest.TestCase):
                 tsl_difference_games_added = set(file1).difference(file2)
         
         self.assertTrue(len(tsl_difference_games_added) > 0) # TSL files must be contain a new game? 
-        # print("\nNew Games added: \n" + "".join(list(tsl_difference)))
   
         # Differences are the new games to be added. 
         for game in list(tsl_difference_games_added): # Single Line
@@ -788,14 +844,14 @@ class QCASTestClient(unittest.TestCase):
         size = os.path.getsize(fname)
         # Read in chunksize blocks at a time
         with open(fname, 'rb') as f:
-            if self.my_preferences.verbose_mode == "true": 
-                print("\nHashing: %(file_name)-40s\tSeed[%(s_index)2s]: %(seed)8s [in MSLfile as: %(reversed)8s]\t" % 
-                    {   'file_name' : os.path.basename(fname), 
-                        's_index': seed_index+1, 
-                        'seed': seed,
-                        'reversed': self.getQCAS_Expected_output(seed)
-                    }, end="")
-                    
+            print("\nHashing: %(file_name)-40s\tSeed[%(s_index)2s]: %(seed)8s [in MSLfile as: %(reversed)8s]\t" % \
+                {   'file_name' : os.path.basename(fname), 
+                    's_index': seed_index+1, 
+                    'seed': seed,
+                    'reversed': self.getQCAS_Expected_output(seed)
+                }, end="")
+
+            
             while True:
                 block = f.read(chunksize)
                 if done >= size: 
@@ -810,8 +866,7 @@ class QCASTestClient(unittest.TestCase):
                         sys.stdout.write("%7d" % (done*100/size) + "%" + p_reset)
                     else:
                         sys.stdout.write("%7d" % 100 + "%" + p_reset)
-
-            
+                            
         return m.hexdigest()
         
     def get_bin_type(self, bin_type):
@@ -846,6 +901,7 @@ class QCASTestClient(unittest.TestCase):
     # input:    string
     # output:   QCAS Expected output, i.e. 8 characters reversed
     def getQCAS_Expected_output(self, text):
+    
         tmpstr = text[:8] # Returns from the beginning to position 8 of uppercase text
         return "".join(reversed([tmpstr[i:i+2] for i in range(0, len(tmpstr), 2)]))     
     
@@ -1002,8 +1058,7 @@ class QCASTestClient(unittest.TestCase):
     
         
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG, format=' %(asctime)s - %(levelname)s- %(message)s')
-    logging.debug('Start of unittesting for qcas datafiles.py')
+    logging.getLogger().info('Start of unittesting for QCAS datafiles')
     unittest.main()
 
     
