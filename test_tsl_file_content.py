@@ -5,7 +5,7 @@ class test_general_file_format(QCASTestClient):
    
     def test_Read_TSL_file_from_disk(self):
         self.assertTrue(os.path.isfile(self.TSLfile))
-        self.assertTrue(os.path.isfile(self.previous_TSLfile))
+        self.assertTrue(os.path.isfile(self.previous_TSLfile)) # this is mandatory even if your only checkling one month
         
     def test_TSL_content_can_be_parsed(self):
         # only one TSL file

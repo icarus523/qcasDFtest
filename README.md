@@ -39,6 +39,25 @@ Change the above variable to `"skip_lengthy_validations": "true"` and the script
 `test_One_new_game_to_be_added_in_PSL_files_full()`
 `test_TSL_entries_exist_in_PSL_files()`
 
+4. Test only a single month
+There is now an option to test a single month: MSL, PSL files, set the following: 
+
+```
+        "nextMonth_MSLfile": "ONE_MONTH_ONLY",
+        "nextMonth_PSLfile": "ONE_MONTH_ONLY",
+```
+
+Note: Previous month TSL is still mandatory, for testing single month datafiles 
+
+This will result with the unit tests to skip tests related to verifying the next month MSL and PSL files. This means the following tests are ignored: 
+
+````
+`test_epsig_log_file_last_four_entries_are_valid_for_psl_versions`
+`test_epsig_log_file_two_entries_command_str_is_valid`
+`test_psl_size_reduction` 
+`test_Generated_PSL_files_Differ`
+````
+
 ---
 # Unit Test Module Details
 ## Module: `test_datafiles.py`

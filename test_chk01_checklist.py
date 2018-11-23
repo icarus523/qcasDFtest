@@ -5,12 +5,12 @@ import unittest
 import sys
 import json
 import pickle
-from test_datafiles import QCASTestClient, PSLfile, PSLEntry_OneHash, TSLfile, MSLfile, Preferences
+from test_datafiles import QCASTestClient, PSLfile, PSLEntry_OneHash, TSLfile, MSLfile, Preferences, skipping_PSL_comparison_tests
 
 def skipping_length_tests(): 
     my_preferences = Preferences()
     return my_preferences.will_skip_lengthy_validations()
-   
+
 class test_chk01_checklist(QCASTestClient):      
     
     def write_to_file(self, fname, data):
@@ -18,6 +18,7 @@ class test_chk01_checklist(QCASTestClient):
                 pickle.dump(list(tsl_difference_games_added), outfile)
                 # json.dumps(data, json_file, sort_keys=True, indent=4, separators=(',',':'))
 
+    @unittest.skipIf(skipping_PSL_comparison_tests(), "Single PSL Validation only") 
     def test_Generated_PSL_files_Differ(self):
         same = set()
         
@@ -40,7 +41,11 @@ class test_chk01_checklist(QCASTestClient):
                 print("\n\n ==== No new games added ==== \n")
                 
         # Find these games in the both PSL files
-        psl_file_list = [self.PSLfile, self.nextMonth_PSLfile] 
+        if skipping_PSL_comparison_tests(): 
+            psl_file_list = [self.PSLfile] 
+        else: 
+            psl_file_list = [self.PSLfile, self.nextMonth_PSLfile] 
+        
         verified_game = list()
         
         for psl_file in psl_file_list: 
@@ -80,7 +85,10 @@ class test_chk01_checklist(QCASTestClient):
             
             psl_entry_list = self.generate_PSL_entry(blnk_file, game)
             
-            self.assertEqual(len(psl_entry_list), 2) # one PSL entry for each month       
+            if not skipping_PSL_comparison_tests():
+                self.assertEqual(len(psl_entry_list), 2) # one PSL entry for each month       
+            else: 
+                self.assertEqual(len(psl_entry_list), 1) # one month only       
 
             for psl_entry in psl_entry_list: 
                 psl_entry_object = PSLfile(psl_entry) 
@@ -104,11 +112,15 @@ class test_chk01_checklist(QCASTestClient):
                 self.assertTrue(len(psl_entry_object.hash_list) == 31, 
                 	msg="Hashlist doesn't contain 31 hashes")
             
-            # verify that PSL object fields matches is the the PSLfiles  
-            self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[0], self.PSLfile), 
-            	msg=psl_entry_list[0] + ", entry did not exist in " + self.PSLfile)
-            self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[1], self.nextMonth_PSLfile), 
-            	msg=psl_entry_list[1] + ", entry did not exist in " + self.nextMonth_PSLfile)
+            if not skipping_PSL_comparison_tests():
+                # verify that PSL object fields matches is the the PSLfiles  
+                self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[0], self.PSLfile), 
+                    msg=psl_entry_list[0] + ", entry did not exist in " + self.PSLfile)
+                self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[1], self.nextMonth_PSLfile), 
+                    msg=psl_entry_list[1] + ", entry did not exist in " + self.nextMonth_PSLfile)
+            else: 
+                self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[0], self.PSLfile), 
+                    msg=psl_entry_list[0] + ", entry did not exist in " + self.PSLfile)
     
     @unittest.skip("TODO: Not yet implemented")
     def test_Games_removed_from_PSL_files(self): 
@@ -147,12 +159,17 @@ class test_chk01_checklist(QCASTestClient):
             for psl_entry in psl_entry_list: 
                 print("\n" + psl_entry)
         
-        self.assertEqual(len(psl_entry_list), 2, 
-        	msg="Expected 2 PSL entries: " + ','.join(psl_entry_list)) # one PSL entry for each month       
-        self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[0], self.PSLfile), 
-        	msg=psl_entry_list[0] + ", entry did not exist in " + self.PSLfile)
-        self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[1], self.nextMonth_PSLfile), 
-        	msg=psl_entry_list[1] + ", entry did not exist in " + self.nextMonth_PSLfile)
+        if not skipping_PSL_comparison_tests():
+            self.assertEqual(len(psl_entry_list), 2, 
+                msg="Expected 2 PSL entries: " + ','.join(psl_entry_list)) # one PSL entry for each month       
+            self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[0], self.PSLfile), 
+                msg=psl_entry_list[0] + ", entry did not exist in " + self.PSLfile)
+            self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[1], self.nextMonth_PSLfile), 
+                msg=psl_entry_list[1] + ", entry did not exist in " + self.nextMonth_PSLfile)
+        else: 
+            self.assertEqual(len(psl_entry_list), 1, msg="Expected 1 PSL entries: " + ','.join(psl_entry_list))
+            self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[0], self.PSLfile), 
+                msg=psl_entry_list[0] + ", entry did not exist in " + self.PSLfile)
 
     # Generate PSL entries for one randomly chosen new game in the new TSL file (all games)
     # Compare with PSL files and make sure that entries for both months matches 
@@ -182,10 +199,14 @@ class test_chk01_checklist(QCASTestClient):
                 if self.my_preferences.verbose_mode == "true": 
                     for psl_entry in psl_entry_list: 
                         print("\n" + psl_entry)    
-                    
-                self.assertEqual(len(psl_entry_list), 2, msg="Expected 2 PSL entries: " + ','.join(psl_entry_list)) # one PSL entry for each month       
-                self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[0], self.PSLfile), msg=psl_entry_list[0] + ", entry did not exist in " + self.PSLfile)
-                self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[1], self.nextMonth_PSLfile), msg=psl_entry_list[1] + ", entry did not exist in " + self.nextMonth_PSLfile)
+                
+                if not skipping_PSL_comparison_tests():
+                    self.assertEqual(len(psl_entry_list), 2, msg="Expected 2 PSL entries: " + ','.join(psl_entry_list)) # one PSL entry for each month       
+                    self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[0], self.PSLfile), msg=psl_entry_list[0] + ", entry did not exist in " + self.PSLfile)
+                    self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[1], self.nextMonth_PSLfile), msg=psl_entry_list[1] + ", entry did not exist in " + self.nextMonth_PSLfile)
+                else: 
+                    self.assertEqual(len(psl_entry_list), 1, msg="Expected 1 PSL entries: " + ','.join(psl_entry_list)) # one PSL entry for each month       
+                    self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[0], self.PSLfile), msg=psl_entry_list[0] + ", entry did not exist in " + self.PSLfile)
             else: 
                 if self.my_preferences.verbose_mode == "true": 
                     print("\nSkipping: " + random_tsl_entry.game_name + ". Reason: " + random_tsl_entry.bin_type + " file type")
@@ -196,8 +217,12 @@ class test_chk01_checklist(QCASTestClient):
     @unittest.skipUnless(os.path.isdir('\\\\Justice.qld.gov.au\\Data\\OLGR-TECHSERV\\BINIMAGE'), "requires Binimage Path")
     def test_One_OLD_game_with_one_seed_in_PSL_file(self): 
         all_games = self.check_file_format(self.TSLfile, 'TSL')
-        msl_file_list = [self.MSLfile, self.nextMonth_MSLfile] 
-
+        msl_file_list = list() 
+        if skipping_PSL_comparison_tests(): 
+            msl_file_list = [self.MSLfile] 
+        else:            
+            msl_file_list = [self.MSLfile, self.nextMonth_MSLfile] 
+            
         complete = False
         
         while True: 
@@ -266,8 +291,12 @@ class test_chk01_checklist(QCASTestClient):
     @unittest.skipUnless(os.path.isdir('\\\\Justice.qld.gov.au\\Data\\OLGR-TECHSERV\\BINIMAGE'), "requires Binimage Path")
     def test_One_NEW_game_with_one_seed_in_PSL_file(self): 
         new_games = self.get_newgames_to_be_added()
-        msl_file_list = [self.MSLfile, self.nextMonth_MSLfile] 
-
+        msl_file_list = list() 
+        if skipping_PSL_comparison_tests():
+            msl_file_list = [self.MSLfile] 
+        else:            
+            msl_file_list = [self.MSLfile, self.nextMonth_MSLfile] 
+            
         complete = False
         
         while True: 
