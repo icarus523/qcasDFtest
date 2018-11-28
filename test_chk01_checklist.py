@@ -11,7 +11,7 @@ from test_datafiles import QCASTestClient, PSLfile, PSLEntry_OneHash, TSLfile, M
 class test_chk01_checklist(QCASTestClient):      
     
     def write_to_file(self, fname, data):
-            with open(self.write_new_games_to_file, 'w+') as json_file:
+            with open(self.my_preferences.data['write_new_games_to_file'], 'w+') as json_file:
                 pickle.dump(list(tsl_difference_games_added), outfile)
                 # json.dumps(data, json_file, sort_keys=True, indent=4, separators=(',',':'))
                 
@@ -34,7 +34,7 @@ class test_chk01_checklist(QCASTestClient):
     def test_new_games_to_be_added_are_in_PSL_files(self):
         game_list_to_be_added = self.get_newgames_to_be_added()
         
-        if self.my_preferences.verbose_mode == "true": 
+        if self.my_preferences.data['verbose_mode'] == "true": 
             if len(game_list_to_be_added) > 0:
                 print("\n\n")
                 logging.getLogger().debug("==== New Games added ====")
@@ -86,7 +86,7 @@ class test_chk01_checklist(QCASTestClient):
         count = 1
         random_chosen_game_list = list() # list of randomly selected games
         print("\n")
-        logging.getLogger().info("Testing " + str(self.my_preferences.number_of_random_games) + " old game with random seed")        
+        logging.getLogger().info("Testing " + str(self.my_preferences.data['number_of_random_games']) + " old game with random seed")        
         
         while True: 
             # Choose a Random game from TSL file
@@ -108,10 +108,10 @@ class test_chk01_checklist(QCASTestClient):
                     print("\n")
                     msg = "==== Old Game[" + str(count) + "]: " + random_tsl_entry.game_name + \
                         " (" + man_name + "), with MSLfile: [" + os.path.basename(msl) + "] ==== "
-                    if self.my_preferences.verbose_mode == "true": 
+                    if self.my_preferences.data['verbose_mode'] == "true": 
                         logging.getLogger().debug(msg) #+ random_tsl_entry.toJSON())
                         
-                    blnk_file = os.path.join(self.my_preferences.path_to_binimage, 
+                    blnk_file = os.path.join(self.my_preferences.data['path_to_binimage'], 
                     self.getMID_Directory(random_tsl_entry.mid), random_tsl_entry.bin_file.strip() + "." + 
                     self.get_bin_type(random_tsl_entry.bin_type))
                     
@@ -123,7 +123,7 @@ class test_chk01_checklist(QCASTestClient):
                     tmpStr = str(localhash).lstrip('0x').zfill(40)
                     localhash = self.getQCAS_Expected_output(tmpStr).upper() # format it
                     
-                    if self.my_preferences.verbose_mode == "true": 
+                    if self.my_preferences.data['verbose_mode'] == "true": 
                         print("\n")
                         logging.getLogger().debug("Hash Generated for: " + os.path.basename(blnk_file) + " = [" 
                             + localhash + "] with seed: ["+ self.getQCAS_Expected_output(random_seed) + "]")                   
@@ -147,13 +147,13 @@ class test_chk01_checklist(QCASTestClient):
                         
                     self.assertEqual(localhash, psl_from_file.hash_list[hash_list_idx], msg=msg_str)
 
-                if count < self.my_preferences.number_of_random_games:
+                if count < self.my_preferences.data['number_of_random_games']:
                     count = count + 1
                 else:
                     complete = True # set the flag.
                         
             else: 
-                if self.my_preferences.verbose_mode == "true": 
+                if self.my_preferences.data['verbose_mode'] == "true": 
                     logging.getLogger().info("Skipping: " + random_tsl_entry.game_name + ". Reason: " 
                         + random_tsl_entry.bin_type + " TSL file type, unsupported")
                 complete = False
@@ -176,7 +176,7 @@ class test_chk01_checklist(QCASTestClient):
         complete = False
         count = 1
         print("\n")
-        logging.getLogger().info("Testing " + str(self.my_preferences.number_of_random_games) + " new game with random seed")
+        logging.getLogger().info("Testing " + str(self.my_preferences.data['number_of_random_games']) + " new game with random seed")
         
         while True: 
             # Choose a Random game from TSL file
@@ -194,11 +194,11 @@ class test_chk01_checklist(QCASTestClient):
                     man_name = self.get_manufacturer_name(random_tsl_entry.mid)                                
                     display_msg = "==== New Game[" + str(count) + "]: " + random_tsl_entry.game_name + " (" + man_name + "), with MSLfile: [" + os.path.basename(msl) + "] ==== "                        
                     
-                    if self.my_preferences.verbose_mode == "true": 
+                    if self.my_preferences.data['verbose_mode'] == "true": 
                         print("\n")
                         logging.getLogger().debug(display_msg)
                                             
-                    blnk_file = os.path.join(self.my_preferences.path_to_binimage, 
+                    blnk_file = os.path.join(self.my_preferences.data['path_to_binimage'], 
                     self.getMID_Directory(random_tsl_entry.mid), random_tsl_entry.bin_file.strip() + "." + 
                     self.get_bin_type(random_tsl_entry.bin_type))
                     
@@ -215,7 +215,7 @@ class test_chk01_checklist(QCASTestClient):
                     tmpStr = str(localhash).lstrip('0x').zfill(40)
                     localhash = self.getQCAS_Expected_output(tmpStr).upper() # format it
                     
-                    if self.my_preferences.verbose_mode == "true": 
+                    if self.my_preferences.data['verbose_mode'] == "true": 
                         print("\n")
                         logging.getLogger().debug("Hash Generated for: " + os.path.basename(blnk_file) + " = [" + localhash + "] with seed: ["+ self.getQCAS_Expected_output(random_seed) + "]")                   
                     
@@ -235,12 +235,12 @@ class test_chk01_checklist(QCASTestClient):
                     # Compare generated hash against the hash from PSL file. 
                     self.assertEqual(localhash, psl_from_file.hash_list[hash_list_idx], msg=msg_str)
                     
-                if count < self.my_preferences.number_of_random_games:
+                if count < self.my_preferences.data['number_of_random_games']:
                     count = count + 1
                 else:
                     complete = True # set the flag.
             else: 
-                if self.my_preferences.verbose_mode == "true": 
+                if self.my_preferences.data['verbose_mode'] == "true": 
                     print("\n")
                     logging.getLogger().info("Skipping: " + random_tsl_entry.game_name + ". Reason: " 
                         + random_tsl_entry.bin_type + " TSL file type, unsupported")
@@ -258,7 +258,7 @@ class test_chk01_checklist(QCASTestClient):
         #psl_difference = list(set(psl_file_list1).intersection(set(psl_file_list2))) 
         games_to_be_removed = list() 
         games_to_be_removed = self.get_oldgames_to_be_removed()
-        if self.my_preferences.verbose_mode == "true": 
+        if self.my_preferences.data['verbose_mode'] == "true": 
             if len(games_to_be_removed) > 1: 
                 print("\nIdentified Games removed: ")
                 for tsl_game_item in games_to_be_removed:

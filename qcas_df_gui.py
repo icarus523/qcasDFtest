@@ -7,6 +7,15 @@ import glob
 import os
 import hashlib
 import logging
+import unittest
+import test_psl_file_content
+import test_file_name_format
+import test_datafiles
+import test_chk01_intensive_checklist
+import test_msl_file_content
+import test_tsl_file_content
+import test_chk01_checklist
+import test_epsig_log_files
 
 from datetime import datetime
 from tkinter import *
@@ -16,6 +25,25 @@ from tkinter import filedialog
 from test_datafiles import QCASTestClient, PSLfile, PSLEntry_OneHash, TSLfile, MSLfile, Preferences, skipping_PSL_comparison_tests, binimage_path_exists
 
 VERSION = "0.1"
+DF_DIRECTORY = "G:/OLGR-TECHSERV/MISC/BINIMAGE/qcas/"
+
+logging.basicConfig(level=logging.DEBUG,
+        format='%(asctime)s - %(levelname)-8s %(message)s',
+        datefmt='%d-%m-%y %H:%M',
+        filename='qcas_test.log',
+        filemode='w')
+        
+# ## Configure logger
+# logger = logging.getLogger()
+# logger.level = logging.INFO
+# stream_handler = logging.StreamHandler(sys.stdout)
+# logger.addHandler(stream_handler)
+
+# file_handler = logging.FileHandler("qcas_test.log")
+
+# #file_handler.setFormatter(formatter)
+# logger.addHandler(stream_handler)
+# logger.addHandler(file_handler)
 
 class qcas_df_gui: 
 
@@ -69,9 +97,9 @@ class qcas_df_gui:
         frame_next_month_msl.pack(side = TOP, padx  = 0, pady = 0, expand = False, fill=X, anchor = 'w')       
 
         # Button Next Month MSL file
-        button_select_nextmonth_msl = ttk.Button(frame_next_month_msl, text = "Next Month MSL File...", width=20, 
+        self.button_select_nextmonth_msl = ttk.Button(frame_next_month_msl, text = "Next Month MSL File...", width=20, 
             command = lambda: self.handleButtonPress('__select_nextmonth_msl_file__'))                                             
-        button_select_nextmonth_msl.pack(side=LEFT, padx = 3, pady = 3, fill=X, expand=False)        
+        self.button_select_nextmonth_msl.pack(side=LEFT, padx = 3, pady = 3, fill=X, expand=False)        
         # Text Entry Current MSL file
         v = StringVar() 
         self.tf_nextmonth_msl = ttk.Entry(frame_next_month_msl, width = 100, textvariable = v)
@@ -99,9 +127,9 @@ class qcas_df_gui:
         frame_next_month_psl.pack(side = TOP, padx  = 0, pady = 0, expand = False, fill=X, anchor = 'w')       
 
         # Button Next Month PSL file
-        button_select_nextmonth_msl = ttk.Button(frame_next_month_psl, text = "Next Month PSL File...", width=20, 
+        self.button_select_nextmonth_psl = ttk.Button(frame_next_month_psl, text = "Next Month PSL File...", width=20, 
             command = lambda: self.handleButtonPress('__select_nextmonth_psl_file__'))                                             
-        button_select_nextmonth_msl.pack(side=LEFT, padx = 3, pady = 3, fill=X, expand=False)        
+        self.button_select_nextmonth_psl.pack(side=LEFT, padx = 3, pady = 3, fill=X, expand=False)        
         # Text Next Month PSL file
         v_psl2 = StringVar() 
         self.tf_nextmonth_psl = ttk.Entry(frame_next_month_psl, width = 100, textvariable = v_psl2)
@@ -136,12 +164,12 @@ class qcas_df_gui:
         # Text Previous Month PSL file
         v_tsl2 = StringVar() 
         self.tf_previousmonth_tsl = ttk.Entry(frame_previous_month_tsl, width = 100, textvariable = v_tsl2)
-        v_tsl2.set(self.my_preferences.previous_TSLfile)
+        v_tsl2.set(self.my_preferences.data['previous_TSLfile'])
         self.tf_previousmonth_tsl.pack(side=LEFT, fill=X, padx = 3, pady = 3, expand=True)
 
         #Frame for Config
-        frame_config = ttk.Labelframe(frame_toparea, text="Configuration")
-        frame_config.pack(side = TOP, fill=Y, expand = False)
+        frame_config = ttk.Labelframe(frame_toparea, text="Configuration: ")
+        frame_config.pack(side = TOP, fill=BOTH, expand = False)
         frame_config.config(relief = RIDGE, borderwidth = 2)
         
         ######## BINIMAGE Location
@@ -152,11 +180,11 @@ class qcas_df_gui:
         # Button Binimage Path
         button_binimage_path = ttk.Button(frame_binimage, text = "BINIMAGE PATH...", width=20, 
             command = lambda: self.handleButtonPress('__select_binimage__'))                                             
-        button_binimage_path.pack(side=LEFT, padx = 3, pady = 3, fill=X, expand=False)        
+        button_binimage_path.pack(side=LEFT, padx = 3, pady = 3, expand=True)        
         # Text Binimage Path
         self.v_binimage = StringVar() 
         self.tf_binimage_path= ttk.Entry(frame_binimage, width = 100, textvariable = self.v_binimage)
-        self.v_binimage.set(self.my_preferences.path_to_binimage)
+        self.v_binimage.set(self.my_preferences.data['path_to_binimage'])
         self.tf_binimage_path.pack(side=LEFT, fill=X, padx = 3, pady = 3, expand=True)
 
         ######## EPSIG Logfile Location
@@ -171,13 +199,28 @@ class qcas_df_gui:
         # Text Epsig Log Path
         self.v_epsiglog = StringVar() 
         self.tf_epsiglog_path= ttk.Entry(frame_epsiglog, width = 100, textvariable = self.v_epsiglog)
-        self.v_epsiglog.set(self.my_preferences.epsig_log_file)
+        self.v_epsiglog.set(self.my_preferences.data['epsig_log_file'])
         self.tf_epsiglog_path.pack(side=LEFT, fill=X, padx = 3, pady = 3, expand=True)
 
+        ######## New Games Text File
+        frame_newgames = ttk.Frame(frame_config)
+        frame_newgames.config(relief = FLAT, borderwidth = 1)
+        frame_newgames.grid(row=3, column=1, sticky='w')
+
+        # Button Epsig Log Path
+        button_newgames_path = ttk.Button(frame_newgames, text = "News Games file...", width=20, 
+            command = lambda: self.handleButtonPress('__select_newgames__'))                                             
+        button_newgames_path.pack(side=LEFT, padx = 3, pady = 3, fill=X, expand=False)        
+        # Text Epsig Log Path
+        self.v_newgames = StringVar() 
+        self.tf_newgames= ttk.Entry(frame_newgames, width = 100, textvariable = self.v_newgames)
+        self.v_newgames.set(self.my_preferences.data['write_new_games_to_file'])
+        self.tf_newgames.pack(side=LEFT, fill=X, padx = 3, pady = 3, expand=True)        
+        
         # Combobox Number of Games to Validate
         frame_combobox = ttk.Frame(frame_config)
         frame_combobox.config(relief = FLAT, borderwidth = 1)
-        frame_combobox.grid(row=3, column=1, sticky='w')
+        frame_combobox.grid(row=4, column=1, sticky='w')
         
         self.box_value = IntVar()
         ttk.Label(frame_combobox, justify=LEFT, text = 'Number of Games To Validate: ').pack(side=LEFT, fill=X, padx = 3, pady = 3, expand=True)
@@ -185,13 +228,13 @@ class qcas_df_gui:
             justify=LEFT, 
             textvariable=self.box_value)
         self.combobox_NumberofGames.pack(side=RIGHT, fill=X, padx = 3, pady = 3, expand=True)
-        self.combobox_NumberofGames.set(self.my_preferences.number_of_random_games) # default value
+        self.combobox_NumberofGames.set(self.my_preferences.data['number_of_random_games']) # default value
         self.combobox_NumberofGames['values'] = ['1', '2', '3', '4', '5', '10', '20']
 
         # Combobox Acceptable Percentage Change to a PSL file
         frame_combobox_psl_change = ttk.Frame(frame_config)
         frame_combobox_psl_change.config(relief = FLAT, borderwidth = 1)
-        frame_combobox_psl_change.grid(row=4, column=1, sticky='w')
+        frame_combobox_psl_change.grid(row=5, column=1, sticky='w')
         
         self.box_value2 = StringVar()
         ttk.Label(frame_combobox_psl_change, justify=LEFT, text = 'PSL file size changed threshold: ').pack(side=LEFT, fill=X, padx = 3, pady = 3, expand=True)
@@ -199,13 +242,13 @@ class qcas_df_gui:
             justify=LEFT, 
             textvariable=self.box_value2)
         self.combobox_NumberofGames.pack(side=RIGHT, fill=X, padx = 3, pady = 3, expand=True)
-        def_val = str(self.my_preferences.percent_changed_acceptable*100) + "%"
+        def_val = str(self.my_preferences.data['percent_changed_acceptable']*100) + "%"
         self.combobox_NumberofGames.set(def_val) # default value
         self.combobox_NumberofGames['values'] = ['5%','10%', '20%', '30%']
         
         # Checkbutton Intensive Validation
         self.intensive_validation = IntVar()
-        if self.my_preferences.skip_lengthy_validations == "false":
+        if self.my_preferences.data['skip_lengthy_validations'] == "false":
             self.intensive_validation.set(0)
         else:
             self.intensive_validation.set(1)
@@ -216,11 +259,11 @@ class qcas_df_gui:
             variable = self.intensive_validation, 
             onvalue=1, 
             offvalue=0)
-        self.cb_intensive_validation.grid(row=5, column=1, sticky='w')
+        self.cb_intensive_validation.grid(row=6, column=1, sticky='w')
 
         # Checkbutton Verbose Mode
         self.verbose_mode = IntVar()
-        if self.my_preferences.verbose_mode == "false":
+        if self.my_preferences.data['verbose_mode'] == "false":
             self.verbose_mode.set(0)
         else:
             self.verbose_mode.set(1)
@@ -232,8 +275,25 @@ class qcas_df_gui:
             variable = self.verbose_mode, 
             onvalue=1, 
             offvalue=0)
-        self.cb_verbose_mode.grid(row=6, column=1, sticky='w')
+        self.cb_verbose_mode.grid(row=7, column=1, sticky='w')
 
+        # Checkbutton One Month Mode
+        self.one_month_mode = IntVar()
+        if self.my_preferences.data['one_month_mode'] == "False":
+            self.one_month_mode.set(0)
+        else:
+            self.one_month_mode.set(1)
+            
+        self.cb_one_month_mode = Checkbutton(
+            frame_config, 
+            text="One Month Mode (Skip PSL comparison validations)", 
+            justify=LEFT, 
+            variable = self.one_month_mode, 
+            onvalue=1, 
+            offvalue=0,
+            command=self.handleCheckButton)
+        self.cb_one_month_mode.grid(row=8, column=1, sticky='w')        
+        
         ######## Bottom Frame
         frame_bottomarea = ttk.Frame(self.root)
         frame_bottomarea.pack(side = BOTTOM, fill=X, expand=False)
@@ -254,67 +314,89 @@ class qcas_df_gui:
 
         self.root.mainloop()
 
+    def handleCheckButton(self): 
+        # One Month Mode
+        if self.one_month_mode.get() == 1: 
+            self.button_select_nextmonth_msl.config(state=DISABLED)
+            self.tf_nextmonth_msl.config(state=DISABLED)
+            self.button_select_nextmonth_psl.config(state=DISABLED)
+            self.tf_nextmonth_psl.config(state=DISABLED)
+        else:
+            self.button_select_nextmonth_msl.config(state=NORMAL)
+            self.tf_nextmonth_msl.config(state=NORMAL)
+            self.button_select_nextmonth_psl.config(state=NORMAL)
+            self.tf_nextmonth_psl.config(state=NORMAL)
+        
     def handleButtonPress(self, choice):
         if choice == '__select_current_msl_file__':
-            tmp = filedialog.askopenfile(initialdir='.')
+            tmp = filedialog.askopenfilename(initialdir=DF_DIRECTORY, title = "Select Current MSL File",filetypes = (("MSL files","*.MSL"),("all files","*.*")))
             
             if tmp: # Selected something
                 self.tf_current_msl.delete(0, END)
-                self.tf_current_msl.insert(0, tmp.name)                
+                self.tf_current_msl.insert(0, tmp)                
         elif choice == '__select_nextmonth_msl_file__':
-            tmp = filedialog.askopenfile(initialdir='.')
+            tmp = filedialog.askopenfilename(initialdir=DF_DIRECTORY, title = "Select Next Month MSL File",filetypes = (("MSL files","*.MSL"),("all files","*.*")))
             
             if tmp: # Selected something
                 self.tf_nextmonth_msl.delete(0, END)
-                self.tf_nextmonth_msl.insert(0, tmp.name)
+                self.tf_nextmonth_msl.insert(0, tmp)
         elif choice == '__select_psl_file__':
-            tmp = filedialog.askopenfile(initialdir='.')
+            tmp = filedialog.askopenfilename(initialdir=DF_DIRECTORY, title = "Select Current PSL File",filetypes = (("PSL files","*.PSL"),("all files","*.*")))
             
             if tmp: # Selected something
                 self.tf_current_psl.delete(0, END)                
-                self.tf_current_psl.insert(0, tmp.name)
+                self.tf_current_psl.insert(0, tmp)
         elif choice == '__select_nextmonth_psl_file__':
-            tmp = filedialog.askopenfile(initialdir='.')
+            tmp = filedialog.askopenfilename(initialdir=DF_DIRECTORY, title = "Select Nexth Month PSL File",filetypes = (("PSL files","*.PSL"),("all files","*.*")))
             
             if tmp: # Selected something
                 self.tf_nextmonth_psl.delete(0, END)                                
-                self.tf_nextmonth_psl.insert(0, tmp.name)
+                self.tf_nextmonth_psl.insert(0, tmp)
         elif choice == '__select_tsl_file__':
-            tmp = filedialog.askopenfile(initialdir='.')
+            tmp = filedialog.askopenfilename(initialdir=DF_DIRECTORY, title = "Select Current TSL File",filetypes = (("TSL files","*.TSL"),("all files","*.*")))
             
             if tmp: # Selected something
                 self.tf_current_tsl.delete(0, END)                                                
-                self.tf_current_tsl.insert(0, tmp.name)
+                self.tf_current_tsl.insert(0, tmp)
 
         elif choice == '__select_previousmonth_tsl_file__':
-            tmp = filedialog.askopenfile(initialdir='.')
+            tmp = filedialog.askopenfilename(initialdir=DF_DIRECTORY, title = "Select Previous Month's TSL File",filetypes = (("TSL files","*.TSL"),("all files","*.*")))
             
             if tmp: # Selected something
                 self.tf_previousmonth_tsl.delete(0, END)                                
-                self.tf_previousmonth_tsl.insert(0, tmp.name)
+                self.tf_previousmonth_tsl.insert(0, tmp)
                 
         elif choice == '__select_binimage__':
-            tmp = filedialog.askdirectory(initialdir=self.my_preferences.path_to_binimage)
+            tmp = filedialog.askdirectory(initialdir=self.my_preferences.data['path_to_binimage'], title = "Select BINIMAGE Directory")
             
             if tmp: # Selected something
                 self.tf_binimage_path.delete(0, END)                                
                 self.tf_binimage_path.insert(0, tmp)
 
         elif choice == '__select_epsiglog_file__':
-            tmp = filedialog.askdirectory(initialdir='.')
+            tmp = filedialog.askopenfilename(initialdir=DF_DIRECTORY, title = "Select EPSIG Log file", filetypes = (("TSL files","*.log"),("all files","*.*")))
             
             if tmp: # Selected something
                 self.tf_epsiglog_path.delete(0, END)                                
                 self.tf_epsiglog_path.insert(0, tmp)
-                
+        elif choice == '__select_newgames__':             
+            tmp = filedialog.askopenfilename(initialdir='.', title = "Select New Games file",filetypes = (("TXT files","*.TXT"),("all files","*.*")))
+            if tmp: # Selected something
+                self.tf_newgames.delete(0, END)
+                self.tf_newgames.insert(0, tmp)   
+            
         elif choice == '__start__':
             threading.Thread(self.StartUnitTest()).start()        
-
+            self.root.deiconify()
         elif choice == '__save__':
             self.UpdatePreferences()
 
+            
     def StartUnitTest(self):
-        # subprocess.call('py __start_qcas_unittesting_script.py', shell=False)
+        self.UpdatePreferences() # save first       
+        #self.root.destroy() # remove gui
+        self.root.withdraw() 
+        
         def_str = "==== QCAS Unit Testing started on: " + str(datetime.now()) + " by: " + getpass.getuser()  + " ===="
         logging.getLogger().info(def_str)    
 
@@ -322,50 +404,67 @@ class qcas_df_gui:
         logging.getLogger().info("QCAS Unit Testing Configuration: \n" + config)
 
         logging.getLogger().info("==== QCAS Unit Test script versions: ====")
+
         unit_test_files = glob.glob("test*.py")
         for file in unit_test_files:
             logging.getLogger().info("%35s\t%s" % (file, QCASTestClient.dohash_sha256(self, file)))
-        logging.getLogger().info("==== Starting Unit Tests ====")
-        subprocess.call('py -m unittest', shell=False)
 
+        print("==== Starting Unit Tests ====")
+        # subprocess.call('py -m unittest', shell=False)
+        #suite = unittest.TestLoader().loadTestsFromModule(test_PSLfile_content)
+        #testResult = unittest.TextTestRunner(verbosity=3).run( suite ) 
 
-
+        tests = [ test_msl_file_content, test_tsl_file_content, test_psl_file_content, test_epsig_log_files , test_file_name_format, test_chk01_intensive_checklist, test_chk01_checklist]
+        testoutput = [ "MSL File Content Tests: ", "TSL File Content Tests: ", "PSL File Content Tests", "epsig log file content tests", "Datafile Filename format tests", "CHK01 Intensive validations", "CHK01 Validations"]
+        for test in tests: 
+            testLoad = unittest.TestLoader().loadTestsFromModule(test)      
+            testResult = unittest.TextTestRunner(verbosity=3).run(testLoad) 
+            logging.getLogger().debug(testoutput[tests.index(test)] + str(testResult))
+        
+            for err in testResult.errors: 
+                logging.getLogger().error(err)
+            
+            for skip in testResult.skipped: 
+                logging.getLogger().warning(skip) 
+            
+            for fail in testResult.failures: 
+                logging.getLogger().error(fail) 
+        
+        
     def UpdatePreferences(self):        
         #update vars
-        self.my_preferences.previous_TSLfile = self.tf_previousmonth_tsl.get()
+        self.my_preferences.data['previous_TSLfile'] = self.tf_previousmonth_tsl.get()
         self.my_preferences.TSLfile = self.tf_current_tsl.get() 
         self.my_preferences.PSLfile = self.tf_current_psl.get()
         self.my_preferences.nextMonth_PSLfile = self.tf_nextmonth_psl.get()
         self.my_preferences.MSLfile = self.tf_current_msl.get()
         self.my_preferences.nextMonth_MSLfile = self.tf_nextmonth_msl.get()
-        self.my_preferences.path_to_binimage = self.v_binimage.get()
-        self.my_preferences.number_of_random_games = self.box_value.get()
-        self.my_preferences.epsig_log_file = self.v_epsiglog.get()        
+        self.my_preferences.data['number_of_random_games'] = self.box_value.get()
+        self.my_preferences.data['epsig_log_file'] = self.v_epsiglog.get()        
         
         if self.intensive_validation.get() == 0: 
-            self.my_preferences.skip_lengthy_validations = "false"
+            self.my_preferences.data['skip_lengthy_validations'] = "false"
         else:
-            self.my_preferences.skip_lengthy_validations = "true"            
+            self.my_preferences.data['skip_lengthy_validations'] = "true"            
 
         if self.verbose_mode.get() == 0:
-            self.my_preferences.verbose_mode = "false"
+            self.my_preferences.data['verbose_mode'] = "false"
         else:
-            self.my_preferences.verbose_mode = "true"
+            self.my_preferences.data['verbose_mode'] = "true"
 
         if self.box_value2.get() == '5%': 
-            self.my_preferences.percent_changed_acceptable = 0.05
+            self.my_preferences.data['percent_changed_acceptable'] = 0.05
         elif self.box_value2.get() == '10%':
-            self.my_preferences.percent_changed_acceptable = 0.10
+            self.my_preferences.data['percent_changed_acceptable'] = 0.10
         elif self.box_value2.get() == '20%':
-            self.my_preferences.percent_changed_acceptable = 0.20
+            self.my_preferences.data['percent_changed_acceptable'] = 0.20
         elif self.box_value2.get() == '30%':
-            self.my_preferences.percent_changed_acceptable = 0.30
+            self.my_preferences.data['percent_changed_acceptable'] = 0.30
         else:
-            self.my_preferences.percent_changed_acceptable = 0.10 # default
+            self.my_preferences.data['percent_changed_acceptable'] = 0.10 # default
 
                     
         self.my_preferences.writefile(self.config_fname) # write to file
-        print(self.my_preferences.toJSON())
         print("updated preference file: " + self.config_fname)
             
 def main():

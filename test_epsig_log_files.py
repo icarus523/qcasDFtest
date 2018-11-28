@@ -49,8 +49,7 @@ class EpsigLogFile():
 
         return self.epsig_log_entry_str.strip()
 
-
- 
+        
 class test_epsig_log_files(QCASTestClient):
 
     def get_psl_file_from_cmd_str(self, s): 
@@ -60,10 +59,10 @@ class test_epsig_log_files(QCASTestClient):
     
     def last_four_logs_success_exit(): 
         today = datetime.now()
-        my_preferences = Preferences()
         last_four_logs_ok = False
+        my_preferences = Preferences()
         
-        with open(my_preferences.epsig_log_file, 'r') as file: 
+        with open(my_preferences.data['epsig_log_file'], 'r') as file: 
             epsig_log = file.read()
             paragraphs = epsig_log.split('\n\n')
             
@@ -94,8 +93,8 @@ class test_epsig_log_files(QCASTestClient):
         return last_four_logs_ok
     
     def test_Read_Epsig_log_file_from_disk(self):
-        self.assertTrue(os.path.isfile(self.my_preferences.epsig_log_file), 
-        	msg=self.my_preferences.epsig_log_file + ": File not found")
+        self.assertTrue(os.path.isfile(self.my_preferences.data['epsig_log_file']), 
+        	msg=self.my_preferences.data['epsig_log_file'] + ": File not found")
         
     @unittest.skipIf(last_four_logs_success_exit() == False, "Skipping PSL version inc tests: Last 4 entries did not complete!")        
     @unittest.skipIf(skipping_PSL_comparison_tests() == True, "Single PSL Validation only") 
@@ -109,7 +108,7 @@ class test_epsig_log_files(QCASTestClient):
 
         today = datetime.now()
 
-        with open(self.my_preferences.epsig_log_file, 'r') as file: 
+        with open(self.my_preferences.data['epsig_log_file'], 'r') as file: 
             epsig_log = file.read()
             paragraphs = epsig_log.split('\n\n')
             
@@ -152,7 +151,7 @@ class test_epsig_log_files(QCASTestClient):
                     self.assertEqual(log_file.footer_status, " with EXIT_SUCCESS", 
                         msg="Epsig Log file did not end with 'EXIT_SUCCESS")
                 else: 
-                    if self.my_preferences.verbose_mode == "true": 
+                    if self.my_preferences.data['verbose_mode'] == "true": 
                         print("#### WARNING: Entry in EPSIG log indicates it has not finished. ####")
 
                 # Need to Verify PSL files used in the last 4 Entries are correct
@@ -178,7 +177,7 @@ class test_epsig_log_files(QCASTestClient):
     def test_epsig_log_file_last_two_entries_command_str_is_valid(self): 
         today = datetime.now()
         
-        with open(self.my_preferences.epsig_log_file, 'r') as file: 
+        with open(self.my_preferences.data['epsig_log_file'], 'r') as file: 
             epsig_log = file.read()
             paragraphs = epsig_log.split('\n\n')
 

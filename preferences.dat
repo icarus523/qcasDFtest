@@ -1,7 +1,7 @@
 {
-    "MSLfile": "G:\\OLGR-TECHSERV\\MISC\\BINIMAGE\\qcas\\qcas_2018_11_v01.msl",
-    "PSLfile": "G:\\OLGR-TECHSERV\\MISC\\BINIMAGE\\qcas\\qcas_2018_11_v03.psl",
-    "TSLfile": "G:\\OLGR-TECHSERV\\MISC\\BINIMAGE\\qcas\\qcas_2018_11_v01.tsl",
+    "MSLfile": "G:/OLGR-TECHSERV/MISC/BINIMAGE/qcas/qcas_2018_11_v01.msl",
+    "PSLfile": "G:/OLGR-TECHSERV/MISC/BINIMAGE/qcas/qcas_2018_11_v04.psl",
+    "TSLfile": "G:/OLGR-TECHSERV/MISC/BINIMAGE/qcas/qcas_2018_11_v02.tsl",
     "epsig_log_file": "G:\\OLGR-TECHSERV\\MISC\\BINIMAGE\\qcas\\log\\epsig.log",
     "mid_list": [
         "00",
@@ -12,12 +12,13 @@
         "12",
         "17"
     ],
-    "nextMonth_MSLfile": "G:\\OLGR-TECHSERV\\MISC\\BINIMAGE\\qcas\\qcas_2018_12_v01.msl",
-    "nextMonth_PSLfile": "G:\\OLGR-TECHSERV\\MISC\\BINIMAGE\\qcas\\qcas_2018_12_v01.psl",
-    "number_of_random_games": 1,
-    "path_to_binimage": "\\\\Justice.qld.gov.au\\Data\\OLGR-TECHSERV\\BINIMAGE",
+    "nextMonth_MSLfile": "G:/OLGR-TECHSERV/MISC/BINIMAGE/qcas/qcas_2018_12_v01.msl",
+    "nextMonth_PSLfile": "G:/OLGR-TECHSERV/MISC/BINIMAGE/qcas/qcas_2018_12_v02.psl",
+    "number_of_random_games": 2,
+    "one_month_mode": "False",
+    "path_to_binimage": "//Justice.qld.gov.au/Data/OLGR-TECHSERV/BINIMAGE",
     "percent_changed_acceptable": 0.1,
-    "previous_TSLfile": "G:\\OLGR-TECHSERV\\MISC\\BINIMAGE\\qcas\\qcas_2018_10_v02.tsl",
+    "previous_TSLfile": "G:/OLGR-TECHSERV/MISC/BINIMAGE/qcas/qcas_2018_11_v01.tsl",
     "skip_lengthy_validations": "true",
     "valid_bin_types": [
         "BLNK",

@@ -122,7 +122,7 @@ Verifies the following entry for each new game generated:
 This test script verifies the expected output of the EPSIG log. 
 
 #### `test_Read_Epsig_log_file_from_disk()`
-- Verifies self.my_preferences.epsig_log_file can be read from disk
+- Verifies self.my_preferences.data['epsig_log_file'] can be read from disk
 
 #### `test_Epsig_Log_file()`
 - Verifies the last entry of the Epsig log file
