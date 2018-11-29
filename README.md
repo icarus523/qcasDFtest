@@ -5,7 +5,14 @@ Rationale: CHK01 is essentially a manual process to verify an automated procedur
 
 This script attempts to complete all CHK01 process as well as thoroughly check the outgoing Casino Datafiles for formating, naming convention and sanity checking. 
 
-To use in Windows: 
+### [NEW] There is now a GUI to control the validation of casino datafiles. 
+To use: 
+1. Double-Click on `qcas_df_gui_control.py`
+
+2. Select Your Options from GUI 
+3. Press [Start Verification]
+
+### Manual Process
 1. Modify preferences.dat file and change the following references: 
 
  ```
@@ -115,9 +122,6 @@ Verifies the following entry for each new game generated:
 - Verifies that the generated PSL entries for two months is created for the Random game. 
 - Verifies that the PSL entries matches for two months exists in `self.PSLfile and self.nextMonth_PSLfile`
 
-
-
-
 ## Epsig Log file Verification Module: `test_epsig_log_files.py`
 This test script verifies the expected output of the EPSIG log. 
 
@@ -131,8 +135,6 @@ This test script verifies the expected output of the EPSIG log.
 - Verifies that the time stamp for when EPSIG last completed is reasonable (within 7 days)
 - Verifies that the end of the Epsig Log File indicates: "with EXIT_SUCCESS"
 - Verifies that the command that was used for Epsig is correct. (Correct Epsig Binary used; Correct BINIMAGE Path used: i.e. G:\; Correct Datafiles referenced, i.e. MSL file is `self.MSLfile or self.my_preferences.data['nextMonth_MSLfile']`; TSL file is `self.TSLfile`; PSL file is `self.PSLfile or self.nextMonth_PSLfile`
-
-
 
 ## Filename Test Module: `test_file_name_format.py`
 Generic test scripts for correct file name format and conventions. 
