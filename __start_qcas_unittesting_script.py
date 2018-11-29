@@ -3,6 +3,8 @@ import getpass
 import glob
 import os
 import hashlib
+import logging
+
 from datetime import datetime
 from test_datafiles import Preferences, skipping_PSL_comparison_tests
 
@@ -48,5 +50,5 @@ unit_test_files = glob.glob("test*.py")
 for file in unit_test_files:
     print("%30s\t%s" % (file, dohash_sha256(file)))
 print("\n ==== Starting Unit Tests ====\n")
-subprocess.call('py -m unittest -v', shell=True)
-pid = subprocess.Popen(args=['cmd.exe', '--command=py -m unittest -v']).pid
+subprocess.call('py -m unittest', shell=False)
+# pid = subprocess.Popen(args=['cmd.exe', '--command=py -m unittest']).pid
