@@ -17,7 +17,7 @@ class test_chk01_intensive_checklist(QCASTestClient):
     @unittest.skipUnless(binimage_path_exists(), "requires Binimage Path")
     @unittest.skipIf(skipping_length_tests(), "Skipping Lengthy Validations")        
     def test_TSL_entries_exist_in_PSL_files_full(self):       
-        if self.my_preferences.verbose_mode == "true": 
+        if self.my_preferences.data['verbose_mode'] == "true": 
             logging.getLogger().info("Testing new Games are in PSL files (full)")    
         # Read TSL entry
         # Generate PSL entry with seeds
@@ -28,7 +28,7 @@ class test_chk01_intensive_checklist(QCASTestClient):
         count = 0
         
         for game in TSL_game_list_to_be_added: 
-            blnk_file = os.path.join(self.my_preferences.path_to_binimage, 
+            blnk_file = os.path.join(self.my_preferences.data['path_to_binimage'], 
             	self.getMID_Directory(game.mid), game.bin_file.strip() + "." + 
             	self.get_bin_type(game.bin_type))
             
@@ -44,7 +44,7 @@ class test_chk01_intensive_checklist(QCASTestClient):
 
                 self.assertTrue(len(psl_entry_object.game_name) < 31, 
                 	msg="Game Name has to be 30 characters or less")
-                self.assertTrue(psl_entry_object.manufacturer in self.my_preferences.mid_list, 
+                self.assertTrue(psl_entry_object.manufacturer in self.my_preferences.data['mid_list'], 
                 	msg="Not a valid MID")
             
                 valid_year = list(range(2017,9999))
@@ -63,59 +63,59 @@ class test_chk01_intensive_checklist(QCASTestClient):
             
             if not skipping_PSL_comparison_tests():
                 # verify that PSL object fields matches is the the PSLfiles  
-                self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[0], self.PSLfile), 
-                    msg=psl_entry_list[0] + ", entry did not exist in " + self.PSLfile)
-                self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[1], self.nextMonth_PSLfile), 
-                    msg=psl_entry_list[1] + ", entry did not exist in " + self.nextMonth_PSLfile)
+                self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[0], self.my_preferences.data['PSLfile']), 
+                    msg=psl_entry_list[0] + ", entry did not exist in " + self.my_preferences.data['PSLfile'])
+                self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[1], self.my_preferences.data['nextMonth_PSLfile']), 
+                    msg=psl_entry_list[1] + ", entry did not exist in " + self.my_preferences.data['nextMonth_PSLfile'])
             else: 
-                self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[0], self.PSLfile), 
-                    msg=psl_entry_list[0] + ", entry did not exist in " + self.PSLfile)
+                self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[0], self.my_preferences.data['PSLfile']), 
+                    msg=psl_entry_list[0] + ", entry did not exist in " + self.my_preferences.data['PSLfile'])
 
     # Generate PSL entries for one randomly chosen new game in the new TSL file
     # Compare with PSL files and make sure that entries for both months matches 
     @unittest.skipUnless(binimage_path_exists(), "requires Binimage Path")
     @unittest.skipIf(skipping_length_tests(), "Skipping Lengthy Validations")            
     def test_One_new_game_to_be_added_in_PSL_files_full(self):
-        if self.my_preferences.verbose_mode == "true": 
+        if self.my_preferences.data['verbose_mode'] == "true": 
             logging.getLogger().info("Testing One New Game Entry in PSL file (full)")
         
         new_games_to_be_added = self.get_newgames_to_be_added()   # TSL object list
         random_tsl_entry = random.choice(new_games_to_be_added) 
-        blnk_file = os.path.join(self.my_preferences.path_to_binimage, 
+        blnk_file = os.path.join(self.my_preferences.data['path_to_binimage'], 
             self.getMID_Directory(random_tsl_entry.mid), 
             random_tsl_entry.bin_file.strip() + "." + self.get_bin_type(random_tsl_entry.bin_type))
             
-        if self.my_preferences.verbose_mode == "true": 
+        if self.my_preferences.data['verbose_mode'] == "true": 
             man_name = self.get_manufacturer_name(random_tsl_entry.mid)                                
             logging.getLogger().debug("Generating PSL entry for one [NEW] approved game: " +  random_tsl_entry.game_name + " (" + man_name + ")")
 
         psl_entry_list = self.generate_PSL_entry(blnk_file, random_tsl_entry)
 
-        if self.my_preferences.verbose_mode == "true": 
+        if self.my_preferences.data['verbose_mode'] == "true": 
             for psl_entry in psl_entry_list: 
                 logging.getLogger().debug(psl_entry)
         
         if not skipping_PSL_comparison_tests():
             self.assertEqual(len(psl_entry_list), 2, 
                 msg="Expected 2 PSL entries: " + ','.join(psl_entry_list)) # one PSL entry for each month       
-            self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[0], self.PSLfile), 
-                msg=psl_entry_list[0] + ", entry did not exist in " + self.PSLfile)
-            self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[1], self.nextMonth_PSLfile), 
-                msg=psl_entry_list[1] + ", entry did not exist in " + self.nextMonth_PSLfile)
+            self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[0], self.my_preferences.data['PSLfile']), 
+                msg=psl_entry_list[0] + ", entry did not exist in " + self.my_preferences.data['PSLfile'])
+            self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[1], self.my_preferences.data['nextMonth_PSLfile']), 
+                msg=psl_entry_list[1] + ", entry did not exist in " + self.my_preferences.data['nextMonth_PSLfile'])
         else: 
             self.assertEqual(len(psl_entry_list), 1, msg="Expected 1 PSL entries: " + ','.join(psl_entry_list))
-            self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[0], self.PSLfile), 
-                msg=psl_entry_list[0] + ", entry did not exist in " + self.PSLfile)
+            self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[0], self.my_preferences.data['PSLfile']), 
+                msg=psl_entry_list[0] + ", entry did not exist in " + self.my_preferences.data['PSLfile'])
 
     # Generate PSL entries for one randomly chosen new game in the new TSL file (all games)
     # Compare with PSL files and make sure that entries for both months matches 
     @unittest.skipUnless(binimage_path_exists(), "requires Binimage Path")
     @unittest.skipIf(skipping_length_tests(), "Skipping Lengthy Validations")            
     def test_One_old_game_to_be_added_in_PSL_files_full(self): 
-        if self.my_preferences.verbose_mode == "true": 
+        if self.my_preferences.data['verbose_mode'] == "true": 
             logging.getLogger().info("Testing One Old Game Entry in PSL file (full)")
         
-        all_games = self.check_file_format(self.TSLfile, 'TSL') 
+        all_games = self.check_file_format(self.my_preferences.data['TSLfile'], 'TSL') 
         complete = False
         while True: 
             # Choose a Random game from TSL file
@@ -125,7 +125,7 @@ class test_chk01_intensive_checklist(QCASTestClient):
                 break
             
             if random_tsl_entry.bin_type == 'BLNK': 
-                blnk_file = os.path.join(self.my_preferences.path_to_binimage, 
+                blnk_file = os.path.join(self.my_preferences.data['path_to_binimage'], 
                     self.getMID_Directory(random_tsl_entry.mid), 
                     random_tsl_entry.bin_file.strip() + "." + 
                     str(self.get_bin_type(random_tsl_entry.bin_type)))
@@ -142,24 +142,24 @@ class test_chk01_intensive_checklist(QCASTestClient):
                         else: 
                             complete = True
                             
-                if self.my_preferences.verbose_mode == "true" and complete == True: 
+                if self.my_preferences.data['verbose_mode'] == "true" and complete == True: 
                     man_name = self.get_manufacturer_name(random_tsl_entry.mid)                                
                     logging.getLogger().debug("Generating PSL entry for one [OLD] approved game: " +  random_tsl_entry.game_name + " (" + man_name + ")")
 
                 if complete: 
                     psl_entry_list = self.generate_PSL_entry(blnk_file, random_tsl_entry) # Slow process
 
-                if self.my_preferences.verbose_mode == "true" and complete: 
+                if self.my_preferences.data['verbose_mode'] == "true" and complete: 
                     for psl_entry in psl_entry_list: 
                         logging.getLogger().debug(psl_entry)    
                 
                 if not skipping_PSL_comparison_tests():
                     self.assertEqual(len(psl_entry_list), 2, msg="Expected 2 PSL entries: " + ','.join(psl_entry_list)) # one PSL entry for each month       
-                    self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[0], self.PSLfile), msg=psl_entry_list[0] + ", entry did not exist in " + self.PSLfile)
-                    self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[1], self.nextMonth_PSLfile), msg=psl_entry_list[1] + ", entry did not exist in " + self.nextMonth_PSLfile)
+                    self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[0], self.my_preferences.data['PSLfile']), msg=psl_entry_list[0] + ", entry did not exist in " + self.my_preferences.data['PSLfile'])
+                    self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[1], self.my_preferences.data['nextMonth_PSLfile']), msg=psl_entry_list[1] + ", entry did not exist in " + self.my_preferences.data['nextMonth_PSLfile'])
                 else: 
                     self.assertEqual(len(psl_entry_list), 1, msg="Expected 1 PSL entries: " + ','.join(psl_entry_list)) # one PSL entry for each month       
-                    self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[0], self.PSLfile), msg=psl_entry_list[0] + ", entry did not exist in " + self.PSLfile)
+                    self.assertTrue(self.verify_psl_entry_exist(psl_entry_list[0], self.my_preferences.data['PSLfile']), msg=psl_entry_list[0] + ", entry did not exist in " + self.my_preferences.data['PSLfile'])
             else: 
-                if self.my_preferences.verbose_mode == "true": 
+                if self.my_preferences.data['verbose_mode'] == "true": 
                     logging.getLogger().debug("Skipping: " + random_tsl_entry.game_name + ". Reason: " + random_tsl_entry.bin_type + " file type")                    

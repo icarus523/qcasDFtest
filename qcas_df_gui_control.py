@@ -16,6 +16,7 @@ import test_msl_file_content
 import test_tsl_file_content
 import test_chk01_checklist
 import test_epsig_log_files
+import webbrowser
 
 from datetime import datetime
 from tkinter import *
@@ -33,18 +34,6 @@ logging.basicConfig(level=logging.DEBUG,
         filename='qcas_test.log',
         filemode='w')
         
-# ## Configure logger
-# logger = logging.getLogger()
-# logger.level = logging.INFO
-# stream_handler = logging.StreamHandler(sys.stdout)
-# logger.addHandler(stream_handler)
-
-# file_handler = logging.FileHandler("qcas_test.log")
-
-# #file_handler.setFormatter(formatter)
-# logger.addHandler(stream_handler)
-# logger.addHandler(file_handler)
-
 class qcas_df_gui: 
 
     # Constructor
@@ -52,6 +41,8 @@ class qcas_df_gui:
         self.my_preferences = Preferences() 
         self.root = tk.Tk()       
         self.config_fname = "preferences.dat"
+        self.my_unittests = list() 
+        self.my_test_output = list()
         
         menubar = tk.Menu(self.root)
         filemenu = tk.Menu(menubar, tearoff=0)
@@ -60,12 +51,21 @@ class qcas_df_gui:
         menubar.add_cascade(label="File", menu=filemenu)
         filemenu.add_command(label="Exit", command=self.root.destroy)
         
+        menubar.add_cascade(label="Help", menu=optionmenu)
+        optionmenu.add_command(label="About this Program", command=None)
+        optionmenu.add_command(label="How To Use", command=self.howToUse)
+
         self.root.config(menu=menubar)
         threading.Thread(self.setUpGUI()).start()        
 
+    def howToUse(self): 
+        url = 'https://github.com/icarus523/qcasDFtest/blob/master/README.md'
+        webbrowser.open_new(url)
+            
+        
     ############# GUI Related ################## 
     def setUpGUI(self):
-        self.root.wm_title("QCAS DF Verify Control v" + VERSION)        
+        self.root.wm_title("QCAS DF GUI Control v" + VERSION)        
         
         self.root.resizable(1,1)    
         self.root.focus_force()  
@@ -88,7 +88,7 @@ class qcas_df_gui:
         # Text Entry Current MSL file
         v_msl = StringVar() 
         self.tf_current_msl = ttk.Entry(frame_current_month_msl, width = 100, textvariable = v_msl)
-        v_msl.set(self.my_preferences.MSLfile)
+        v_msl.set(self.my_preferences.data['MSLfile'])
         self.tf_current_msl.pack(side=LEFT, fill=X, padx = 3, pady = 3, expand=True)
 
         ######## Next Month MSL
@@ -103,7 +103,7 @@ class qcas_df_gui:
         # Text Entry Current MSL file
         v = StringVar() 
         self.tf_nextmonth_msl = ttk.Entry(frame_next_month_msl, width = 100, textvariable = v)
-        v.set(self.my_preferences.nextMonth_MSLfile)
+        v.set(self.my_preferences.data['nextMonth_MSLfile'])
         self.tf_nextmonth_msl.pack(side=LEFT, fill=X, padx = 3, pady = 3, expand=True)
 
         ######## Current PSL
@@ -118,7 +118,7 @@ class qcas_df_gui:
         # Text Entry Current PSL file
         v_psl = StringVar() 
         self.tf_current_psl = ttk.Entry(frame_current_psl, width = 100, textvariable = v_psl)
-        v_psl.set(self.my_preferences.PSLfile)
+        v_psl.set(self.my_preferences.data['PSLfile'])
         self.tf_current_psl.pack(side=LEFT, fill=X, padx = 3, pady = 3, expand=True)
 
         ######## Next Month PSL
@@ -133,7 +133,7 @@ class qcas_df_gui:
         # Text Next Month PSL file
         v_psl2 = StringVar() 
         self.tf_nextmonth_psl = ttk.Entry(frame_next_month_psl, width = 100, textvariable = v_psl2)
-        v_psl2.set(self.my_preferences.nextMonth_PSLfile)
+        v_psl2.set(self.my_preferences.data['nextMonth_PSLfile'])
         self.tf_nextmonth_psl.pack(side=LEFT, fill=X, padx = 3, pady = 3, expand=True)
 
 
@@ -149,7 +149,7 @@ class qcas_df_gui:
         # Text Entry Current PSL file
         v_tsl = StringVar() 
         self.tf_current_tsl = ttk.Entry(frame_current_tsl, width = 100, textvariable = v_tsl)
-        v_tsl.set(self.my_preferences.TSLfile)
+        v_tsl.set(self.my_preferences.data['TSLfile'])
         self.tf_current_tsl.pack(side=LEFT, fill=X, padx = 3, pady = 3, expand=True)
 
         ######## Previous Month TSL
@@ -294,11 +294,109 @@ class qcas_df_gui:
             command=self.handleCheckButton)
         self.cb_one_month_mode.grid(row=8, column=1, sticky='w')        
         
+
+        
         ######## Bottom Frame
         frame_bottomarea = ttk.Frame(self.root)
         frame_bottomarea.pack(side = BOTTOM, fill=X, expand=False)
         frame_bottomarea.config(relief = RIDGE, borderwidth = 1)
 
+        ######## Unittest Frame
+        frame_unittest = ttk.Labelframe(frame_bottomarea, text="Unit tests:")
+        frame_unittest.pack(side = TOP, fill=X, expand=False)
+        frame_unittest.config(relief = RIDGE, borderwidth = 1)
+        
+        # Checkbutton unit test filename format
+        self.unittest_filename_format = IntVar()           
+        self.cb_unittest_filename_format = Checkbutton(
+            frame_unittest, 
+            text="File Name Format", 
+            justify=LEFT, 
+            variable = self.unittest_filename_format, 
+            onvalue=1, 
+            offvalue=0,
+            command=self.handleCheckButton)
+        self.cb_unittest_filename_format.pack(side = LEFT, fill=X, expand=False)
+        self.unittest_filename_format.set(1)
+        
+        # Checkbutton unit test MSL file content
+        self.unittest_msl_file_content = IntVar()           
+        self.cb_unittest_msl_file_content = Checkbutton(
+            frame_unittest, 
+            text="MSL file content", 
+            justify=LEFT, 
+            variable = self.unittest_msl_file_content, 
+            onvalue=1, 
+            offvalue=0,
+            command=self.handleCheckButton)
+        self.cb_unittest_msl_file_content.pack(side = LEFT, fill=X, expand=False)
+        self.unittest_msl_file_content.set(1)
+        
+        # Checkbutton unit test PSL file content
+        self.unittest_psl_file_content = IntVar()           
+        self.cb_unittest_psl_file_content = Checkbutton(
+            frame_unittest, 
+            text="PSL file content", 
+            justify=LEFT, 
+            variable = self.unittest_psl_file_content, 
+            onvalue=1, 
+            offvalue=0,
+            command=self.handleCheckButton)
+        self.cb_unittest_psl_file_content.pack(side = LEFT, fill=X, expand=False)
+        self.unittest_psl_file_content.set(1)
+        
+        # Checkbutton unit test TSL file content
+        self.unittest_tsl_file_content = IntVar()           
+        self.cb_unittest_tsl_file_content = Checkbutton(
+            frame_unittest, 
+            text="TSL file content", 
+            justify=LEFT, 
+            variable = self.unittest_tsl_file_content, 
+            onvalue=1, 
+            offvalue=0,
+            command=self.handleCheckButton)
+        self.cb_unittest_tsl_file_content.pack(side = LEFT, fill=X, expand=False)
+        self.unittest_tsl_file_content.set(1)
+        
+        # Checkbutton unit test epsig log file
+        self.unittest_epsig_log_file = IntVar()           
+        self.cb_unittest_epsig_log_file = Checkbutton(
+            frame_unittest, 
+            text="epsig log file", 
+            justify=LEFT, 
+            variable = self.unittest_epsig_log_file, 
+            onvalue=1, 
+            offvalue=0,
+            command=self.handleCheckButton)
+        self.cb_unittest_epsig_log_file.pack(side = LEFT, fill=X, expand=False)
+        self.unittest_epsig_log_file.set(1)
+        
+        # Checkbutton chk01 basic
+        self.unittest_chk01_basic = IntVar()           
+        self.cb_unittest_chk01_basic = Checkbutton(
+            frame_unittest, 
+            text="CHK01 Basic", 
+            justify=LEFT, 
+            variable = self.unittest_chk01_basic, 
+            onvalue=1, 
+            offvalue=0,
+            command=self.handleCheckButton)
+        self.cb_unittest_chk01_basic.pack(side = LEFT, fill=X, expand=False)
+        self.unittest_chk01_basic.set(1)
+        
+        # Checkbutton chk01 intensive
+        #self.unittest_chk01_intensive = IntVar()           
+        #self.cb_unittest_chk01_intensive = Checkbutton(
+        #    frame_unittest, 
+        #    text="CHK01 Intensive", 
+        #    justify=LEFT, 
+        #    variable = self.unittest_chk01_intensive, 
+        #    onvalue=1, 
+        #    offvalue=0,
+        #    command=self.handleCheckButton)
+        #self.cb_unittest_chk01_intensive.pack(side = LEFT, fill=X, expand=False)
+        #self.unittest_chk01_intensive.set(1)
+        
         ######## Start Button Frame
         frame_start_button = ttk.Frame(frame_bottomarea)
         frame_start_button.config(relief = FLAT, borderwidth = 1)
@@ -327,6 +425,41 @@ class qcas_df_gui:
             self.button_select_nextmonth_psl.config(state=NORMAL)
             self.tf_nextmonth_psl.config(state=NORMAL)
         
+        # Build Tests         
+        self.my_unittests = list() # clear list    
+        self.my_test_output = list() # clear list
+
+        # by default always do intensive chk01, but is controllable via Checkbox
+        self.my_unittests.append(test_chk01_intensive_checklist)
+        self.my_test_output.append("CHK01 Intensive validations")          
+        
+        if self.unittest_filename_format.get() == 1: 
+            self.my_unittests.append(test_file_name_format)
+            self.my_test_output.append("Datafile Filename format tests")
+            
+        if self.unittest_msl_file_content.get() == 1: 
+            self.my_unittests.append(test_msl_file_content)
+            self.my_test_output.append("MSL File Content Tests: ")
+            
+        if self.unittest_psl_file_content.get() == 1: 
+            self.my_unittests.append(test_psl_file_content)
+            self.my_test_output.append("PSL File Content Tests: ")
+        
+        if self.unittest_tsl_file_content.get() == 1: 
+            self.my_unittests.append(test_tsl_file_content)
+            self.my_test_output.append("TSL File Content Tests: ")        
+        
+        if self.unittest_epsig_log_file.get() == 1: 
+            self.my_unittests.append(test_epsig_log_files)
+            self.my_test_output.append("epsig log file content tests")   
+
+        if self.unittest_chk01_basic.get() == 1: 
+            self.my_unittests.append(test_chk01_checklist)
+            self.my_test_output.append("CHK01 Validations")           
+
+
+
+            
     def handleButtonPress(self, choice):
         if choice == '__select_current_msl_file__':
             tmp = filedialog.askopenfilename(initialdir=DF_DIRECTORY, title = "Select Current MSL File",filetypes = (("MSL files","*.MSL"),("all files","*.*")))
@@ -386,13 +519,15 @@ class qcas_df_gui:
                 self.tf_newgames.insert(0, tmp)   
             
         elif choice == '__start__':
-            threading.Thread(self.StartUnitTest()).start()        
-            self.root.deiconify()
+            self.handleCheckButton() # get CheckButton unit tests
+            threading.Thread(self.StartUnitTest(self.my_unittests, self.my_test_output)).start()        
+            self.root.deiconify()            
+            
         elif choice == '__save__':
             self.UpdatePreferences()
-
+       
             
-    def StartUnitTest(self):
+    def StartUnitTest(self, tests, testoutput):
         self.UpdatePreferences() # save first       
         #self.root.destroy() # remove gui
         self.root.withdraw() 
@@ -409,13 +544,11 @@ class qcas_df_gui:
         for file in unit_test_files:
             logging.getLogger().info("%35s\t%s" % (file, QCASTestClient.dohash_sha256(self, file)))
 
-        print("==== Starting Unit Tests ====")
+        logging.getLogger().info("==== Starting Unit Tests ====")
         # subprocess.call('py -m unittest', shell=False)
-        #suite = unittest.TestLoader().loadTestsFromModule(test_PSLfile_content)
-        #testResult = unittest.TextTestRunner(verbosity=3).run( suite ) 
 
-        tests = [ test_msl_file_content, test_tsl_file_content, test_psl_file_content, test_epsig_log_files , test_file_name_format, test_chk01_intensive_checklist, test_chk01_checklist]
-        testoutput = [ "MSL File Content Tests: ", "TSL File Content Tests: ", "PSL File Content Tests", "epsig log file content tests", "Datafile Filename format tests", "CHK01 Intensive validations", "CHK01 Validations"]
+        #tests = [ test_msl_file_content, test_tsl_file_content, test_psl_file_content, test_epsig_log_files , test_file_name_format, test_chk01_intensive_checklist, test_chk01_checklist]
+        #testoutput = [ "MSL File Content Tests: ", "TSL File Content Tests: ", "PSL File Content Tests", "epsig log file content tests", "Datafile Filename format tests", "CHK01 Intensive validations", "CHK01 Validations"]
         for test in tests: 
             testLoad = unittest.TestLoader().loadTestsFromModule(test)      
             testResult = unittest.TextTestRunner(verbosity=3).run(testLoad) 
@@ -434,11 +567,11 @@ class qcas_df_gui:
     def UpdatePreferences(self):        
         #update vars
         self.my_preferences.data['previous_TSLfile'] = self.tf_previousmonth_tsl.get()
-        self.my_preferences.TSLfile = self.tf_current_tsl.get() 
-        self.my_preferences.PSLfile = self.tf_current_psl.get()
-        self.my_preferences.nextMonth_PSLfile = self.tf_nextmonth_psl.get()
-        self.my_preferences.MSLfile = self.tf_current_msl.get()
-        self.my_preferences.nextMonth_MSLfile = self.tf_nextmonth_msl.get()
+        self.my_preferences.data['TSLfile'] = self.tf_current_tsl.get() 
+        self.my_preferences.data['PSLfile'] = self.tf_current_psl.get()
+        self.my_preferences.data['nextMonth_PSLfile'] = self.tf_nextmonth_psl.get()
+        self.my_preferences.data['MSLfile'] = self.tf_current_msl.get()
+        self.my_preferences.data['nextMonth_MSLfile'] = self.tf_nextmonth_msl.get()
         self.my_preferences.data['number_of_random_games'] = self.box_value.get()
         self.my_preferences.data['epsig_log_file'] = self.v_epsiglog.get()        
         
