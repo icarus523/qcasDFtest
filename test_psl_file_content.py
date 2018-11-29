@@ -11,9 +11,9 @@ class test_PSLfile_content(QCASTestClient):
             logging.getLogger().info("Testing PSL file is reasonable")    
         
         if skipping_PSL_comparison_tests() == True: 
-            psl_files = [self.PSLfile] 
+            psl_files = [self.my_preferences.data['PSLfile']] 
         else: 
-            psl_files = [self.PSLfile, self.nextMonth_PSLfile] 
+            psl_files = [self.my_preferences.data['PSLfile'], self.my_preferences.data['nextMonth_PSLfile']] 
             
         for psl_file in psl_files: 
             size_in_bytes = os.stat(psl_file).st_size # filesize
@@ -29,8 +29,8 @@ class test_PSLfile_content(QCASTestClient):
         if self.my_preferences.data['verbose_mode'] == "true": 
             logging.getLogger().info("Testing PSL file size reduction is reasonable") 
             
-        PSLfile_size_in_bytes = os.stat(self.PSLfile).st_size # filesize
-        nextMonth_PSLfile_size_in_bytes = os.stat(self.nextMonth_PSLfile).st_size # filesize
+        PSLfile_size_in_bytes = os.stat(self.my_preferences.data['PSLfile']).st_size # filesize
+        nextMonth_PSLfile_size_in_bytes = os.stat(self.my_preferences.data['nextMonth_PSLfile']).st_size # filesize
         
         # +/-10% of the current PSL size is acceptable. 
         acceptable_size = float(PSLfile_size_in_bytes) * self.my_preferences.data['percent_changed_acceptable'] # 0.10
@@ -46,9 +46,9 @@ class test_PSLfile_content(QCASTestClient):
     
     def test_PSL_content_can_be_parsed(self):
         if skipping_PSL_comparison_tests() == True: 
-            pslfile_list = [self.PSLfile] 
+            pslfile_list = [self.my_preferences.data['PSLfile']] 
         else: 
-            pslfile_list = [self.PSLfile, self.nextMonth_PSLfile] 
+            pslfile_list = [self.my_preferences.data['PSLfile'], self.my_preferences.data['nextMonth_PSLfile']] 
         
         if self.my_preferences.data['verbose_mode'] == "true": 
             logging.getLogger().info("Testing PSL files can be parsed: " + ",".join(pslfile_list))    
@@ -91,10 +91,10 @@ class test_PSLfile_content(QCASTestClient):
     def test_Read_PSL_file_from_disk(self):
         logging.getLogger().info("Testing PSL files read from disk")    
 
-        self.assertTrue(os.path.isfile(self.PSLfile))
+        self.assertTrue(os.path.isfile(self.my_preferences.data['PSLfile']))
         
         if not skipping_PSL_comparison_tests():
-            self.assertTrue(os.path.isfile(self.nextMonth_PSLfile))
+            self.assertTrue(os.path.isfile(self.my_preferences.data['nextMonth_PSLfile']))
 
 
     # Verify that valid MIDs have PSL entries. 
@@ -106,9 +106,9 @@ class test_PSLfile_content(QCASTestClient):
         pslfile_list = list() 
         
         if skipping_PSL_comparison_tests() == True: 
-            pslfile_list = [self.PSLfile] 
+            pslfile_list = [self.my_preferences.data['PSLfile']] 
         else: 
-            pslfile_list = [self.PSLfile, self.nextMonth_PSLfile] 
+            pslfile_list = [self.my_preferences.data['PSLfile'], self.my_preferences.data['nextMonth_PSLfile']] 
         
         for pslfile in pslfile_list: 
             # Check for PSL File Format by Instantiating an object of PSL type
@@ -136,9 +136,9 @@ class test_PSLfile_content(QCASTestClient):
             
         pslfile_list = list() 
         if skipping_PSL_comparison_tests() == True: 
-            pslfile_list = [self.PSLfile] 
+            pslfile_list = [self.my_preferences.data['PSLfile']] 
         else: 
-            pslfile_list = [self.PSLfile, self.nextMonth_PSLfile] 
+            pslfile_list = [self.my_preferences.data['PSLfile'], self.my_preferences.data['nextMonth_PSLfile']] 
             
         psl_field_month = ''
         psl_field_year = ''

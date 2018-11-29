@@ -130,7 +130,7 @@ This test script verifies the expected output of the EPSIG log.
 - Verifies that the time stamp for when EPSIG last ran is reasonable (within 7 days)
 - Verifies that the time stamp for when EPSIG last completed is reasonable (within 7 days)
 - Verifies that the end of the Epsig Log File indicates: "with EXIT_SUCCESS"
-- Verifies that the command that was used for Epsig is correct. (Correct Epsig Binary used; Correct BINIMAGE Path used: i.e. G:\; Correct Datafiles referenced, i.e. MSL file is `self.MSLfile or self.nextMonth_MSLfile`; TSL file is `self.TSLfile`; PSL file is `self.PSLfile or self.nextMonth_PSLfile`
+- Verifies that the command that was used for Epsig is correct. (Correct Epsig Binary used; Correct BINIMAGE Path used: i.e. G:\; Correct Datafiles referenced, i.e. MSL file is `self.MSLfile or self.my_preferences.data['nextMonth_MSLfile']`; TSL file is `self.TSLfile`; PSL file is `self.PSLfile or self.nextMonth_PSLfile`
 
 
 
@@ -138,10 +138,10 @@ This test script verifies the expected output of the EPSIG log.
 Generic test scripts for correct file name format and conventions. 
 
 #### `test_MSL_filename_ends_with_MSL()`
-- Verifies that `self.MSLfile or self.nextMonth_MSLfile` ends with .msl
+- Verifies that `self.MSLfile or self.my_preferences.data['nextMonth_MSLfile']` ends with .msl
 
 #### `test_MSL_filename_date()`
-- Verifies that the month fields in `self.MSLfile or self.nextMonth_MSLfile` are not equal
+- Verifies that the month fields in `self.MSLfile or self.my_preferences.data['nextMonth_MSLfile']` are not equal
 - Verifies that the MSL filename month fields are not equal
 - Verifies that the MSL year fields is the same if month is less than 12, otherwise an increment in Year value is expected
 
@@ -200,14 +200,14 @@ Generic test scripts for correct file name format and conventions.
 - Verifies that the file size of the MSL files is reasonable (The size should not change and is 1KB)
 
 #### `test_MSL_content_can_be_parsed()`
-- Verifies the `self.MSLfile` and `self.nextMonth_MSLfile` file contents by reading parsing the files
+- Verifies the `self.MSLfile` and `self.my_preferences.data['nextMonth_MSLfile']` file contents by reading parsing the files
 - Verifies that the MSL object generated from the files only has one entry
 
 #### `test_MSL_file_one_row()`
 - Verifies that the MSL files only has one entry
 
 #### `test_Read_MSL_file()`
-- Verifies that the `self.MSLfile` and `self.nextMonth_MSLfile` can be read from disk 
+- Verifies that the `self.MSLfile` and `self.my_preferences.data['nextMonth_MSLfile']` can be read from disk 
 
 #### `test_MSL_fields_sanity_checks()`
 - Performs sanity checks on MSL fields, for both MSL files

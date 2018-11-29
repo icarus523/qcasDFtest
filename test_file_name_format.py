@@ -9,26 +9,26 @@ class test_file_name_format(QCASTestClient):
         if self.my_preferences.data['verbose_mode'] == "true": 
             logging.getLogger().info("Testing MSL file ends with .MSL")    
     
-        assert(str(self.MSLfile).upper().endswith("MSL"))
+        assert(str(self.my_preferences.data['MSLfile']).upper().endswith("MSL"))
         
         if not skipping_PSL_comparison_tests(): # Do Assert only for Both Months
-            assert(str(self.nextMonth_MSLfile).upper().endswith("MSL"))
+            assert(str(self.my_preferences.data['nextMonth_MSLfile']).upper().endswith("MSL"))
 
     def test_MSL_filename_date(self):
         if self.my_preferences.data['verbose_mode'] == "true": 
             logging.getLogger().info("Testing MSL filename Date")    
 
-        current_month = self.get_filename_month(self.MSLfile)
+        current_month = self.get_filename_month(self.my_preferences.data['MSLfile'])
         # year is to be same, unless current month = 12 (Dec)
-        current_month_year = self.get_filename_year(self.MSLfile)
+        current_month_year = self.get_filename_year(self.my_preferences.data['MSLfile'])
         
         if not skipping_PSL_comparison_tests():
-            next_month = self.get_filename_month(self.nextMonth_MSLfile)
+            next_month = self.get_filename_month(self.my_preferences.data['nextMonth_MSLfile'])
 
             # current month != next month
             self.assertNotEqual(current_month, next_month, msg="MSL files are the same")
 
-            next_month_year = self.get_filename_year(self.nextMonth_MSLfile)
+            next_month_year = self.get_filename_year(self.my_preferences.data['nextMonth_MSLfile'])
 
             if int(current_month) < 12 :
                 self.assertEqual(int(next_month_year), int(current_month_year), msg="MSL filename Year is not the same") # same year
@@ -36,46 +36,46 @@ class test_file_name_format(QCASTestClient):
             if int(next_month) == 12:
                 self.assertNotEqual(int(current_month_year), int(next_month_year) + 1) # new year
 
-            if self.is_new_year(self.MSLfile):
+            if self.is_new_year(self.my_preferences.data['MSLfile']):
                 self.assertEqual(int(next_month_year), 1, msg="MSL filename Year, for New Year is not 1")
 
     def test_MSL_filename_version(self):
         if self.my_preferences.data['verbose_mode'] == "true": 
             logging.getLogger().info("Testing MSL filename version")    
         
-        version = self.get_filename_version(self.MSLfile)
+        version = self.get_filename_version(self.my_preferences.data['MSLfile'])
         self.assertEqual(int(version), 1, msg="MSL version must always be 1") 
         
         if not skipping_PSL_comparison_tests():
-            nextmonth_version = self.get_filename_version(self.nextMonth_MSLfile)
+            nextmonth_version = self.get_filename_version(self.my_preferences.data['nextMonth_MSLfile'])
             self.assertEqual(int(nextmonth_version), 1, msg="MSL version must always be 1") # version must always be v1.
 
     def test_TSLfile_ends_with_TSL(self):
         if self.my_preferences.data['verbose_mode'] == "true": 
             logging.getLogger().info("Testing TSL filename ends with .TSL")    
        
-        assert(str(self.TSLfile).upper().endswith("TSL")) # only 1 TSL file
+        assert(str(self.my_preferences.data['TSLfile']).upper().endswith("TSL")) # only 1 TSL file
 
     ### PSL file name format tests
     def test_PSLfile_ends_with_PSL(self):
         if self.my_preferences.data['verbose_mode'] == "true": 
             logging.getLogger().info("Testing PSL filename ends with .PSL")       
-        assert(str(self.PSLfile).upper().endswith("PSL"))
+        assert(str(self.my_preferences.data['PSLfile']).upper().endswith("PSL"))
         
         if not skipping_PSL_comparison_tests():
-            assert(str(self.nextMonth_PSLfile).upper().endswith("PSL"))
+            assert(str(self.my_preferences.data['nextMonth_PSLfile']).upper().endswith("PSL"))
     
     ## @unittest.skip("Skipping PSL version inc tests")        
     def test_PSL_file_version_increment(self):
         if self.my_preferences.data['verbose_mode'] == "true": 
             logging.getLogger().info("Testing PSL filename version increment")       
 
-        psl_version = self.get_filename_version(self.PSLfile)
-        current_month = self.get_filename_month(self.PSLfile)
+        psl_version = self.get_filename_version(self.my_preferences.data['PSLfile'])
+        current_month = self.get_filename_month(self.my_preferences.data['PSLfile'])
         
         if not skipping_PSL_comparison_tests():
-            next_month_psl_version = self.get_filename_version(self.nextMonth_PSLfile)
-            next_month = self.get_filename_month(self.nextMonth_PSLfile)
+            next_month_psl_version = self.get_filename_version(self.my_preferences.data['nextMonth_PSLfile'])
+            next_month = self.get_filename_month(self.my_preferences.data['nextMonth_PSLfile'])
 
         
         # "PSLfile": "G:\\OLGR-TECHSERV\\MISC\\BINIMAGE\\qcas\\qcas_2018_07_v04.psl",
@@ -92,9 +92,9 @@ class test_file_name_format(QCASTestClient):
             # # can't assume that the next month psl version is equal to 1.
 
             # # Assume the previous PSL file and previous nextMonthPSL file
-            # previous_PSLfile = "qcas_" + self.get_filename_year(self.PSLfile) + "_" + current_month + "_v" + self.format_twoDigit(int(psl_version) - 1) + ".psl"
-            # previous_nextMonth_PSLfile = "qcas_" + self.get_filename_year(self.nextMonth_PSLfile) + "_" + next_month + "_v" + self.format_twoDigit(int(next_month_psl_version) - 1) + ".psl"
-            # path = os.path.dirname(self.PSLfile)
+            # previous_PSLfile = "qcas_" + self.get_filename_year(self.my_preferences.data['PSLfile']) + "_" + current_month + "_v" + self.format_twoDigit(int(psl_version) - 1) + ".psl"
+            # previous_nextMonth_PSLfile = "qcas_" + self.get_filename_year(self.my_preferences.data['nextMonth_PSLfile']) + "_" + next_month + "_v" + self.format_twoDigit(int(next_month_psl_version) - 1) + ".psl"
+            # path = os.path.dirname(self.my_preferences.data['PSLfile'])
             # previous_PSLfile = os.path.join(path, previous_PSLfile)
             # previous_nextMonth_PSLfile = os.path.join(path, previous_nextMonth_PSLfile)
             
@@ -130,17 +130,17 @@ class test_file_name_format(QCASTestClient):
         if self.my_preferences.data['verbose_mode'] == "true": 
             logging.getLogger().info("Testing PSL filename date")      
             
-        current_month = self.get_filename_month(self.PSLfile)
-        current_month_year = self.get_filename_year(self.PSLfile)
+        current_month = self.get_filename_month(self.my_preferences.data['PSLfile'])
+        current_month_year = self.get_filename_year(self.my_preferences.data['PSLfile'])
         
         if not skipping_PSL_comparison_tests():
-            next_month = self.get_filename_month(self.nextMonth_PSLfile)
+            next_month = self.get_filename_month(self.my_preferences.data['nextMonth_PSLfile'])
 
             # current month != next month
             self.assertNotEqual(current_month, next_month, msg="PSL files are the same")
 
             # year is to be same, unless current month = 12 (Dec)
-            next_month_year = self.get_filename_year(self.nextMonth_PSLfile)
+            next_month_year = self.get_filename_year(self.my_preferences.data['nextMonth_PSLfile'])
 
             if int(current_month) < 12 :
                 self.assertEqual(int(next_month_year), int(current_month_year), 

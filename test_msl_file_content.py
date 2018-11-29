@@ -14,9 +14,9 @@ class test_MSL_files(QCASTestClient):
         msl_files = list() 
         
         if skipping_PSL_comparison_tests():
-            msl_files = [self.MSLfile] 
+            msl_files = [self.my_preferences.data['MSLfile']] 
         else:            
-            msl_files = [self.MSLfile, self.nextMonth_MSLfile] 
+            msl_files = [self.my_preferences.data['MSLfile'], self.my_preferences.data['nextMonth_MSLfile']] 
         
         for msl_file in msl_files: 
             size_in_bytes = os.stat(msl_file)
@@ -34,9 +34,9 @@ class test_MSL_files(QCASTestClient):
         msl_entry_object_list = list() 
         
         if skipping_PSL_comparison_tests(): 
-            msl_files = [self.MSLfile] 
+            msl_files = [self.my_preferences.data['MSLfile']] 
         else:
-            msl_files = [self.MSLfile, self.nextMonth_MSLfile] 
+            msl_files = [self.my_preferences.data['MSLfile'], self.my_preferences.data['nextMonth_MSLfile']] 
 
         for msl_file in msl_files: 
             msl_entry_object_list = self.check_file_format(msl_file, 'MSL') # Parse the file and validate MSL content
@@ -52,9 +52,9 @@ class test_MSL_files(QCASTestClient):
         msl_files = list() 
         
         if skipping_PSL_comparison_tests(): 
-            msl_files = [self.MSLfile] 
+            msl_files = [self.my_preferences.data['MSLfile']] 
         else:            
-            msl_files = [self.MSLfile, self.nextMonth_MSLfile] 
+            msl_files = [self.my_preferences.data['MSLfile'], self.my_preferences.data['nextMonth_MSLfile']] 
         
         for msl_file in msl_files:
             with open(msl_file, 'r') as msl:
@@ -66,12 +66,12 @@ class test_MSL_files(QCASTestClient):
         if self.my_preferences.data['verbose_mode'] == "true": 
             logging.getLogger().info("Testing MSL files can be read from disk")    
         
-        err_msg = "Cannot read MSL file, check paths to: " + self.MSLfile
-        self.assertTrue(os.path.isfile(self.MSLfile), msg=err_msg)
+        err_msg = "Cannot read MSL file, check paths to: " + self.my_preferences.data['MSLfile']
+        self.assertTrue(os.path.isfile(self.my_preferences.data['MSLfile']), msg=err_msg)
         
         if not skipping_PSL_comparison_tests():
-            err_msg = "Cannot read MSL file, check paths to: " + self.MSLfile
-            self.assertTrue(os.path.isfile(self.nextMonth_MSLfile), msg=err_msg)
+            err_msg = "Cannot read MSL file, check paths to: " + self.my_preferences.data['MSLfile']
+            self.assertTrue(os.path.isfile(self.my_preferences.data['nextMonth_MSLfile']), msg=err_msg)
             
     def test_MSL_fields_sanity_checks(self):
         if self.my_preferences.data['verbose_mode'] == "true": 
@@ -80,9 +80,9 @@ class test_MSL_files(QCASTestClient):
         mslfile_list = list() 
         
         if skipping_PSL_comparison_tests():
-            mslfile_list = [self.MSLfile] 
+            mslfile_list = [self.my_preferences.data['MSLfile']] 
         else:            
-            mslfile_list = [self.MSLfile, self.nextMonth_MSLfile] 
+            mslfile_list = [self.my_preferences.data['MSLfile'], self.my_preferences.data['nextMonth_MSLfile']] 
             
         for mslfile in mslfile_list: 
             # Check for MSL file format

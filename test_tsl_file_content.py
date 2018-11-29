@@ -8,7 +8,7 @@ class test_general_file_format(QCASTestClient):
         if self.my_preferences.data['verbose_mode'] == "true": 
             logging.getLogger().info("Testing TSL files can be read from disk")    
         
-        self.assertTrue(os.path.isfile(self.TSLfile))
+        self.assertTrue(os.path.isfile(self.my_preferences.data['TSLfile']))
         self.assertTrue(os.path.isfile(self.my_preferences.data['previous_TSLfile'])) # this is mandatory even if your only checkling one month
         
     def test_TSL_content_can_be_parsed(self):
@@ -16,7 +16,7 @@ class test_general_file_format(QCASTestClient):
             logging.getLogger().info("Testing TSL files can parsed")    
         
         # only one TSL file
-        tslfile_list = self.check_file_format(self.TSLfile, 'TSL')
+        tslfile_list = self.check_file_format(self.my_preferences.data['TSLfile'], 'TSL')
 
         for tsl_entry in tslfile_list:
             # Check for TSL manufacturer field

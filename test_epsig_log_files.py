@@ -105,6 +105,7 @@ class test_epsig_log_files(QCASTestClient):
         # Allocating buffer 262144 bytes
         # Finished at Mon Oct 09 13:18:15 2017
         # with EXIT_SUCCESS   
+        logging.getLogger().info("Testing epsig log file for last 4 entries")        
 
         today = datetime.now()
 
@@ -176,7 +177,8 @@ class test_epsig_log_files(QCASTestClient):
     @unittest.skipIf(skipping_PSL_comparison_tests(), "Single PSL Validation only")     
     def test_epsig_log_file_last_two_entries_command_str_is_valid(self): 
         today = datetime.now()
-        
+        logging.getLogger().info("Testing epsig log file for valid command string")        
+
         with open(self.my_preferences.data['epsig_log_file'], 'r') as file: 
             epsig_log = file.read()
             paragraphs = epsig_log.split('\n\n')

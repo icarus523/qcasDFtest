@@ -86,23 +86,13 @@ class Preferences:
     def readfile(self, filename): 
         with open(filename, 'r') as jsonfile: 
             self.data = json.load(jsonfile)
-            # data file preferences
-            # self.mid_list = self.data['mid_list']
-            #self.valid_bin_types = self.data['valid_bin_types']
-            #self.data['previous_TSLfile'] = self.data['previous_TSLfile']
-            #self.epsig_log_file = self.data['epsig_log_file']
-            #self.write_new_games_to_file = self.data['write_new_games_to_file']
-            #self.skip_lengthy_validations = self.data['skip_lengthy_validations']
-            #self.percent_changed_acceptable = self.data['percent_changed_acceptable']
-            #self.verbose_mode = self.data['verbose_mode']
-            #self.number_of_random_games = self.data['number_of_random_games']
             
             # Datafiles 
-            self.TSLfile = self.data['TSLfile']
-            self.PSLfile = self.data['PSLfile']
-            self.nextMonth_PSLfile = self.data['nextMonth_PSLfile']
-            self.MSLfile = self.data['MSLfile']
-            self.nextMonth_MSLfile = self.data['nextMonth_MSLfile']
+            # self.TSLfile = self.data['TSLfile']
+            # self.PSLfile = self.data['PSLfile']
+            # self.nextMonth_PSLfile = self.data['nextMonth_PSLfile']
+            # self.my_preferences.data['MSLfile'] = self.data['MSLfile']
+            # self.my_preferences.data['nextMonth_MSLfile'] = self.data['nextMonth_MSLfile']
                         
             
     def scan_datafiles(self): 
@@ -151,26 +141,13 @@ class Preferences:
     def toJSON(self): 
         return (json.dumps(self, default=lambda o: o.__dict__, sort_keys = True, indent=4))
     
-    def writefile(self, fname): 
-        # data file preferences
-        # self.data['path_to_binimage'] = self.path_to_binimage
-        # self.data['mid_list'] = self.mid_list
-        # self.data['valid_bin_types'] = self.valid_bin_types
-        
-        #self.data['epsig_log_file'] = self.epsig_log_file
-        #self.data['write_new_games_to_file'] = self.write_new_games_to_file
-        #self.data['skip_lengthy_validations'] = self.skip_lengthy_validations
-        #self.data['percent_changed_acceptable'] = self.percent_changed_acceptable
-        #self.data['verbose_mode'] = self.verbose_mode 
-        #self.data['number_of_random_games'] = self.number_of_random_games
-    
+    def writefile(self, fname):    
         # Datafiles 
-        self.data['TSLfile'] = self.TSLfile
-        # self.data['previous_TSLfile'] = self.data['previous_TSLfile']        
-        self.data['PSLfile'] = self.PSLfile
-        self.data['nextMonth_PSLfile'] = self.nextMonth_PSLfile
-        self.data['MSLfile'] = self.MSLfile
-        self.data['nextMonth_MSLfile'] = self.nextMonth_MSLfile
+        # self.data['TSLfile'] = self.TSLfile
+        # self.data['PSLfile'] = self.PSLfile
+        # self.data['nextMonth_PSLfile'] = self.nextMonth_PSLfile
+        #self.data['MSLfile'] = self.my_preferences.data['MSLfile']
+        # self.data['nextMonth_MSLfile'] = self.my_preferences.data['nextMonth_MSLfile']
     
         with open(fname, 'w') as outfile: 
             json.dump(self.data, outfile,sort_keys=True, indent=4, separators=(',', ': '))
@@ -473,13 +450,13 @@ class QCASTestClient(unittest.TestCase):
         ## 
         ## TSL files 
         # self.data['previous_TSLfile'] = self.my_preferences.data['previous_TSLfile']
-        self.TSLfile = self.my_preferences.TSLfile
+        # self.TSLfile = self.my_preferences.TSLfile
         ## PSL files (hashes)
-        self.PSLfile = self.my_preferences.PSLfile
-        self.nextMonth_PSLfile = self.my_preferences.nextMonth_PSLfile
+        # self.PSLfile = self.my_preferences.PSLfile
+        # self.nextMonth_PSLfile = self.my_preferences.nextMonth_PSLfile
         ## MSL files (seeds)
-        self.MSLfile = self.my_preferences.MSLfile
-        self.nextMonth_MSLfile = self.my_preferences.nextMonth_MSLfile
+        # self.my_preferences.data['MSLfile'] = self.my_preferences.MSLfile
+        # self.my_preferences.data['nextMonth_MSLfile'] = self.my_preferences.nextMonth_MSLfile
         ##
         ###############################################
         self.next_month = {'month': '', 'year':''} 
@@ -683,7 +660,7 @@ class QCASTestClient(unittest.TestCase):
         game_list_to_be_removed = list()
 
         with open(self.my_preferences.data['previous_TSLfile'], 'r') as file1: 
-            with open(self.TSLfile, 'r') as file2: 
+            with open(self.my_preferences.data['TSLfile'], 'r') as file2: 
                 tsl_difference_games_removed = set(file1).difference(file2)        
         
         for game in list(game_list_to_be_removed): # Single Line
@@ -695,11 +672,11 @@ class QCASTestClient(unittest.TestCase):
         game_list_to_be_added = list()
         tsl_difference_games_added = set()
 
-        with open(self.TSLfile, 'r') as file1:
+        with open(self.my_preferences.data['TSLfile'], 'r') as file1:
             with open(self.my_preferences.data['previous_TSLfile'], 'r') as file2:
                 tsl_difference_games_added = set(file1).difference(file2)
         
-        self.assertTrue(len(tsl_difference_games_added) > 0) # TSL files must be contain a new game? 
+        self.assertTrue(len(tsl_difference_games_added) > 0) # TSL files must contain a new game? 
   
         # Differences are the new games to be added. 
         for game in list(tsl_difference_games_added): # Single Line
@@ -927,18 +904,18 @@ class QCASTestClient(unittest.TestCase):
         self.assertTrue(path[2:] == "\OLGR-TECHSERV\BINIMAGE\*.*")
         
         msl = fields[2].strip()
-        msl_list = [self.MSLfile, self.nextMonth_MSLfile]
+        msl_list = [self.my_preferences.data['MSLfile'], self.my_preferences.data['nextMonth_MSLfile']]
         self.assertTrue(any(msl in x for x in msl_list)) 
         
         tsl = fields[3].strip()
-        tsl_list = [self.TSLfile, self.my_preferences.data['previous_TSLfile']]
+        tsl_list = [self.my_preferences.data['TSLfile'], self.my_preferences.data['previous_TSLfile']]
         self.assertTrue(any(tsl in x for x in tsl_list))
         
         psl = fields[4].strip()
         
         # remove paths
-        head, psl_tail = os.path.split(self.PSLfile)
-        head, psl_tail2 = os.path.split(self.nextMonth_PSLfile)
+        head, psl_tail = os.path.split(self.my_preferences.data['PSLfile'])
+        head, psl_tail2 = os.path.split(self.my_preferences.data['nextMonth_PSLfile'])
 
         self.assertTrue(psl in [psl_tail, psl_tail2])
 
@@ -949,9 +926,9 @@ class QCASTestClient(unittest.TestCase):
         psl_entry_list = list()
 
         if skipping_PSL_comparison_tests(): 
-            msl_file_list = [self.MSLfile]
+            msl_file_list = [self.my_preferences.data['MSLfile']]
         else: 
-            msl_file_list = [self.MSLfile, self.nextMonth_MSLfile]
+            msl_file_list = [self.my_preferences.data['MSLfile'], self.my_preferences.data['nextMonth_MSLfile']]
     
         for msl_file in msl_file_list: # Check both months
             msl = self.check_file_format(msl_file, 'MSL')
@@ -980,7 +957,7 @@ class QCASTestClient(unittest.TestCase):
         psl_entry = ''
         psl_entry_list = list()
     
-        msl = self.check_file_format(self.MSLfile, 'MSL')
+        msl = self.check_file_format(self.my_preferences.data['MSLfile'], 'MSL')
         
         psl_entry = "%(game_name)-30s,%(mid)02d,%(year)4s,%(month)02d,%(ssan)010d," % {'game_name': TSL_object.game_name[:30], 'mid': int(TSL_object.mid), 'year': msl[0].year, 'month': msl[0].month, 'ssan': TSL_object.ssan}
 

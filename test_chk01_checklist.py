@@ -20,15 +20,15 @@ class test_chk01_checklist(QCASTestClient):
     def test_PSL_files_are_Different(self):
         same = set()
         
-        with open(self.PSLfile, 'r') as file1:
-            with open(self.nextMonth_PSLfile, 'r') as file2:
+        with open(self.my_preferences.data['PSLfile'], 'r') as file1:
+            with open(self.my_preferences.data['nextMonth_PSLfile'], 'r') as file2:
                 same = set(file1).intersection(file2)
    
-        err_msg = self.PSLfile + " is the same as: " + self.nextMonth_PSLfile
+        err_msg = self.my_preferences.data['PSLfile'] + " is the same as: " + self.my_preferences.data['nextMonth_PSLfile']
         self.assertFalse(len(same) > 0, msg=err_msg)
     
-        with open(self.PSLfile, 'r') as file1:
-            with open(self.nextMonth_PSLfile, 'r') as file2:
+        with open(self.my_preferences.data['PSLfile'], 'r') as file1:
+            with open(self.my_preferences.data['nextMonth_PSLfile'], 'r') as file2:
                 same = set(file1).intersection(file2)
                 
     def test_new_games_to_be_added_are_in_PSL_files(self):
@@ -46,9 +46,9 @@ class test_chk01_checklist(QCASTestClient):
                 
         # Find these games in the both PSL files
         if skipping_PSL_comparison_tests(): 
-            psl_file_list = [self.PSLfile] 
+            psl_file_list = [self.my_preferences.data['PSLfile']] 
         else: 
-            psl_file_list = [self.PSLfile, self.nextMonth_PSLfile] 
+            psl_file_list = [self.my_preferences.data['PSLfile'], self.my_preferences.data['nextMonth_PSLfile']] 
         
         verified_game = list()
         
@@ -74,18 +74,17 @@ class test_chk01_checklist(QCASTestClient):
     # Note checks both month's MSL and PSL files; only verifies BLNK files. 
     @unittest.skipUnless(binimage_path_exists(), "requires BINIMAGE path")
     def test_X_OLD_games_with_one_seed_in_PSL_file(self): 
-        all_games = self.check_file_format(self.TSLfile, 'TSL')
+        all_games = self.check_file_format(self.my_preferences.data['TSLfile'], 'TSL')
         
         msl_file_list = list() 
         if skipping_PSL_comparison_tests(): 
-            msl_file_list = [self.MSLfile] 
+            msl_file_list = [self.my_preferences.data['MSLfile']] 
         else:            
-            msl_file_list = [self.MSLfile, self.nextMonth_MSLfile] 
+            msl_file_list = [self.my_preferences.data['MSLfile'], self.my_preferences.data['nextMonth_MSLfile']] 
             
         complete = False
         count = 1
         random_chosen_game_list = list() # list of randomly selected games
-        print("\n")
         logging.getLogger().info("Testing " + str(self.my_preferences.data['number_of_random_games']) + " old game with random seed")        
         
         while True: 
@@ -130,10 +129,10 @@ class test_chk01_checklist(QCASTestClient):
 
                     psl_entries_list = list() 
                     # Compare Hash with PSL Entry
-                    if msl == self.nextMonth_MSLfile: 
-                        psl_entries_list = self.check_file_format(self.nextMonth_PSLfile, 'PSL')  # generate PSL object list for next month (Important) 
-                    elif msl == self.MSLfile: 
-                        psl_entries_list = self.check_file_format(self.PSLfile, 'PSL')  # generate PSL object list for next month (Important) 
+                    if msl == self.my_preferences.data['nextMonth_MSLfile']: 
+                        psl_entries_list = self.check_file_format(self.my_preferences.data['nextMonth_PSLfile'], 'PSL')  # generate PSL object list for next month (Important) 
+                    elif msl == self.my_preferences.data['MSLfile']: 
+                        psl_entries_list = self.check_file_format(self.my_preferences.data['PSLfile'], 'PSL')  # generate PSL object list for next month (Important) 
 
                     psl_from_file = ''
                     for psl_entry in psl_entries_list: 
@@ -169,9 +168,9 @@ class test_chk01_checklist(QCASTestClient):
         new_games = self.get_newgames_to_be_added()
         msl_file_list = list() 
         if skipping_PSL_comparison_tests():
-            msl_file_list = [self.MSLfile] 
+            msl_file_list = [self.my_preferences.data['MSLfile']] 
         else:            
-            msl_file_list = [self.MSLfile, self.nextMonth_MSLfile] 
+            msl_file_list = [self.my_preferences.data['MSLfile'], self.my_preferences.data['nextMonth_MSLfile']] 
             
         complete = False
         count = 1
@@ -221,10 +220,10 @@ class test_chk01_checklist(QCASTestClient):
                     
                     psl_entries_list = list() 
                     # Compare Hash with PSL Entry
-                    if msl == self.nextMonth_MSLfile: 
-                        psl_entries_list = self.check_file_format(self.nextMonth_PSLfile, 'PSL')  # generate PSL object list for next month (Important) 
-                    elif msl == self.MSLfile: 
-                        psl_entries_list = self.check_file_format(self.PSLfile, 'PSL')  # generate PSL object list for next month (Important) 
+                    if msl == self.my_preferences.data['nextMonth_MSLfile']: 
+                        psl_entries_list = self.check_file_format(self.my_preferences.data['nextMonth_PSLfile'], 'PSL')  # generate PSL object list for next month (Important) 
+                    elif msl == self.my_preferences.data['MSLfile']: 
+                        psl_entries_list = self.check_file_format(self.my_preferences.data['PSLfile'], 'PSL')  # generate PSL object list for next month (Important) 
 
                     for psl_entry in psl_entries_list: 
                         if random_tsl_entry.ssan == psl_entry.ssan: 
@@ -252,8 +251,8 @@ class test_chk01_checklist(QCASTestClient):
     def test_Games_removed_from_PSL_files(self): 
         # generate a list of games removed. 
         # Difference from previous month PSL and this Months PSL files (multiple). 
-        #psl_file_list2 = self.check_file_format(self.PSLfile, 'PSL')
-        #psl_file_list1 = self.check_file_format(self.nextMonth_PSLfile, 'PSL')
+        #psl_file_list2 = self.check_file_format(self.my_preferences.data['PSLfile'], 'PSL')
+        #psl_file_list1 = self.check_file_format(self.my_preferences.data['nextMonth_PSLfile'], 'PSL')
 
         #psl_difference = list(set(psl_file_list1).intersection(set(psl_file_list2))) 
         games_to_be_removed = list() 
