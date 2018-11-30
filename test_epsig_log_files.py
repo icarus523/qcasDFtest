@@ -2,6 +2,7 @@ import os
 import csv
 import sys
 import unittest
+import logging
 from test_datafiles import QCASTestClient, PSLfile, TSLfile, MSLfile, Preferences, skipping_PSL_comparison_tests
 from datetime import datetime, date
 
@@ -15,8 +16,9 @@ VALID_EPSIG_VERSION = '3.5'
 
 class EpsigLogFile(): 
 
-    def __init__(self, data):    
-        assert(len(data) == 6, "Data is not complete: " + "".join(data)) # this should be 5
+    def __init__(self, data): 
+       
+        assert(len(data) == 6), "Data is not complete: " # this should be 5
     
         self.header = data[0] 
         self.version_number = self.header.split(' ')[2] # 3.5
@@ -92,7 +94,9 @@ class test_epsig_log_files(QCASTestClient):
                 
         return last_four_logs_ok
     
-    def test_Read_Epsig_log_file_from_disk(self):
+    def test_Read_Epsig_log_file_from_disk(self):    
+        logging.getLogger().info("Testing epsig log file can be read from disk")       
+        
         self.assertTrue(os.path.isfile(self.my_preferences.data['epsig_log_file']), 
         	msg=self.my_preferences.data['epsig_log_file'] + ": File not found")
         
@@ -152,7 +156,7 @@ class test_epsig_log_files(QCASTestClient):
                     self.assertEqual(log_file.footer_status, " with EXIT_SUCCESS", 
                         msg="Epsig Log file did not end with 'EXIT_SUCCESS")
                 else: 
-                    if self.my_preferences.data['verbose_mode'] == "true": 
+                    if self.verbose_mode:
                         print("#### WARNING: Entry in EPSIG log indicates it has not finished. ####")
 
                 # Need to Verify PSL files used in the last 4 Entries are correct

@@ -19,36 +19,39 @@ class test_chk01_checklist(QCASTestClient):
     @unittest.skipIf(skipping_PSL_comparison_tests(), "Config: Single PSL File Validation") 
     def test_PSL_files_are_Different(self):
         same = set()
+        PSL_file = self.my_preferences.data['PSLfile']
+        nextMonth_PSLfile = self.my_preferences.data['nextMonth_PSLfile']
         
-        with open(self.my_preferences.data['PSLfile'], 'r') as file1:
-            with open(self.my_preferences.data['nextMonth_PSLfile'], 'r') as file2:
+        with open(PSL_file, 'r') as file1:
+            with open(nextMonth_PSLfile, 'r') as file2:
                 same = set(file1).intersection(file2)
    
-        err_msg = self.my_preferences.data['PSLfile'] + " is the same as: " + self.my_preferences.data['nextMonth_PSLfile']
+        err_msg = PSL_file + " is the same as: " + nextMonth_PSLfile
         self.assertFalse(len(same) > 0, msg=err_msg)
     
-        with open(self.my_preferences.data['PSLfile'], 'r') as file1:
-            with open(self.my_preferences.data['nextMonth_PSLfile'], 'r') as file2:
+        with open(PSL_file, 'r') as file1:
+            with open(nextMonth_PSLfile, 'r') as file2:
                 same = set(file1).intersection(file2)
                 
     def test_new_games_to_be_added_are_in_PSL_files(self):
         game_list_to_be_added = self.get_newgames_to_be_added()
+        PSL_file = self.my_preferences.data['PSLfile']
+        nextMonth_PSLfile = self.my_preferences.data['nextMonth_PSLfile']
         
-        if self.my_preferences.data['verbose_mode'] == "true": 
+        if self.verbose_mode: 
             if len(game_list_to_be_added) > 0:
-                print("\n\n")
                 logging.getLogger().debug("==== New Games added ====")
                 for tsl_game_item in game_list_to_be_added:                    
                     logging.getLogger().debug(tsl_game_item.toJSON_oneline())
             else:
-                print("\n\n")
                 logging.getLogger().debug("==== No new games added ==== \n")
                 
         # Find these games in the both PSL files
+
         if skipping_PSL_comparison_tests(): 
-            psl_file_list = [self.my_preferences.data['PSLfile']] 
+            psl_file_list = [PSL_file] 
         else: 
-            psl_file_list = [self.my_preferences.data['PSLfile'], self.my_preferences.data['nextMonth_PSLfile']] 
+            psl_file_list = [PSL_file, nextMonth_PSLfile] 
         
         verified_game = list()
         
@@ -74,18 +77,26 @@ class test_chk01_checklist(QCASTestClient):
     # Note checks both month's MSL and PSL files; only verifies BLNK files. 
     @unittest.skipUnless(binimage_path_exists(), "requires BINIMAGE path")
     def test_X_OLD_games_with_one_seed_in_PSL_file(self): 
-        all_games = self.check_file_format(self.my_preferences.data['TSLfile'], 'TSL')
+        MSLfile = self.my_preferences.data['MSLfile']
+        PSL_file = self.my_preferences.data['PSLfile']
+        TSLfile = self.my_preferences.data['TSLfile']
+        nextMonth_MSLfile = self.my_preferences.data['nextMonth_MSLfile']
+        nextMonth_PSLfile = self.my_preferences.data['nextMonth_PSLfile']
+
+        all_games = self.check_file_format(TSLfile, 'TSL')
         
         msl_file_list = list() 
         if skipping_PSL_comparison_tests(): 
-            msl_file_list = [self.my_preferences.data['MSLfile']] 
+            msl_file_list = [MSLfile] 
         else:            
-            msl_file_list = [self.my_preferences.data['MSLfile'], self.my_preferences.data['nextMonth_MSLfile']] 
+            msl_file_list = [MSLfile, nextMonth_MSLfile] 
             
         complete = False
         count = 1
         random_chosen_game_list = list() # list of randomly selected games
-        logging.getLogger().info("Testing " + str(self.my_preferences.data['number_of_random_games']) + " old game with random seed")        
+        display_msg = "Testing " + str(self.my_preferences.data['number_of_random_games']) + " old game with random seed"        
+        print("\n" + display_msg)
+        logging.getLogger().info(display_msg)        
         
         while True: 
             # Choose a Random game from TSL file
@@ -104,15 +115,14 @@ class test_chk01_checklist(QCASTestClient):
                     hash_list_idx = mslfile[0].seed_list.index(random_seed)
                     
                     man_name = self.get_manufacturer_name(random_tsl_entry.mid)
-                    print("\n")
                     msg = "==== Old Game[" + str(count) + "]: " + random_tsl_entry.game_name + \
                         " (" + man_name + "), with MSLfile: [" + os.path.basename(msl) + "] ==== "
-                    if self.my_preferences.data['verbose_mode'] == "true": 
-                        logging.getLogger().debug(msg) #+ random_tsl_entry.toJSON())
-                        
+                    print("\n" + msg)
+                    if self.verbose_mode: 
+                        logging.getLogger().debug(msg) #+ random_tsl_entry.toJSON())                    
+                    
                     blnk_file = os.path.join(self.my_preferences.data['path_to_binimage'], 
-                    self.getMID_Directory(random_tsl_entry.mid), random_tsl_entry.bin_file.strip() + "." + 
-                    self.get_bin_type(random_tsl_entry.bin_type))
+                        self.getMID_Directory(random_tsl_entry.mid), random_tsl_entry.bin_file.strip() + "." + self.get_bin_type(random_tsl_entry.bin_type))
                     
                     # IMPORTANT currently only verifies BLNK files
                     localhash = self.dobnk(blnk_file, random_seed, random_seed_idx, random_tsl_entry.mid, blocksize=65535)
@@ -122,17 +132,18 @@ class test_chk01_checklist(QCASTestClient):
                     tmpStr = str(localhash).lstrip('0x').zfill(40)
                     localhash = self.getQCAS_Expected_output(tmpStr).upper() # format it
                     
-                    if self.my_preferences.data['verbose_mode'] == "true": 
-                        print("\n")
-                        logging.getLogger().debug("Hash Generated for: " + os.path.basename(blnk_file) + " = [" 
-                            + localhash + "] with seed: ["+ self.getQCAS_Expected_output(random_seed) + "]")                   
+                    if self.verbose_mode: 
+                        display_msg = "Hash Generated for: " + os.path.basename(blnk_file) + " = [" \
+                            + localhash + "] with seed: ["+ self.getQCAS_Expected_output(random_seed) + "]"
+                        print("\n" + display_msg)
+                        logging.getLogger().debug(display_msg)                   
 
                     psl_entries_list = list() 
                     # Compare Hash with PSL Entry
-                    if msl == self.my_preferences.data['nextMonth_MSLfile']: 
-                        psl_entries_list = self.check_file_format(self.my_preferences.data['nextMonth_PSLfile'], 'PSL')  # generate PSL object list for next month (Important) 
+                    if msl == nextMonth_MSLfile: 
+                        psl_entries_list = self.check_file_format(nextMonth_PSLfile, 'PSL')  # generate PSL object list for next month (Important) 
                     elif msl == self.my_preferences.data['MSLfile']: 
-                        psl_entries_list = self.check_file_format(self.my_preferences.data['PSLfile'], 'PSL')  # generate PSL object list for next month (Important) 
+                        psl_entries_list = self.check_file_format(PSL_file, 'PSL')  # generate PSL object list for next month (Important) 
 
                     psl_from_file = ''
                     for psl_entry in psl_entries_list: 
@@ -152,7 +163,7 @@ class test_chk01_checklist(QCASTestClient):
                     complete = True # set the flag.
                         
             else: 
-                if self.my_preferences.data['verbose_mode'] == "true": 
+                if self.verbose_mode: 
                     logging.getLogger().info("Skipping: " + random_tsl_entry.game_name + ". Reason: " 
                         + random_tsl_entry.bin_type + " TSL file type, unsupported")
                 complete = False
@@ -167,23 +178,46 @@ class test_chk01_checklist(QCASTestClient):
     def test_X_NEW_game_with_one_seed_in_PSL_file(self): 
         new_games = self.get_newgames_to_be_added()
         msl_file_list = list() 
+        
+        MSLfile = self.my_preferences.data['MSLfile']
+        PSL_file = self.my_preferences.data['PSLfile']
+        nextMonth_MSLfile = self.my_preferences.data['nextMonth_MSLfile']
+        nextMonth_PSLfile = self.my_preferences.data['nextMonth_PSLfile']
+        
         if skipping_PSL_comparison_tests():
-            msl_file_list = [self.my_preferences.data['MSLfile']] 
+            msl_file_list = [MSLfile] 
         else:            
-            msl_file_list = [self.my_preferences.data['MSLfile'], self.my_preferences.data['nextMonth_MSLfile']] 
+            msl_file_list = [MSLfile, nextMonth_MSLfile] 
             
         complete = False
         count = 1
-        print("\n")
-        logging.getLogger().info("Testing " + str(self.my_preferences.data['number_of_random_games']) + " new game with random seed")
+        number_of_random_games = self.my_preferences.data['number_of_random_games']
         
+        display_msg = "Testing " + str(number_of_random_games) + " new game with random seed"
+        print("\n" + display_msg)
+        logging.getLogger().info(display_msg)
+        
+        random_chosen_game_list = list() 
+        valid_random_game = False
+
         while True: 
-            # Choose a Random game from TSL file
-            random_tsl_entry = random.choice(new_games) # if len(newgames) < 4, then process will continue but verified against random new seeds. 
+            # Choose a Random game from TSL file              
+            random_tsl_entry = random.choice(new_games)            
+            
+            if len(new_games) < 4: # if < 4 games overall, continue just use different seeds
+                valid_random_game = True
+            else: # otherwise make sure its not an already tested game
+                if random_tsl_entry not in random_chosen_game_list: 
+                    valid_random_game = True
+                else: 
+                    valid_random_game = False
             
             # Test that "BLNK" file contents can be processed, ie. HMAC-SHA1 or SHA1 only. 
             # Will skip if files being hashed in the BLNK is not SHA1, e.g.  CR32, 0A4R, 0A4F 
-            if self.check_game_type(random_tsl_entry) == True: 
+            if self.check_game_type(random_tsl_entry) == True and valid_random_game == True: 
+                random_chosen_game_list.append(random_tsl_entry) # save the game
+                valid_random_game = False
+                
                 for msl in msl_file_list:
                     random_seed_idx =  random.randint(0,30) # Choose a random day for the month
                     mslfile = self.check_file_format(msl, 'MSL')
@@ -191,10 +225,11 @@ class test_chk01_checklist(QCASTestClient):
                     hash_list_idx = mslfile[0].seed_list.index(random_seed)
 
                     man_name = self.get_manufacturer_name(random_tsl_entry.mid)                                
-                    display_msg = "==== New Game[" + str(count) + "]: " + random_tsl_entry.game_name + " (" + man_name + "), with MSLfile: [" + os.path.basename(msl) + "] ==== "                        
+                    display_msg = "==== New Game[" + str(count) + "]: " + random_tsl_entry.game_name \
+                        + " (" + man_name + "), with MSLfile: [" + os.path.basename(msl) + "] ==== "                        
                     
-                    if self.my_preferences.data['verbose_mode'] == "true": 
-                        print("\n")
+                    if self.verbose_mode: 
+                        print("\n" + display_msg)
                         logging.getLogger().debug(display_msg)
                                             
                     blnk_file = os.path.join(self.my_preferences.data['path_to_binimage'], 
@@ -214,32 +249,35 @@ class test_chk01_checklist(QCASTestClient):
                     tmpStr = str(localhash).lstrip('0x').zfill(40)
                     localhash = self.getQCAS_Expected_output(tmpStr).upper() # format it
                     
-                    if self.my_preferences.data['verbose_mode'] == "true": 
-                        print("\n")
-                        logging.getLogger().debug("Hash Generated for: " + os.path.basename(blnk_file) + " = [" + localhash + "] with seed: ["+ self.getQCAS_Expected_output(random_seed) + "]")                   
+                    if self.verbose_mode: 
+                        display_msg = "Hash Generated for: " + os.path.basename(blnk_file) + " = [" \
+                            + localhash + "] with seed: ["+ self.getQCAS_Expected_output(random_seed) + "]"
+                        print("\n" + display_msg)
+                        logging.getLogger().debug(display_msg)                   
                     
                     psl_entries_list = list() 
                     # Compare Hash with PSL Entry
-                    if msl == self.my_preferences.data['nextMonth_MSLfile']: 
-                        psl_entries_list = self.check_file_format(self.my_preferences.data['nextMonth_PSLfile'], 'PSL')  # generate PSL object list for next month (Important) 
+                    if msl == nextMonth_MSLfile: 
+                        psl_entries_list = self.check_file_format(nextMonth_PSLfile, 'PSL')  # generate PSL object list for next month (Important) 
                     elif msl == self.my_preferences.data['MSLfile']: 
-                        psl_entries_list = self.check_file_format(self.my_preferences.data['PSLfile'], 'PSL')  # generate PSL object list for next month (Important) 
+                        psl_entries_list = self.check_file_format(PSL_file, 'PSL')  # generate PSL object list for next month (Important) 
 
                     for psl_entry in psl_entries_list: 
                         if random_tsl_entry.ssan == psl_entry.ssan: 
                             psl_from_file = psl_entry
                             break # not expecting any other matches.                             
                     
-                    msg_str = "Generated Hash: [" + localhash + "] does not equal Expected Hash: [" +  psl_from_file.hash_list[hash_list_idx] + "] Seed=[" + random_seed + "], Index=" + str(hash_list_idx)                                                      
+                    msg_str = "Generated Hash: [" + localhash + "] does not equal Expected Hash: [" \
+                        +  psl_from_file.hash_list[hash_list_idx] + "] Seed=[" + random_seed + "], Index=" + str(hash_list_idx)                                                      
                     # Compare generated hash against the hash from PSL file. 
                     self.assertEqual(localhash, psl_from_file.hash_list[hash_list_idx], msg=msg_str)
                     
-                if count < self.my_preferences.data['number_of_random_games']:
+                if count < number_of_random_games:
                     count = count + 1
                 else:
                     complete = True # set the flag.
             else: 
-                if self.my_preferences.data['verbose_mode'] == "true": 
+                if self.verbose_mode: 
                     print("\n")
                     logging.getLogger().info("Skipping: " + random_tsl_entry.game_name + ". Reason: " 
                         + random_tsl_entry.bin_type + " TSL file type, unsupported")
@@ -255,12 +293,11 @@ class test_chk01_checklist(QCASTestClient):
         #psl_file_list1 = self.check_file_format(self.my_preferences.data['nextMonth_PSLfile'], 'PSL')
 
         #psl_difference = list(set(psl_file_list1).intersection(set(psl_file_list2))) 
-        games_to_be_removed = list() 
-        games_to_be_removed = self.get_oldgames_to_be_removed()
-        if self.my_preferences.data['verbose_mode'] == "true": 
+        games_to_be_removed_list = self.get_oldgames_to_be_removed()
+        if self.verbose_mode: 
             if len(games_to_be_removed) > 1: 
                 print("\nIdentified Games removed: ")
-                for tsl_game_item in games_to_be_removed:
+                for tsl_game_item in games_to_be_removed_list:
                     print(tsl_game_item.toJSON())
             else:
                 print("\nNo Games removed!", end="")                

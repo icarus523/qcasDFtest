@@ -7,7 +7,7 @@ from test_datafiles import QCASTestClient, PSLfile, skipping_PSL_comparison_test
 class test_PSLfile_content(QCASTestClient): 
 
     def test_psl_size_is_reasonable(self): 
-        if self.my_preferences.data['verbose_mode'] == "true": 
+        if self.verbose_mode: 
             logging.getLogger().info("Testing PSL file is reasonable")    
         
         if skipping_PSL_comparison_tests() == True: 
@@ -26,7 +26,7 @@ class test_PSLfile_content(QCASTestClient):
     
     @unittest.skipIf(skipping_PSL_comparison_tests(), "Single PSL Validation only") 
     def test_psl_size_reduction(self):
-        if self.my_preferences.data['verbose_mode'] == "true": 
+        if self.verbose_mode: 
             logging.getLogger().info("Testing PSL file size reduction is reasonable") 
             
         PSLfile_size_in_bytes = os.stat(self.my_preferences.data['PSLfile']).st_size # filesize
@@ -50,7 +50,7 @@ class test_PSLfile_content(QCASTestClient):
         else: 
             pslfile_list = [self.my_preferences.data['PSLfile'], self.my_preferences.data['nextMonth_PSLfile']] 
         
-        if self.my_preferences.data['verbose_mode'] == "true": 
+        if self.verbose_mode: 
             logging.getLogger().info("Testing PSL files can be parsed: " + ",".join(pslfile_list))    
             
         for pslfile in pslfile_list: 
@@ -99,7 +99,7 @@ class test_PSLfile_content(QCASTestClient):
 
     # Verify that valid MIDs have PSL entries. 
     def test_valid_MIDs_have_PSL_entries(self): 
-        if self.my_preferences.data['verbose_mode'] == "true": 
+        if self.verbose_mode: 
             logging.getLogger().info("Testing PSL files contains all expected MIDs")    
         
         verified_manufacturer = list()
@@ -131,7 +131,7 @@ class test_PSLfile_content(QCASTestClient):
                   
     
     def test_date_field_in_PSL_entry_equals_date_field_in_filename(self): 
-        if self.my_preferences.data['verbose_mode'] == "true": 
+        if self.verbose_mode: 
             logging.getLogger().info("Testing PSL Date Fields matches Filename Date")    
             
         pslfile_list = list() 

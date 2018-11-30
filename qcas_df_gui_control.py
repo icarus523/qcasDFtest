@@ -17,22 +17,24 @@ import test_tsl_file_content
 import test_chk01_checklist
 import test_epsig_log_files
 import webbrowser
+import atexit
 
 from datetime import datetime
 from tkinter import *
 from tkinter import ttk
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
 
 from test_datafiles import QCASTestClient, PSLfile, PSLEntry_OneHash, TSLfile, MSLfile, Preferences, skipping_PSL_comparison_tests, binimage_path_exists
 
 VERSION = "0.1"
 DF_DIRECTORY = "G:/OLGR-TECHSERV/MISC/BINIMAGE/qcas/"
+os.system('mode con: cols=150 lines=2500')
 
 logging.basicConfig(level=logging.DEBUG,
         format='%(asctime)s - %(levelname)-8s %(message)s',
         datefmt='%d-%m-%y %H:%M',
         filename='qcas_test.log',
-        filemode='w')
+        filemode='a')
         
 class qcas_df_gui: 
 
@@ -248,7 +250,7 @@ class qcas_df_gui:
         
         # Checkbutton Intensive Validation
         self.intensive_validation = IntVar()
-        if self.my_preferences.data['skip_lengthy_validations'] == "false":
+        if self.my_preferences.data['skip_lengthy_validations'].upper() == "FALSE":
             self.intensive_validation.set(0)
         else:
             self.intensive_validation.set(1)
@@ -263,7 +265,7 @@ class qcas_df_gui:
 
         # Checkbutton Verbose Mode
         self.verbose_mode = IntVar()
-        if self.my_preferences.data['verbose_mode'] == "false":
+        if self.my_preferences.data['verbose_mode'].upper() == "FALSE":
             self.verbose_mode.set(0)
         else:
             self.verbose_mode.set(1)
@@ -279,7 +281,7 @@ class qcas_df_gui:
 
         # Checkbutton One Month Mode
         self.one_month_mode = IntVar()
-        if self.my_preferences.data['one_month_mode'] == "False":
+        if self.my_preferences.data['one_month_mode'].upper() == "FALSE":
             self.one_month_mode.set(0)
         else:
             self.one_month_mode.set(1)
@@ -384,18 +386,19 @@ class qcas_df_gui:
         self.cb_unittest_chk01_basic.pack(side = LEFT, fill=X, expand=False)
         self.unittest_chk01_basic.set(1)
         
-        # Checkbutton chk01 intensive
-        #self.unittest_chk01_intensive = IntVar()           
-        #self.cb_unittest_chk01_intensive = Checkbutton(
-        #    frame_unittest, 
-        #    text="CHK01 Intensive", 
-        #    justify=LEFT, 
-        #    variable = self.unittest_chk01_intensive, 
-        #    onvalue=1, 
-        #    offvalue=0,
-        #    command=self.handleCheckButton)
-        #self.cb_unittest_chk01_intensive.pack(side = LEFT, fill=X, expand=False)
-        #self.unittest_chk01_intensive.set(1)
+        # Checkbutton chk01 intensive 
+        self.unittest_chk01_intensive = IntVar()           
+        self.cb_unittest_chk01_intensive = Checkbutton(
+            frame_unittest, 
+            text="CHK01 Intensive", 
+            justify=LEFT, 
+            variable = self.unittest_chk01_intensive, 
+            onvalue=1, 
+            offvalue=0,
+            command=self.handleCheckButton)
+        self.cb_unittest_chk01_intensive.pack(side = LEFT, fill=X, expand=False)
+        self.unittest_chk01_intensive.set(1)
+        self.cb_unittest_chk01_intensive.config(state=DISABLED)
         
         ######## Start Button Frame
         frame_start_button = ttk.Frame(frame_bottomarea)
@@ -456,9 +459,6 @@ class qcas_df_gui:
         if self.unittest_chk01_basic.get() == 1: 
             self.my_unittests.append(test_chk01_checklist)
             self.my_test_output.append("CHK01 Validations")           
-
-
-
             
     def handleButtonPress(self, choice):
         if choice == '__select_current_msl_file__':
@@ -547,22 +547,27 @@ class qcas_df_gui:
         logging.getLogger().info("==== Starting Unit Tests ====")
         # subprocess.call('py -m unittest', shell=False)
 
-        #tests = [ test_msl_file_content, test_tsl_file_content, test_psl_file_content, test_epsig_log_files , test_file_name_format, test_chk01_intensive_checklist, test_chk01_checklist]
-        #testoutput = [ "MSL File Content Tests: ", "TSL File Content Tests: ", "PSL File Content Tests", "epsig log file content tests", "Datafile Filename format tests", "CHK01 Intensive validations", "CHK01 Validations"]
         for test in tests: 
             testLoad = unittest.TestLoader().loadTestsFromModule(test)      
             testResult = unittest.TextTestRunner(verbosity=3).run(testLoad) 
-            logging.getLogger().debug(testoutput[tests.index(test)] + str(testResult))
         
             for err in testResult.errors: 
-                logging.getLogger().error(err)
+                for err_detail in err: 
+                    logging.getLogger().error(err_detail)
             
             for skip in testResult.skipped: 
-                logging.getLogger().warning(skip) 
+                for skip_details in skip:
+                    logging.getLogger().warning(skip_details) 
             
             for fail in testResult.failures: 
-                logging.getLogger().error(fail) 
+                for fail_details in fail: 
+                    logging.getLogger().error(fail_details) 
+                
+            logging.getLogger().debug(testoutput[tests.index(test)] + str(testResult)) # summary
         
+        display_msg = "QCAS Datafiles Validation COMPLETE: " + str(datetime.now()) + " by: " + getpass.getuser()
+        logging.getLogger().info("==== " + display_msg + " ====")
+        messagebox.showinfo("Finished!", display_msg)
         
     def UpdatePreferences(self):        
         #update vars
@@ -576,14 +581,14 @@ class qcas_df_gui:
         self.my_preferences.data['epsig_log_file'] = self.v_epsiglog.get()        
         
         if self.intensive_validation.get() == 0: 
-            self.my_preferences.data['skip_lengthy_validations'] = "false"
+            self.my_preferences.data['skip_lengthy_validations'] = "FALSE"
         else:
-            self.my_preferences.data['skip_lengthy_validations'] = "true"            
+            self.my_preferences.data['skip_lengthy_validations'] = "TRUE"            
 
         if self.verbose_mode.get() == 0:
-            self.my_preferences.data['verbose_mode'] = "false"
+            self.my_preferences.data['verbose_mode'] = "FALSE"
         else:
-            self.my_preferences.data['verbose_mode'] = "true"
+            self.my_preferences.data['verbose_mode'] = "TRUE"
 
         if self.box_value2.get() == '5%': 
             self.my_preferences.data['percent_changed_acceptable'] = 0.05
@@ -596,20 +601,27 @@ class qcas_df_gui:
         else:
             self.my_preferences.data['percent_changed_acceptable'] = 0.10 # default
 
-                    
+        if self.one_month_mode.get() == 0: 
+            self.my_preferences.data['one_month_mode'] = "FALSE"
+        else:
+            self.my_preferences.data['one_month_mode'] = "TRUE"
+
+            
         self.my_preferences.writefile(self.config_fname) # write to file
         print("updated preference file: " + self.config_fname)
+
+def exit_handler():
+    logging.getLogger().info("==== QCAS Unit Test STOPPED/INTERRUPTED: " + str(datetime.now()) + " by: " + getpass.getuser()  + " ====")
             
 def main():
     app = None
+    atexit.register(exit_handler)
     
     try: 
         app = qcas_df_gui()
            
     except KeyboardInterrupt:       
-        logging.debug("Program Exiting.")
         app.root.quit()
-
         sys.exit(0)
 
 if __name__ == "__main__": main()
