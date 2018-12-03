@@ -16,6 +16,7 @@ import test_msl_file_content
 import test_tsl_file_content
 import test_chk01_checklist
 import test_epsig_log_files
+import test_chk01_checklist_game_removals
 import webbrowser
 import atexit
 
@@ -26,7 +27,7 @@ from tkinter import filedialog, messagebox
 
 from test_datafiles import QCASTestClient, PSLfile, PSLEntry_OneHash, TSLfile, MSLfile, Preferences, skipping_PSL_comparison_tests, binimage_path_exists
 
-VERSION = "0.1"
+VERSION = "0.2"
 DF_DIRECTORY = "G:/OLGR-TECHSERV/MISC/BINIMAGE/qcas/"
 os.system('mode con: cols=150 lines=2500')
 
@@ -435,6 +436,10 @@ class qcas_df_gui:
         # by default always do intensive chk01, but is controllable via Checkbox
         self.my_unittests.append(test_chk01_intensive_checklist)
         self.my_test_output.append("CHK01 Intensive validations")          
+        
+        self.my_unittests.append(test_chk01_checklist_game_removals)
+        self.my_test_output.append("CHK01 game removals")          
+
         
         if self.unittest_filename_format.get() == 1: 
             self.my_unittests.append(test_file_name_format)
