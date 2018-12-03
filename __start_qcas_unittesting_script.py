@@ -12,6 +12,7 @@ import test_msl_file_content
 import test_tsl_file_content
 import test_chk01_checklist
 import test_epsig_log_files
+import test_chk01_checklist_game_removals
 import unittest
 import json
 
@@ -27,7 +28,7 @@ logging.basicConfig(level=logging.DEBUG,
         format='%(asctime)s - %(levelname)-8s %(message)s',
         datefmt='%d-%m-%y %H:%M',
         filename='qcas_test.log',
-        filemode='w')
+        filemode='a')
                 
 my_preferences = Preferences()
 def_str = "==== QCAS Unit Testing started on: " + str(datetime.now()) + " by: " + getpass.getuser()  + " ===="
@@ -51,6 +52,9 @@ my_test_output = list() # clear list
 
 my_unittests.append(test_chk01_intensive_checklist)
 my_test_output.append("CHK01 intensive validations")          
+
+my_unittests.append(test_chk01_checklist_game_removals)
+my_test_output.append("CHK01 game removals")   
 
 my_unittests.append(test_file_name_format)
 my_test_output.append("Datafile filename format tests")

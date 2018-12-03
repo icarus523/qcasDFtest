@@ -163,10 +163,11 @@ class test_chk01_checklist(QCASTestClient):
                     complete = True # set the flag.
                         
             else: 
-                if self.verbose_mode: 
+                if random_tsl_entry not in random_chosen_game_list: 
+                    logging.getLogger().info("Skipping: " + random_tsl_entry.game_name + ". Reason: Game already processed, trying another random game.")
+                else: 
                     logging.getLogger().info("Skipping: " + random_tsl_entry.game_name + ". Reason: " 
                         + random_tsl_entry.bin_type + " TSL file type, unsupported")
-                complete = False
 
             if complete: 
                 break
@@ -277,27 +278,13 @@ class test_chk01_checklist(QCASTestClient):
                 else:
                     complete = True # set the flag.
             else: 
-                if self.verbose_mode: 
-                    print("\n")
+                if not valid_random_game: 
+                    logging.getLogger().info("Skipping: " + random_tsl_entry.game_name + ". Reason: Game already processed, trying another random game.")
+                else: 
                     logging.getLogger().info("Skipping: " + random_tsl_entry.game_name + ". Reason: " 
                         + random_tsl_entry.bin_type + " TSL file type, unsupported")
 
             if complete == True: 
                 break
 
-    @unittest.skip("TODO: Not yet implemented")
-    def test_Games_removed_from_PSL_files(self): 
-        # generate a list of games removed. 
-        # Difference from previous month PSL and this Months PSL files (multiple). 
-        #psl_file_list2 = self.check_file_format(self.my_preferences.data['PSLfile'], 'PSL')
-        #psl_file_list1 = self.check_file_format(self.my_preferences.data['nextMonth_PSLfile'], 'PSL')
-
-        #psl_difference = list(set(psl_file_list1).intersection(set(psl_file_list2))) 
-        games_to_be_removed_list = self.get_oldgames_to_be_removed()
-        if self.verbose_mode: 
-            if len(games_to_be_removed) > 1: 
-                print("\nIdentified Games removed: ")
-                for tsl_game_item in games_to_be_removed_list:
-                    print(tsl_game_item.toJSON())
-            else:
-                print("\nNo Games removed!", end="")                
+        
