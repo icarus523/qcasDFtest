@@ -5,14 +5,14 @@ from test_datafiles import QCASTestClient, PSLfile
 class test_general_file_format(QCASTestClient):
    
     def test_Read_TSL_file_from_disk(self):
-        if self.my_preferences.data['verbose_mode'] == "true": 
+        if self.verbose_mode: 
             logging.getLogger().info("Testing TSL files can be read from disk")    
         
         self.assertTrue(os.path.isfile(self.my_preferences.data['TSLfile']))
         self.assertTrue(os.path.isfile(self.my_preferences.data['previous_TSLfile'])) # this is mandatory even if your only checkling one month
         
     def test_TSL_content_can_be_parsed(self):
-        if self.my_preferences.data['verbose_mode'] == "true": 
+        if self.verbose_mode: 
             logging.getLogger().info("Testing TSL files can parsed")    
         
         # only one TSL file

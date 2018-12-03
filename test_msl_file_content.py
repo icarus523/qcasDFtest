@@ -8,7 +8,7 @@ class test_MSL_files(QCASTestClient):
     # Verify that the size of the MSL files is reasonable. 
     # (The size should not change and is 1KB)
     def test_MSL_size_is_reasonable(self): 
-        if self.my_preferences.data['verbose_mode'] == "true": 
+        if self.verbose_mode: 
             logging.getLogger().info("Testing MSL file size remains reasonable (1KB)")    
         
         msl_files = list() 
@@ -27,7 +27,7 @@ class test_MSL_files(QCASTestClient):
     # Verify the content of any MSL including that they refers to the correct month, year 
     # and contains seed data for each day
     def test_MSL_content_can_be_parsed(self): 
-        if self.my_preferences.data['verbose_mode'] == "true": 
+        if self.verbose_mode: 
             logging.getLogger().info("Testing MSL content can be parsed")    
         
         msl_files = list() 
@@ -46,7 +46,7 @@ class test_MSL_files(QCASTestClient):
 
     # MSL file should always be one row
     def test_MSL_file_one_row(self):
-        if self.my_preferences.data['verbose_mode'] == "true": 
+        if self.verbose_mode: 
             logging.getLogger().info("Testing MSL file only has one entry")    
     
         msl_files = list() 
@@ -63,7 +63,7 @@ class test_MSL_files(QCASTestClient):
                 
     # General Test to make sure MSL files can be read from disk
     def test_Read_MSL_file_from_disk(self):
-        if self.my_preferences.data['verbose_mode'] == "true": 
+        if self.verbose_mode: 
             logging.getLogger().info("Testing MSL files can be read from disk")    
         
         err_msg = "Cannot read MSL file, check paths to: " + self.my_preferences.data['MSLfile']
@@ -74,7 +74,7 @@ class test_MSL_files(QCASTestClient):
             self.assertTrue(os.path.isfile(self.my_preferences.data['nextMonth_MSLfile']), msg=err_msg)
             
     def test_MSL_fields_sanity_checks(self):
-        if self.my_preferences.data['verbose_mode'] == "true": 
+        if self.verbose_mode: 
             logging.getLogger().info("Testing MSL content passes sanity checks")    
         
         mslfile_list = list() 

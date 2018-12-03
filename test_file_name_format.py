@@ -6,7 +6,7 @@ from test_datafiles import QCASTestClient, PSLfile, skipping_PSL_comparison_test
 class test_file_name_format(QCASTestClient): 
 
     def test_MSL_filename_ends_with_MSL(self):
-        if self.my_preferences.data['verbose_mode'] == "true": 
+        if self.verbose_mode: 
             logging.getLogger().info("Testing MSL file ends with .MSL")    
     
         assert(str(self.my_preferences.data['MSLfile']).upper().endswith("MSL"))
@@ -15,7 +15,7 @@ class test_file_name_format(QCASTestClient):
             assert(str(self.my_preferences.data['nextMonth_MSLfile']).upper().endswith("MSL"))
 
     def test_MSL_filename_date(self):
-        if self.my_preferences.data['verbose_mode'] == "true": 
+        if self.verbose_mode: 
             logging.getLogger().info("Testing MSL filename Date")    
 
         current_month = self.get_filename_month(self.my_preferences.data['MSLfile'])
@@ -40,7 +40,7 @@ class test_file_name_format(QCASTestClient):
                 self.assertEqual(int(next_month_year), 1, msg="MSL filename Year, for New Year is not 1")
 
     def test_MSL_filename_version(self):
-        if self.my_preferences.data['verbose_mode'] == "true": 
+        if self.verbose_mode: 
             logging.getLogger().info("Testing MSL filename version")    
         
         version = self.get_filename_version(self.my_preferences.data['MSLfile'])
@@ -51,14 +51,14 @@ class test_file_name_format(QCASTestClient):
             self.assertEqual(int(nextmonth_version), 1, msg="MSL version must always be 1") # version must always be v1.
 
     def test_TSLfile_ends_with_TSL(self):
-        if self.my_preferences.data['verbose_mode'] == "true": 
+        if self.verbose_mode: 
             logging.getLogger().info("Testing TSL filename ends with .TSL")    
        
         assert(str(self.my_preferences.data['TSLfile']).upper().endswith("TSL")) # only 1 TSL file
 
     ### PSL file name format tests
     def test_PSLfile_ends_with_PSL(self):
-        if self.my_preferences.data['verbose_mode'] == "true": 
+        if self.verbose_mode: 
             logging.getLogger().info("Testing PSL filename ends with .PSL")       
         assert(str(self.my_preferences.data['PSLfile']).upper().endswith("PSL"))
         
@@ -67,7 +67,7 @@ class test_file_name_format(QCASTestClient):
     
     ## @unittest.skip("Skipping PSL version inc tests")        
     def test_PSL_file_version_increment(self):
-        if self.my_preferences.data['verbose_mode'] == "true": 
+        if self.verbose_mode: 
             logging.getLogger().info("Testing PSL filename version increment")       
 
         psl_version = self.get_filename_version(self.my_preferences.data['PSLfile'])
@@ -127,7 +127,7 @@ class test_file_name_format(QCASTestClient):
         #    self.assertEqual(int(next_month_psl_version), 1) # New Month, version is v1                           
         
     def test_PSL_filename_date(self):
-        if self.my_preferences.data['verbose_mode'] == "true": 
+        if self.verbose_mode: 
             logging.getLogger().info("Testing PSL filename date")      
             
         current_month = self.get_filename_month(self.my_preferences.data['PSLfile'])

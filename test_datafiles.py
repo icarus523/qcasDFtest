@@ -40,7 +40,7 @@ CHECK_ONE_FILE_ONLY_FLG = "ONE_MONTH_ONLY"
 def skipping_PSL_comparison_tests(): 
     my_preferences = Preferences()
     
-    if my_preferences.data['one_month_mode'] == "True": 
+    if my_preferences.data['one_month_mode'].upper() == "TRUE": 
         return True
     else:
         return False
@@ -115,7 +115,7 @@ class Preferences:
     
         ordered_psl_file = self.identify_datafiles(self.psl_file_list)
 
-        if self.my_preferences.data['verbose_mode'] == "true": 
+        if self.data['verbose_mode'] == "TRUE": 
             logging.getLogger().debug("Sorted PSL file: " + ",".join(ordered_psl_file))
     
     def identify_datafiles(self, datafile): 
@@ -153,7 +153,7 @@ class Preferences:
             json.dump(self.data, outfile,sort_keys=True, indent=4, separators=(',', ': '))
     
     def will_skip_lengthy_validations(self):   
-        if self.data['skip_lengthy_validations'] == "true": 
+        if self.data['skip_lengthy_validations'].upper() == "TRUE": 
             return True
         else:
             return False
@@ -441,7 +441,10 @@ class QCASTestClient(unittest.TestCase):
         # Read from JSON file
         # Global Vars, Paths, and QCAS datafile names
         self.my_preferences = Preferences() 
+        self.verbose_mode = self.my_preferences.data['verbose_mode'] == "TRUE"
+        
         self.psl_cache_file = CacheMemory() ## Use a cache memory 
+
         # self.psl_cache_file = CacheFile(self.my_preferences.cache_filename) # use a Cachefile - all defaults
 
         ###############################################
@@ -830,7 +833,7 @@ class QCASTestClient(unittest.TestCase):
                 if not block: break
                 m.update(block)      
                 
-                if self.my_preferences.data['verbose_mode'] == "true": 
+                if self.my_preferences.data['verbose_mode'] == "TRUE": 
                     if (done*100/size) < 100: 
                         sys.stdout.write("%7d" % (done*100/size) + "%" + p_reset)
                     else:
@@ -1002,32 +1005,9 @@ class QCASTestClient(unittest.TestCase):
 
         return rv
        
-    # Print iterations progress
-    # Source: https://stackoverflow.com/questions/3173320/text-progress-bar-in-the-console
-    def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█'):
-        """
-        Call in a loop to create terminal progress bar
-        @params:
-            iteration   - Required  : current iteration (Int)
-            total       - Required  : total iterations (Int)
-            prefix      - Optional  : prefix string (Str)
-            suffix      - Optional  : suffix string (Str)
-            decimals    - Optional  : positive number of decimals in percent complete (Int)
-            length      - Optional  : character length of bar (Int)
-            fill        - Optional  : bar fill character (Str)
-        """
-        percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
-        filledLength = int(length * iteration // total)
-        bar = fill * filledLength + '-' * (length - filledLength)
-        print('\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix), end = '\r')
-        # Print New Line on Complete
-        if iteration == total: 
-            print()
-    
     
         
 if __name__ == '__main__':
-    logging.getLogger().info('Start of unittesting for QCAS datafiles')
     unittest.main()
 
     
