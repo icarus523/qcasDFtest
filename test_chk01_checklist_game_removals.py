@@ -26,20 +26,10 @@ class test_chk01_checklist_game_removals(QCASTestClient):
         
         return return_game
 
-    # @unittest.skip("TODO: Not yet implemented")
-    def test_Games_removed_from_PSL_files(self): 
-        previous_TSLfile = self.my_preferences.data['previous_TSLfile']
-        currentTSLfile = self.my_preferences.data['TSLfile']
-        
-        nextMonth_PSLfile = self.my_preferences.data['nextMonth_PSLfile']
-        PSLfile = self.my_preferences.data['PSLfile']
-        
-        verbose_mode = self.my_preferences.data['verbose_mode']
-        
-        # the verify script can perform checks comparing the differences in the entries of old and new TSL file which 
-        # should match with the new and old current month PS1 files – whether additions or removals.
-    
+    def getTSLDifference_List(self, previous_TSLfile, currentTSLfile): 
         tsl_difference = set()
+        verbose_mode = self.my_preferences.data['verbose_mode'].upper() == "TRUE"
+
         with open(previous_TSLfile, 'r') as file1: 
             with open(currentTSLfile, 'r') as file2: 
                 tsl_difference = set(file2).difference(file1)
@@ -53,19 +43,12 @@ class test_chk01_checklist_game_removals(QCASTestClient):
         for tsl_game in tsl_difference: 
             game = TSLfile(tsl_game)
             tsl_ssan_list.append(game.ssan)
-                            
-        # Generate a list of games removed from PSL files, as the current Month and next Month will have identical SSANs 
-        # We will require previous Month's PSL file. 
         
-        currentPSLfile = self.check_file_format(PSLfile, 'PSL')              
-        Tk().withdraw()        
-        # The user must specify the previous month's PSL file which should reflect the changes of the current TSL file.         
-        previous_PSLfile = filedialog.askopenfilename(initialdir=DF_DIRECTORY, 
-            title = "Select Previous Month PSL File",filetypes = (("PSL files","*.PSL"),("all files","*.*")))            
-        
-        psl_file_list2 = list() 
-        if previous_PSLfile: 
-            psl_file_list2 = self.check_file_format(previous_PSLfile, 'PSL')
+        return tsl_ssan_list
+
+    def getPSLDifference_List(self, PSLfile, previous_PSLfile):         
+        currentPSLfile = self.check_file_format(PSLfile, 'PSL')
+        prevPSLfile = self.check_file_format(previous_PSLfile, 'PSL')
 
         # get all ssan in current PSL file
         psl_ssan_in_current_month = list() 
@@ -75,16 +58,37 @@ class test_chk01_checklist_game_removals(QCASTestClient):
         
         # get all ssan in previous month's PSL file
         psl_ssan_in_previous_month = list() 
-        for psl_file_entry in psl_file_list2: 
+        for psl_file_entry in prevPSLfile: 
             psl_ssan_in_previous_month.append(psl_file_entry.ssan)  
         psl_ssan_in_previous_month.sort() 
         
         # get the difference between the two sets
-        psl_ssan_difference = set(psl_ssan_in_previous_month).symmetric_difference(psl_ssan_in_current_month)
+        psl_ssan_difference = set(psl_ssan_in_previous_month).symmetric_difference(psl_ssan_in_current_month)        
+        
+        return psl_ssan_difference
+        
+    # @unittest.skip("TODO: Not yet implemented")
+    def test_Games_removed_from_PSL_files(self): 
+        previous_TSLfile = self.my_preferences.data['previous_TSLfile']
+        currentTSLfile = self.my_preferences.data['TSLfile']        
+        PSLfile = self.my_preferences.data['PSLfile']
+        previousMonth_PSLfile = self.my_preferences.data['previousMonth_PSLfile']
+        
+        verbose_mode = self.my_preferences.data['verbose_mode'].upper() == "TRUE"
+        
+        if verbose_mode: 
+            logging.getLogger().info("Testing Games removed from TSL files matches PSL files")
+        
+        # the verify script can perform checks comparing the differences in the entries of old and new TSL file which 
+        # should match with the new and old current month PS1 files – whether additions or removals.    
+        tsl_ssan_list = self.getTSLDifference_List(previous_TSLfile, currentTSLfile)
+    
+        # Generate a list of games removed from PSL files, as the current Month and next Month will have identical SSANs 
+        # We will require previous Month's PSL file.        
+        psl_ssan_difference = self.getPSLDifference_List(PSLfile, previousMonth_PSLfile)
 
         if verbose_mode: 
-            # print("Expected PSL differences: " + str(len(psl_ssan_in_current_month) - len(psl_ssan_in_previous_month)))
             logging.getLogger().debug("Expected PSL differences: " + str(len(psl_ssan_difference)))
         
-        err_msg = "Not the same games being added/removed from TSL vs PSL, check you selected the correct previous PSL file."
+        err_msg = "Not the same games being added/removed from TSL vs PSL, check you selected the correct previous PSL file: " + previousMonth_PSLfile
         self.assertTrue(len(psl_ssan_difference ^ set(tsl_ssan_list)) == 0, msg=err_msg) # bitwise XOR, must be zero fcr matching
