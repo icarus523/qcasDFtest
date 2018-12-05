@@ -142,10 +142,13 @@ class test_chk01_checklist(QCASTestClient):
                     # Compare Hash with PSL Entry
                     if msl == nextMonth_MSLfile: 
                         psl_entries_list = self.check_file_format(nextMonth_PSLfile, 'PSL')  # generate PSL object list for next month (Important) 
-                    elif msl == self.my_preferences.data['MSLfile']: 
+                    elif msl == MSLfile: 
                         psl_entries_list = self.check_file_format(PSL_file, 'PSL')  # generate PSL object list for next month (Important) 
 
-                    psl_from_file = ''
+                    err_msg = "Length of PSL entries does not equal TSL entries, check PSL files for: " + msl + " has been completed"
+                    self.assertTrue(len(psl_entries_list) == len(all_games), msg=err_msg)
+                    
+                    psl_from_file = None
                     for psl_entry in psl_entries_list: 
                         if random_tsl_entry.ssan == psl_entry.ssan: 
                             psl_from_file = psl_entry
@@ -179,12 +182,15 @@ class test_chk01_checklist(QCASTestClient):
     def test_X_NEW_game_with_one_seed_in_PSL_file(self): 
         new_games = self.get_newgames_to_be_added()
         msl_file_list = list() 
-        
+
         MSLfile = self.my_preferences.data['MSLfile']
         PSL_file = self.my_preferences.data['PSLfile']
         nextMonth_MSLfile = self.my_preferences.data['nextMonth_MSLfile']
         nextMonth_PSLfile = self.my_preferences.data['nextMonth_PSLfile']
-        
+        TSLfile = self.my_preferences.data['TSLfile']
+
+        all_games_list = self.check_file_format(TSLfile, 'TSL')
+
         if skipping_PSL_comparison_tests():
             msl_file_list = [MSLfile] 
         else:            
@@ -263,6 +269,9 @@ class test_chk01_checklist(QCASTestClient):
                     elif msl == self.my_preferences.data['MSLfile']: 
                         psl_entries_list = self.check_file_format(PSL_file, 'PSL')  # generate PSL object list for next month (Important) 
 
+                    err_msg = "Length of PSL entries does not equal TSL entries, check PSL files for: " + msl + " has been completed"
+                    self.assertTrue(len(psl_entries_list) == len(all_games_list), msg=err_msg)                        
+                        
                     for psl_entry in psl_entries_list: 
                         if random_tsl_entry.ssan == psl_entry.ssan: 
                             psl_from_file = psl_entry

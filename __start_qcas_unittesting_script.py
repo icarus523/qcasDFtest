@@ -31,20 +31,19 @@ logging.basicConfig(level=logging.DEBUG,
         filemode='a')
                 
 my_preferences = Preferences()
-def_str = "==== QCAS Unit Testing started on: " + str(datetime.now()) + " by: " + getpass.getuser()  + " ===="
+def_str = "==== QCAS Datafiles Testing started on: " + str(datetime.now()) + " by: " + getpass.getuser()  + " ===="
 logging.getLogger().info(def_str)    
 
-config = json.dumps(my_preferences.data, sort_keys=True, indent=4, separators=(',', ': '))
-logging.getLogger().info("QCAS Unit Testing Configuration: \n" + config)
+config = json.dumps(self.my_preferences.data, sort_keys=True, indent=4, separators=(',', ': '))
+logging.getLogger().info("QCAS Datafiles Testing Configuration: \n" + config)
 
-logging.getLogger().info("==== QCAS Unit Test script versions: ====")
+logging.getLogger().info("==== QCAS Datafiles Test script versions: ====")
 
 unit_test_files = glob.glob("test*.py")
 for file in unit_test_files:
-    logging.getLogger().info("%35s\t%s" % (file, QCASTestClient.dohash_sha256(None,file)))
+    logging.getLogger().info("%35s\t%s" % (file, QCASTestClient.dohash_sha256(self, file)))
 
 logging.getLogger().info("==== Starting Unit Tests ====")
-# subprocess.call('py -m unittest', shell=False)
 
 # Build Tests         
 my_unittests = list() # clear list    

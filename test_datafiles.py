@@ -37,6 +37,25 @@ from time import sleep
 p_reset = "\x08"*8
 CHECK_ONE_FILE_ONLY_FLG = "ONE_MONTH_ONLY"
 
+DEFAULT_DATA = { 'path_to_binimage' : 'G:\\OLGR-TECHSERV\\BINIMAGE',
+                  'mid_list' : [ '00', '01', '05', '07', '09', '12', '17'],
+                  'valid_bin_types' : ['BLNK','PS32','SHA1'], #
+                  'epsig_log_file' : 'G:\\OLGR-TECHSERV\\MISC\\BINIMAGE\\qcas\\log\\epsig.log',# 
+                  'previous_TSLfile' : "qcas_2017_09_v02.tsl", 
+                  'TSLfile' : "qcas_2017_10_v01.tsl", 
+                  'PSLfile' : "qcas_2017_10_v03.psl", 
+                  'nextMonth_PSLfile': "qcas_2017_11_v01.psl", 
+                  'previousMonth_PSLfile' : "qcas_2018_12_v03.psl",
+                  'MSLfile' : "qcas_2017_10_v01.msl",
+                  'nextMonth_MSLfile' : "qcas_2017_11_v01.msl",
+                  'write_new_games_to_file': "new_games.json",
+                  'skip_lengthy_validations': "true",
+                  'percent_changed_acceptable' : 0.10,
+                  'verbose_mode': "true",
+                  'number_of_random_games': 4,
+                  'one_month_mode': "false"
+                }
+
 def skipping_PSL_comparison_tests(): 
     my_preferences = Preferences()
     
@@ -62,38 +81,18 @@ class Preferences:
         
         if os.path.isfile(preference_filename): 
             self.readfile(preference_filename)
+            if self.verifydata() == False: # verify preferences file read
+                self.data = DEFAULT_DATA # generate defaults
+                self.writefile(preference_filename)
         else:            
             # default values
-            self.data = { 'path_to_binimage' : 'G:\\OLGR-TECHSERV\\BINIMAGE',
-                          'mid_list' : [ '00', '01', '05', '07', '09', '12', '17'],
-                          'valid_bin_types' : ['BLNK','PS32','SHA1'], #
-                          'epsig_log_file' : 'G:\\OLGR-TECHSERV\\MISC\\BINIMAGE\\qcas\\log\\epsig.log',# 
-                          'previous_TSLfile' : "qcas_2017_09_v02.tsl", 
-                          'TSLfile' : "qcas_2017_10_v01.tsl", 
-                          'PSLfile' : "qcas_2017_10_v03.psl", 
-                          'nextMonth_PSLfile': "qcas_2017_11_v01.psl", 
-                          'MSLfile' : "qcas_2017_10_v01.msl",
-                          'nextMonth_MSLfile' : "qcas_2017_11_v01.msl",
-                          'write_new_games_to_file': "new_games.json",
-                          'skip_lengthy_validations': "true",
-                          'percent_changed_acceptable' : 0.10,
-                          'verbose_mode': "true",
-                          'number_of_random_games': 4,
-                          'one_month_mode': True
-                        }
+            self.data = DEFAULT_DATA
             self.writefile(preference_filename)
             
     def readfile(self, filename): 
         with open(filename, 'r') as jsonfile: 
             self.data = json.load(jsonfile)
-            
-            # Datafiles 
-            # self.TSLfile = self.data['TSLfile']
-            # self.PSLfile = self.data['PSLfile']
-            # self.nextMonth_PSLfile = self.data['nextMonth_PSLfile']
-            # self.my_preferences.data['MSLfile'] = self.data['MSLfile']
-            # self.my_preferences.data['nextMonth_MSLfile'] = self.data['nextMonth_MSLfile']
-                        
+
             
     def scan_datafiles(self): 
         df_list = dict([(f, None) for f in os.listdir(".")])
@@ -141,14 +140,7 @@ class Preferences:
     def toJSON(self): 
         return (json.dumps(self, default=lambda o: o.__dict__, sort_keys = True, indent=4))
     
-    def writefile(self, fname):    
-        # Datafiles 
-        # self.data['TSLfile'] = self.TSLfile
-        # self.data['PSLfile'] = self.PSLfile
-        # self.data['nextMonth_PSLfile'] = self.nextMonth_PSLfile
-        #self.data['MSLfile'] = self.my_preferences.data['MSLfile']
-        # self.data['nextMonth_MSLfile'] = self.my_preferences.data['nextMonth_MSLfile']
-    
+    def writefile(self, fname):       
         with open(fname, 'w') as outfile: 
             json.dump(self.data, outfile,sort_keys=True, indent=4, separators=(',', ': '))
     
@@ -160,7 +152,32 @@ class Preferences:
     
     def getData(self): 
         return self.data
+        
+    def verifydata(self): 
+        if self.data['path_to_binimage'] != None and \
+            self.data['mid_list'] != None and \
+            self.data['valid_bin_types'] != None and \
+            self.data['epsig_log_file'] != None and \
+            self.data['previous_TSLfile'] != None and \
+            self.data['TSLfile'] != None and \
+            self.data['PSLfile'] != None and \
+            self.data['nextMonth_PSLfile'] != None and \
+            self.data['previousMonth_PSLfile'] != None and \
+            self.data['MSLfile'] != None and \
+            self.data['nextMonth_MSLfile'] != None and \
+            self.data['skip_lengthy_validations'] != None and \
+            self.data['percent_changed_acceptable'] != None and \
+            self.data['verbose_mode'] != None and \
+            self.data['number_of_random_games'] != None and \
+            self.data['one_month_mode'] != None : 
+
+            # do nothing
+            return True
             
+        else:            
+            print("Error reading file from disk, recreating all preferences from Default") 
+            return False
+                  
 class CacheMemory: 
 
     def __init__(self):
@@ -452,14 +469,8 @@ class QCASTestClient(unittest.TestCase):
         ## Modify the following files only
         ## 
         ## TSL files 
-        # self.data['previous_TSLfile'] = self.my_preferences.data['previous_TSLfile']
-        # self.TSLfile = self.my_preferences.TSLfile
-        ## PSL files (hashes)
-        # self.PSLfile = self.my_preferences.PSLfile
-        # self.nextMonth_PSLfile = self.my_preferences.nextMonth_PSLfile
-        ## MSL files (seeds)
-        # self.my_preferences.data['MSLfile'] = self.my_preferences.MSLfile
-        # self.my_preferences.data['nextMonth_MSLfile'] = self.my_preferences.nextMonth_MSLfile
+        ## PSL files (hashes)        
+        ## MSL files (seeds)        
         ##
         ###############################################
         self.next_month = {'month': '', 'year':''} 
@@ -467,7 +478,6 @@ class QCASTestClient(unittest.TestCase):
             'month': datetime.now().month,
             'year': datetime.now().year
         }
-        #self.write_new_games_to_file = self.my_preferences.write_new_games_to_file
         
         if self.this_month['month'] == 12:
             self.next_month = {
@@ -1005,10 +1015,5 @@ class QCASTestClient(unittest.TestCase):
 
         return rv
        
-    
-        
 if __name__ == '__main__':
     unittest.main()
-
-    
-    
