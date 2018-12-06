@@ -7,7 +7,7 @@ This script attempts to complete all CHK01 process as well as thoroughly check t
 
 ### [NEW] There is now a GUI to control the validation of casino datafiles. 
 To use: 
-1. Double-Click on `qcas_df_gui_control.py`
+1. Double-Click on `__qcasDF_gui_control.py`
 
 2. Select Your Options from GUI 
 3. Press [Start Verification]
@@ -25,6 +25,9 @@ To use:
         
         "path_to_binimage" : "\\\\Justice.qld.gov.au\\Data\\OLGR-TECHSERV\\BINIMAGE"
         "epsig_log_file": "\\\\Justice.qld.gov.au\\Data\\OLGR-TECHSERV\\OLGR-TECHSERV\\MISC\\BINIMAGE\\qcas\\log\\epsig.log"  
+        
+        "previousMonth_PSLfile": "G:/OLGR-TECHSERV/MISC/BINIMAGE/qcas/qcas_2018_11_v03.psl",
+        "previous_TSLfile": "G:/OLGR-TECHSERV/MISC/BINIMAGE/qcas/qcas_2018_11_v01.tsl",
 ```
         
 2. On the command prompt (in Windows) use: `py -m unittest -v`
@@ -36,10 +39,10 @@ Otherwise you can use the helper script named: `__start_qcas_unittesting_script.
 There is an option in the preferences.dat file to skip lengthy checks. 
 
 ```
-    "skip_lengthy_validations": "false"
+    "skip_lengthy_validations": "FALSE"
 ```
 
-Change the above variable to `"skip_lengthy_validations": "true"` and the script will avoid any lengthy tests. These include: 
+Change the above variable to `"skip_lengthy_validations": "TRUE"` and the script will avoid any lengthy tests. These include: 
 
 `test_new_games_to_be_added_are_in_PSL_files()`
 `test_One_old_game_to_be_added_in_PSL_files_full()`
@@ -50,8 +53,7 @@ Change the above variable to `"skip_lengthy_validations": "true"` and the script
 There is now an option to test a single month: MSL, PSL files, set the following: 
 
 ```
-        "nextMonth_MSLfile": "ONE_MONTH_ONLY",
-        "nextMonth_PSLfile": "ONE_MONTH_ONLY",
+    "one_month_mode": "TRUE",
 ```
 
 Note: Previous month TSL is still mandatory, for testing single month datafiles 
@@ -96,11 +98,24 @@ Reads the text file and creates an Object, it also performs the following sanity
 ## CHK01: Datafiles Checklist Module: `test_chk01_checklist.py`
 Mirrors the checks specified in CHK01 Casino Datafiles checklist, the following unit tests are performed in this test: 
 
-#### `test_Generated_PSL_files_Differ()`
+#### `test_PSL_files_are_Different()`
 - Verifies that the two PSL files: `self.PSLfile and self.nextMonth_PSLfile` are not the same. 
 
 #### `test_new_games_to_be_added_are_in_PSL_files()`
 - Verifies if the SSANs of new games exist in both `self.PSLfile and self.nextMonth_PSLfile` files. 
+
+#### `test_X_OLD_games_with_one_seed_in_PSL_file()`
+- Similar to `test_One_old_game_to_be_added_in_PSL_files()` but utilises one random seed for both months for X number of games
+
+#### `test_X_NEW_game_with_one_seed_in_PSL_file()`
+- Similar to `test_One_new_game_to_be_added_in_PSL_files()` but utilises one random seed for both months for X number of games
+
+## CHK01: Game Removal Module: `test_chk01_checklist_game_removals.py`
+
+#### `test_Games_removed_from_PSL_files()`
+- Verifies that expected games removed has been identified from the PSL files. 
+
+## CHK01: Intensive Checklist Module: `test_chk01_intensive_checklist.py`
 
 #### `test_TSL_entries_exist_in_PSL_files()`
 Verifies the following entry for each new game generated: 
@@ -110,9 +125,6 @@ Verifies the following entry for each new game generated:
 - PSL Month field is valid:  1 < valid month < 12
 - PSL SSAN is valid: 150000 < SSAN < 999999999
 - Number of Hashes in the PSL entry is equal to 31
-
-#### [to be completed] `test_Games_removed_from_PSL_files()`
-- Verifies that expected games removed has been identified from the PSL files. 
 
 #### `test_One_new_game_to_be_added_in_PSL_files()`
 - Verifies that the generated PSL entries for two months is created for the Random game. 
@@ -177,10 +189,10 @@ Generic test scripts for correct file name format and conventions.
 
 ## PSL file Module: `test_psl_file_content.py`
 
-#### `test_psl_size_is_reasonable()`
+##### `test_psl_size_is_reasonable()`
 - Verifies that the file size of the PSL files is reasonable (greater than 1055KB as at July 2013)
 
-### `test_PSL_content_can_be_parsed()`
+#### `test_PSL_content_can_be_parsed()`
 - Verifies the `self.PSLfile` and `self.nextMonth_PSLfile` file formats
 - Verifies PSL file manufacturer field is valid
 - Verifies PSL Game name field length is 30 characters or less
