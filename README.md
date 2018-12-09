@@ -29,7 +29,11 @@ To use:
         "previousMonth_PSLfile": "G:/OLGR-TECHSERV/MISC/BINIMAGE/qcas/qcas_2018_11_v03.psl",
         "previous_TSLfile": "G:/OLGR-TECHSERV/MISC/BINIMAGE/qcas/qcas_2018_11_v01.tsl",
 ```
-        
+
+#### Important Options
+`previousMonth_PSLfile` is used to determine whether new games being included matches with what is being expected through: `TSLfile`.
+
+
 2. On the command prompt (in Windows) use: `py -m unittest -v`
 Will run all unit test scripts. To specify a specifc unit test use: `py -m unittest test_chk01_checklist.py`
 
@@ -43,12 +47,12 @@ There is an option in the preferences.dat file to skip lengthy checks.
 ```
 
 Change the above variable to `"skip_lengthy_validations": "TRUE"` and the script will avoid any lengthy tests. These include: 
-
+```
 `test_new_games_to_be_added_are_in_PSL_files()`
 `test_One_old_game_to_be_added_in_PSL_files_full()`
 `test_One_new_game_to_be_added_in_PSL_files_full()`
 `test_TSL_entries_exist_in_PSL_files()`
-
+```
 4. Test only a single month
 There is now an option to test a single month: MSL, PSL files, set the following: 
 
@@ -126,11 +130,11 @@ Verifies the following entry for each new game generated:
 - PSL SSAN is valid: 150000 < SSAN < 999999999
 - Number of Hashes in the PSL entry is equal to 31
 
-#### `test_One_new_game_to_be_added_in_PSL_files()`
+#### `test_One_new_game_to_be_added_in_PSL_files_full()`
 - Verifies that the generated PSL entries for two months is created for the Random game. 
 - Verifies that the PSL entries matches for two months exists in `self.PSLfile and self.nextMonth_PSLfile`
 
-#### `test_One_old_game_to_be_added_in_PSL_files()`
+#### `test_One_old_game_to_be_added_in_PSL_files_full()`
 - Verifies that the generated PSL entries for two months is created for the Random game. 
 - Verifies that the PSL entries matches for two months exists in `self.PSLfile and self.nextMonth_PSLfile`
 
@@ -138,13 +142,19 @@ Verifies the following entry for each new game generated:
 This test script verifies the expected output of the EPSIG log. 
 
 #### `test_Read_Epsig_log_file_from_disk()`
-- Verifies self.my_preferences.data['epsig_log_file'] can be read from disk
+- Verifies `self.my_preferences.data['epsig_log_file']` can be read from disk
 
-#### `test_Epsig_Log_file()`
+#### `test_epsig_log_file_last_four_entries_are_valid_for_psl_versions()`
+- Verifies the last four paragraphs in the epsig log file are complete and as expected. 
+- Verifies that the end of each paragraph indicates: "with EXIT_SUCCESS"
+- Verifies that the time stamp for when EPSIG last ran is reasonable (within 30 days)
+- Verifies that the time stamp for when EPSIG last completed is reasonable (within 30 days)
+
+#### `test_epsig_log_file_last_two_entries_command_str_is_valid()`
 - Verifies the last entry of the Epsig log file
 - Verifies the version of EPSIG being used (expected: v3.5)
-- Verifies that the time stamp for when EPSIG last ran is reasonable (within 7 days)
-- Verifies that the time stamp for when EPSIG last completed is reasonable (within 7 days)
+- Verifies that the time stamp for when EPSIG last ran is reasonable (within 30 days)
+- Verifies that the time stamp for when EPSIG last completed is reasonable (within 30 days)
 - Verifies that the end of the Epsig Log File indicates: "with EXIT_SUCCESS"
 - Verifies that the command that was used for Epsig is correct. (Correct Epsig Binary used; Correct BINIMAGE Path used: i.e. G:\; Correct Datafiles referenced, i.e. MSL file is `self.MSLfile or self.my_preferences.data['nextMonth_MSLfile']`; TSL file is `self.TSLfile`; PSL file is `self.PSLfile or self.nextMonth_PSLfile`
 
@@ -152,10 +162,10 @@ This test script verifies the expected output of the EPSIG log.
 Generic test scripts for correct file name format and conventions. 
 
 #### `test_MSL_filename_ends_with_MSL()`
-- Verifies that `self.MSLfile or self.my_preferences.data['nextMonth_MSLfile']` ends with .msl
+- Verifies that `MSLfile or nextMonth_MSLfile` ends with .msl
 
 #### `test_MSL_filename_date()`
-- Verifies that the month fields in `self.MSLfile or self.my_preferences.data['nextMonth_MSLfile']` are not equal
+- Verifies that the month fields in `MSLfile or nextMonth_MSLfile` are not equal
 - Verifies that the MSL filename month fields are not equal
 - Verifies that the MSL year fields is the same if month is less than 12, otherwise an increment in Year value is expected
 
@@ -174,7 +184,7 @@ Generic test scripts for correct file name format and conventions.
 #### `test_PSL_filename_date()`
 - Verify that current PSL month is not equal to the new PSL month 
 - Verify that the PSL year is the same, unless current PSL month is December.
-
+- Verify that if PSL month is new year then the Year field should be current month field + 1
 
 ## TSL file Module: `test_tsl_file_content.py`
 
