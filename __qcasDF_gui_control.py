@@ -269,6 +269,7 @@ class qcas_df_gui:
             self.intensive_validation.set(0)
         else:
             self.intensive_validation.set(1)
+            
         self.cb_intensive_validation = Checkbutton(
             frame_config, 
             text="Skip Intensive Validations", 
@@ -445,10 +446,7 @@ class qcas_df_gui:
         self.my_unittests = list() # clear list    
         self.my_test_output = list() # clear list
 
-        # by default always do intensive chk01, but is controllable via Checkbox
-        self.my_unittests.append(test_chk01_intensive_checklist)
-        self.my_test_output.append("CHK01 Intensive validations")          
-        
+        # by default always do test_chk01_checklist_game_removals
         self.my_unittests.append(test_chk01_checklist_game_removals)
         self.my_test_output.append("CHK01 game removals")          
         
@@ -475,7 +473,12 @@ class qcas_df_gui:
         if self.unittest_chk01_basic.get() == 1: 
             self.my_unittests.append(test_chk01_checklist)
             self.my_test_output.append("CHK01 Validations")           
-            
+        
+        if self.intensive_validation.get() == 1: 
+            self.my_unittests.append(test_chk01_intensive_checklist)
+            self.my_test_output.append("CHK01 Intensive validations")   
+
+        
     def handleButtonPress(self, choice):
         if choice == '__select_current_msl_file__':
             tmp = filedialog.askopenfilename(initialdir=DF_DIRECTORY, title = "Select Current MSL File",filetypes = (("MSL files","*.MSL"),("all files","*.*")))
@@ -501,6 +504,13 @@ class qcas_df_gui:
             if tmp: # Selected something
                 self.tf_nextmonth_psl.delete(0, END)                                
                 self.tf_nextmonth_psl.insert(0, tmp)
+        elif choice == '__select_prevmonth_psl_file__': 
+            tmp = filedialog.askopenfilename(initialdir=DF_DIRECTORY, title = "Select Previous Month PSL File",filetypes = (("PSL files","*.PSL"),("all files","*.*")))
+            
+            if tmp: # Selected something
+                self.tf_prevmonth_psl.delete(0, END)                                
+                self.tf_prevmonth_psl.insert(0, tmp)        
+        
         elif choice == '__select_tsl_file__':
             tmp = filedialog.askopenfilename(initialdir=DF_DIRECTORY, title = "Select Current TSL File",filetypes = (("TSL files","*.TSL"),("all files","*.*")))
             
@@ -536,17 +546,17 @@ class qcas_df_gui:
             
         elif choice == '__start__':
             self.handleCheckButton() # get CheckButton unit tests
+            self.UpdatePreferences()            
             threading.Thread(self.StartUnitTest(self.my_unittests, self.my_test_output)).start()        
-            self.root.deiconify()            
+            self.root.deiconify() # show window           
             
         elif choice == '__save__':
+            self.handleCheckButton() # get CheckButton unit tests
             self.UpdatePreferences()
        
             
     def StartUnitTest(self, tests, testoutput):
-        self.UpdatePreferences() # save first       
-        #self.root.destroy() # remove gui
-        self.root.withdraw() 
+        self.root.withdraw() # hide window
         
         def_str = "==== QCAS Datafiles Testing started on: " + str(datetime.now()) + " by: " + getpass.getuser()  + " ===="
         logging.getLogger().info(def_str)    
@@ -590,6 +600,7 @@ class qcas_df_gui:
         self.my_preferences.data['TSLfile'] = self.tf_current_tsl.get() 
         self.my_preferences.data['PSLfile'] = self.tf_current_psl.get()
         self.my_preferences.data['nextMonth_PSLfile'] = self.tf_nextmonth_psl.get()
+        self.my_preferences.data['previousMonth_PSLfile'] = self.tf_prevmonth_psl.get()        
         self.my_preferences.data['MSLfile'] = self.tf_current_msl.get()
         self.my_preferences.data['nextMonth_MSLfile'] = self.tf_nextmonth_msl.get()
         self.my_preferences.data['number_of_random_games'] = self.box_value.get()
@@ -624,6 +635,8 @@ class qcas_df_gui:
             
         self.my_preferences.writefile(self.config_fname) # write to file
         print("updated preference file: " + self.config_fname)
+        self.my_preferences = None
+        self.my_preferences = Preferences() 
 
 def exit_handler():
     logging.getLogger().info("==== QCAS Unit Test STOPPED/INTERRUPTED: " + str(datetime.now()) + " by: " + getpass.getuser()  + " ====")

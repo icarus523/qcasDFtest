@@ -5,7 +5,7 @@ from test_datafiles import QCASTestClient, PSLfile, skipping_PSL_comparison_test
 
 class test_file_name_format(QCASTestClient): 
 
-    def test_MSL_filename_ends_with_MSL(self):
+    def test_MSL_filename_ends_with_MSL(self):    
         if self.verbose_mode: 
             logging.getLogger().info("Testing MSL file ends with .MSL")    
     
@@ -37,7 +37,7 @@ class test_file_name_format(QCASTestClient):
                 self.assertNotEqual(int(current_month_year), int(next_month_year) + 1) # new year
 
             if self.is_new_year(self.my_preferences.data['MSLfile']):
-                self.assertEqual(int(next_month_year), 1, msg="MSL filename Year, for New Year is not 1")
+                self.assertEqual(int(next_month), 1, msg="MSL filename 'Month' field, for New Year is not 1 (January)")
 
     def test_MSL_filename_version(self):
         if self.verbose_mode: 
