@@ -16,24 +16,6 @@ import time
 from datetime import datetime, timedelta
 from time import sleep
 
-#logging.basicConfig(level=logging.INFO,
-##        format='%(asctime)s - %(levelname)-8s %(message)s',
-#       datefmt='%d-%m-%y %H:%M',
-#        filename='qcas_test.log',
-#        filemode='w')
-        
-# ## Configure logger
-# logger = logging.getLogger()
-# logger.level = logging.INFO
-# stream_handler = logging.StreamHandler(sys.stdout)
-# logger.addHandler(stream_handler)
-
-# file_handler = logging.FileHandler("qcas_test.log")
-
-# #file_handler.setFormatter(formatter)
-# logger.addHandler(stream_handler)
-# logger.addHandler(file_handler)
-
 p_reset = "\x08"*8
 CHECK_ONE_FILE_ONLY_FLG = "ONE_MONTH_ONLY"
 
@@ -56,9 +38,13 @@ DEFAULT_DATA = { 'path_to_binimage' : 'G:\\OLGR-TECHSERV\\BINIMAGE',
                   'one_month_mode': "false"
                 }
 
-def skipping_PSL_comparison_tests(): 
+# Unit Test Decorator Functions
+def skipping_lengthy_tests(): 
     my_preferences = Preferences()
-    
+    return my_preferences.data['skip_lengthy_validations'].upper() == "TRUE"                
+                
+def skipping_PSL_comparison_tests(): 
+    my_preferences = Preferences()    
     if my_preferences.data['one_month_mode'].upper() == "TRUE": 
         return True
     else:
@@ -66,9 +52,9 @@ def skipping_PSL_comparison_tests():
 
 def binimage_path_exists(): 
     my_preferences = Preferences()
-
     return os.path.isdir(my_preferences.data['path_to_binimage'])        
-       
+
+# Class for Preferences.dat file     
 class Preferences: 
 
     def __init__(self): 
@@ -142,13 +128,7 @@ class Preferences:
     
     def writefile(self, fname):       
         with open(fname, 'w') as outfile: 
-            json.dump(self.data, outfile,sort_keys=True, indent=4, separators=(',', ': '))
-    
-    def will_skip_lengthy_validations(self):   
-        if self.data['skip_lengthy_validations'].upper() == "TRUE": 
-            return True
-        else:
-            return False
+            json.dump(self.data, outfile,sort_keys=True, indent=4, separators=(',', ': '))    
     
     def getData(self): 
         return self.data
@@ -460,8 +440,7 @@ class QCASTestClient(unittest.TestCase):
         self.my_preferences = Preferences() 
         self.verbose_mode = self.my_preferences.data['verbose_mode'] == "TRUE"
         
-        self.psl_cache_file = CacheMemory() ## Use a cache memory 
-
+        self.psl_cache_file = CacheMemory() ## Use a cache memory, clear after each test
         # self.psl_cache_file = CacheFile(self.my_preferences.cache_filename) # use a Cachefile - all defaults
 
         ###############################################
@@ -491,8 +470,8 @@ class QCASTestClient(unittest.TestCase):
             }
 
     def tearDown(self): 
-        err_msg = ""
-        
+        err_msg = ""  
+        self.my_preferences = None
             
     def generate_seed_list_for_test(self): 
         seedlist = list() 
@@ -689,15 +668,19 @@ class QCASTestClient(unittest.TestCase):
             with open(self.my_preferences.data['previous_TSLfile'], 'r') as file2:
                 tsl_difference_games_added = set(file1).difference(file2)
         
-        self.assertTrue(len(tsl_difference_games_added) > 0) # TSL files must contain a new game? 
+        self.assertTrue(len(tsl_difference_games_added) > 0, msg="TSL file has no new games") # TSL files must contain a new game? 
   
         # Differences are the new games to be added. 
         for game in list(tsl_difference_games_added): # Single Line
             game_list_to_be_added.append(TSLfile(game)) # Generate TSL object
         
-        self.save_game_list_to_disk(game_list_to_be_added)  # write file to disk. 
+        # sort by game name then by manufacturer, manufaturer is sorted by MID (i.e. numbers with ARI = 00, IGT= 01, etc)
+        tsl_game_list_sorted = sorted(game_list_to_be_added, key=lambda game_list_to_be_added: (game_list_to_be_added.game_name))
+        tsl_game_list_sorted = sorted(tsl_game_list_sorted, key=lambda tsl_game_list_sorted: (tsl_game_list_sorted.mid))
         
-        return game_list_to_be_added
+        self.save_game_list_to_disk(tsl_game_list_sorted)  # write file to disk. 
+        
+        return tsl_game_list_sorted
     
     # input: tsl object game list
     # output: none
@@ -706,10 +689,6 @@ class QCASTestClient(unittest.TestCase):
         timestamp = str(datetime.now())
         # month = datetime.now().strftime("%B")
         
-        # sort by game name then by manufacturer, manufaturer is sorted by MID (i.e. numbers with ARI = 00, IGT= 01, etc)
-        tsl_game_list_sorted = sorted(tsl_game_list, key=lambda tsl_game_list: (tsl_game_list.game_name))
-        tsl_game_list_sorted = sorted(tsl_game_list_sorted, key=lambda tsl_game_list_sorted: (tsl_game_list_sorted.mid))
-
         today = datetime.now()
         this_month = today
         next_month = today + timedelta(days=31) 
@@ -721,7 +700,7 @@ class QCASTestClient(unittest.TestCase):
                 + this_month.strftime("%B %Y") + " and " + next_month.strftime("%B %Y") + "\n")
             file.writelines("\nAdditions:")
             mid = ""
-            for game in tsl_game_list_sorted: 
+            for game in tsl_game_list: 
                 if mid != game.mid: 
                     mid = game.mid
                     file.writelines("\n\n" + self.get_manufacturer_name(game.mid) + "\n")
@@ -843,6 +822,7 @@ class QCASTestClient(unittest.TestCase):
                 if not block: break
                 m.update(block)      
                 
+                # percentage %
                 if self.my_preferences.data['verbose_mode'] == "TRUE": 
                     if (done*100/size) < 100: 
                         sys.stdout.write("%7d" % (done*100/size) + "%" + p_reset)
