@@ -19,6 +19,7 @@ import json
 from datetime import datetime
 from test_datafiles import Preferences, skipping_PSL_comparison_tests, QCASTestClient
 from tkinter import messagebox
+import tkinter as tk
 
 # Configure Console Window
 os.system('mode con: cols=150 lines=120')
@@ -34,14 +35,14 @@ my_preferences = Preferences()
 def_str = "==== QCAS Datafiles Testing started on: " + str(datetime.now()) + " by: " + getpass.getuser()  + " ===="
 logging.getLogger().info(def_str)    
 
-config = json.dumps(self.my_preferences.data, sort_keys=True, indent=4, separators=(',', ': '))
+config = json.dumps(my_preferences.data, sort_keys=True, indent=4, separators=(',', ': '))
 logging.getLogger().info("QCAS Datafiles Testing Configuration: \n" + config)
 
 logging.getLogger().info("==== QCAS Datafiles Test script versions: ====")
 
 unit_test_files = glob.glob("test*.py")
 for file in unit_test_files:
-    logging.getLogger().info("%35s\t%s" % (file, QCASTestClient.dohash_sha256(self, file)))
+    logging.getLogger().info("%35s\t%s" % (file, QCASTestClient.dohash_sha256(self=None, fname=file)))
 
 logging.getLogger().info("==== Starting Unit Tests ====")
 
@@ -83,8 +84,8 @@ for test in my_unittests:
             logging.getLogger().error(err_detail) # log any errors as errors in full
     
     for skip in testResult.skipped: 
-        for skip_details in skip:
-            logging.getLogger().warning(skip_details) # log any skipped tests as warnings
+        #for skip_details in skip:
+        logging.getLogger().warning(skip) # log any skipped tests as warnings
     
     for fail in testResult.failures: 
         for fail_details in fail: 
@@ -94,4 +95,8 @@ for test in my_unittests:
 
 display_msg = "QCAS Datafiles Validation COMPLETE: " + str(datetime.now()) + " by: " + getpass.getuser()
 logging.getLogger().info("==== " + display_msg + " ====")
+
+# GUI elements
+root = tk.Tk()
+root.withdraw() # hide window
 messagebox.showinfo("Finished!", display_msg)

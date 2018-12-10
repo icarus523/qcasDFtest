@@ -6,8 +6,8 @@ import logging
 from test_datafiles import QCASTestClient, PSLfile, TSLfile, MSLfile, Preferences, skipping_PSL_comparison_tests
 from datetime import datetime, date
 
-NUMBER_OF_VALID_DAYS_SINCE_START_OF_LOG = 60
-NUMBER_OF_VALID_DAYS_SINCE_END_OF_LOG = 60
+NUMBER_OF_VALID_DAYS_SINCE_START_OF_LOG = 30
+NUMBER_OF_VALID_DAYS_SINCE_END_OF_LOG = 30
 
 VALID_EPSIG_VERSION = '3.5'
 #LOG_FILE = "G:\\OLGR-TECHSERV\\MISC\\BINIMAGE\\qcas\\log\\epsig.log"
@@ -18,7 +18,7 @@ class EpsigLogFile():
 
     def __init__(self, data): 
        
-        assert(len(data) == 6), "Data is not complete: " # this should be 5
+        assert(len(data) == 6), "Data is not complete."
     
         self.header = data[0] 
         self.version_number = self.header.split(' ')[2] # 3.5
