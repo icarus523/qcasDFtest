@@ -38,10 +38,7 @@ DEFAULT_DATA = { 'path_to_binimage' : 'G:\\OLGR-TECHSERV\\BINIMAGE',
                   'one_month_mode': "false"
                 }
 
-# Unit Test Decorator Functions
-def skipping_lengthy_tests(): 
-    my_preferences = Preferences()
-    return my_preferences.data['skip_lengthy_validations'].upper() == "TRUE"                
+   
                 
 def skipping_PSL_comparison_tests(): 
     my_preferences = Preferences()    

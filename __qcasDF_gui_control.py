@@ -19,6 +19,7 @@ import test_epsig_log_files
 import test_chk01_checklist_game_removals
 import webbrowser
 import atexit
+import time
 
 from datetime import datetime
 from tkinter import *
@@ -29,7 +30,7 @@ from test_datafiles import QCASTestClient, PSLfile, PSLEntry_OneHash, TSLfile, M
 
 VERSION = "0.2"
 DF_DIRECTORY = "G:/OLGR-TECHSERV/MISC/BINIMAGE/qcas/"
-os.system('mode con: cols=150 lines=2500')
+os.system('mode con: cols=150 lines=120')
 
 logging.basicConfig(level=logging.DEBUG,
         format='%(asctime)s - %(levelname)-8s %(message)s',
@@ -44,8 +45,9 @@ class qcas_df_gui:
         self.my_preferences = Preferences() 
         self.root = tk.Tk()       
         self.config_fname = "preferences.dat"
-        self.my_unittests = list() 
+        self.my_unittests = list()
         self.my_test_output = list()
+        self.proc = None
         
         menubar = tk.Menu(self.root)
         filemenu = tk.Menu(menubar, tearoff=0)
@@ -276,7 +278,8 @@ class qcas_df_gui:
             justify=LEFT, 
             variable = self.intensive_validation, 
             onvalue=1, 
-            offvalue=0)
+            offvalue=0, 
+            command=self.handleCheckButton)
         self.cb_intensive_validation.grid(row=6, column=1, sticky='w')
 
         # Checkbutton Verbose Mode
@@ -299,8 +302,16 @@ class qcas_df_gui:
         self.one_month_mode = IntVar()
         if self.my_preferences.data['one_month_mode'].upper() == "FALSE":
             self.one_month_mode.set(0)
+            self.button_select_nextmonth_msl.config(state=NORMAL)
+            self.tf_nextmonth_msl.config(state=NORMAL)
+            self.button_select_nextmonth_psl.config(state=NORMAL)
+            self.tf_nextmonth_psl.config(state=NORMAL)
         else:
             self.one_month_mode.set(1)
+            self.button_select_nextmonth_msl.config(state=DISABLED)
+            self.tf_nextmonth_msl.config(state=DISABLED)
+            self.button_select_nextmonth_psl.config(state=DISABLED)
+            self.tf_nextmonth_psl.config(state=DISABLED)
             
         self.cb_one_month_mode = Checkbutton(
             frame_config, 
@@ -419,9 +430,15 @@ class qcas_df_gui:
         frame_start_button.config(relief = FLAT, borderwidth = 1)
         frame_start_button.pack(side = TOP, padx  = 0, pady = 0, expand = False, fill=X, anchor = 'w')       
         # Button Start 
-        button_start = ttk.Button(frame_start_button, text = "Start Verification", width=20, 
+        self.button_start = ttk.Button(frame_start_button, text = "Start Verification", width=20, 
             command = lambda: self.handleButtonPress('__start__'))
-        button_start.pack(side=RIGHT, padx = 3, pady = 3, fill=X, expand=False)       
+        self.button_start.pack(side=RIGHT, padx = 3, pady = 3, fill=X, expand=False)      
+
+        # Button Stop
+        button_stop = ttk.Button(frame_start_button, text = "Stop", width=20, 
+            command = lambda: self.handleButtonPress('__stop__'))
+        button_stop.pack(side=RIGHT, padx = 3, pady = 3, fill=X, expand=False)         
+        
         # Button Save Config 
         button_save = ttk.Button(frame_start_button, text = "Save Config", width=20, 
             command = lambda: self.handleButtonPress('__save__'))                 
@@ -446,10 +463,13 @@ class qcas_df_gui:
         self.my_unittests = list() # clear list    
         self.my_test_output = list() # clear list
 
+        self.my_unittests.append(test_chk01_intensive_checklist)
+        self.my_test_output.append("CHK01 Intensive validations")             
+        
         # by default always do test_chk01_checklist_game_removals
         self.my_unittests.append(test_chk01_checklist_game_removals)
-        self.my_test_output.append("CHK01 game removals")          
-        
+        self.my_test_output.append("CHK01 game removals")             
+            
         if self.unittest_filename_format.get() == 1: 
             self.my_unittests.append(test_file_name_format)
             self.my_test_output.append("Datafile Filename format tests")
@@ -473,11 +493,8 @@ class qcas_df_gui:
         if self.unittest_chk01_basic.get() == 1: 
             self.my_unittests.append(test_chk01_checklist)
             self.my_test_output.append("CHK01 Validations")           
-        
-        if self.intensive_validation.get() == 1: 
-            self.my_unittests.append(test_chk01_intensive_checklist)
-            self.my_test_output.append("CHK01 Intensive validations")   
 
+      
         
     def handleButtonPress(self, choice):
         if choice == '__select_current_msl_file__':
@@ -545,56 +562,41 @@ class qcas_df_gui:
                 self.tf_newgames.insert(0, tmp)   
             
         elif choice == '__start__':
+            self.my_preferences = None 
+            self.my_preferences = Preferences() 
             self.handleCheckButton() # get CheckButton unit tests
             self.UpdatePreferences()            
-            threading.Thread(self.StartUnitTest(self.my_unittests, self.my_test_output)).start()        
-            self.root.deiconify() # show window           
+            threading.Thread(self.StartUnitTest(self.my_unittests, self.my_test_output)).start()                    
+            # self.button_start.config(state=DISABLED)         
+            self.root.deiconify() # show window  
             
         elif choice == '__save__':
+            self.my_preferences = None 
+            self.my_preferences = Preferences() 
             self.handleCheckButton() # get CheckButton unit tests
             self.UpdatePreferences()
-       
+            
+        elif choice == '__stop__': 
+            if self.proc: 
+                self.proc.terminate() # stop process. 
+                self.proc = None            
+                print("\n### Stopped Validation ###")
+                logging.getLogger().info("==== QCAS Unit Test STOPPED/INTERRUPTED: " + str(datetime.now()) + " by: " + getpass.getuser()  + " ====")
+
+            self.button_start.config(state=NORMAL)
+
             
     def StartUnitTest(self, tests, testoutput):
-        self.root.withdraw() # hide window
+        # self.root.withdraw() # hide main window
+        if self.proc == None:
+            self.proc = subprocess.Popen(['py.exe', '__start_qcas_unittesting_script.py'])
+        else: 
+            print("\n\n ### Validation in Progress. Please Stop first ###")                
         
-        def_str = "==== QCAS Datafiles Testing started on: " + str(datetime.now()) + " by: " + getpass.getuser()  + " ===="
-        logging.getLogger().info(def_str)    
-
-        config = json.dumps(self.my_preferences.data, sort_keys=True, indent=4, separators=(',', ': '))
-        logging.getLogger().info("QCAS Datafiles Testing Configuration: \n" + config)
-
-        logging.getLogger().info("==== QCAS Datafiles Test script versions: ====")
-
-        unit_test_files = glob.glob("test*.py")
-        for file in unit_test_files:
-            logging.getLogger().info("%35s\t%s" % (file, QCASTestClient.dohash_sha256(self, file)))
-
-        logging.getLogger().info("==== Starting Unit Tests ====")
-
-        for test in tests: 
-            testLoad = unittest.TestLoader().loadTestsFromModule(test)      
-            testResult = unittest.TextTestRunner(verbosity=3).run(testLoad) 
+    def UpdatePreferences(self):   
+        self.my_preferences = None
+        self.my_preferences = Preferences() 
         
-            for err in testResult.errors: 
-                for err_detail in err: 
-                    logging.getLogger().error(err_detail)
-            
-            for skip in testResult.skipped: 
-                for skip_details in skip:
-                    logging.getLogger().warning(skip_details) 
-            
-            for fail in testResult.failures: 
-                for fail_details in fail: 
-                    logging.getLogger().error(fail_details) 
-                
-            logging.getLogger().debug(testoutput[tests.index(test)] + str(testResult)) # summary
-        
-        display_msg = "QCAS Datafiles Validation COMPLETE: " + str(datetime.now()) + " by: " + getpass.getuser()
-        logging.getLogger().info("==== " + display_msg + " ====")
-        messagebox.showinfo("Finished!", display_msg)
-        
-    def UpdatePreferences(self):        
         #update vars
         self.my_preferences.data['previous_TSLfile'] = self.tf_previousmonth_tsl.get()
         self.my_preferences.data['TSLfile'] = self.tf_current_tsl.get() 
@@ -635,8 +637,6 @@ class qcas_df_gui:
             
         self.my_preferences.writefile(self.config_fname) # write to file
         print("updated preference file: " + self.config_fname)
-        self.my_preferences = None
-        self.my_preferences = Preferences() 
 
 def exit_handler():
     logging.getLogger().info("==== QCAS Unit Test STOPPED/INTERRUPTED: " + str(datetime.now()) + " by: " + getpass.getuser()  + " ====")
