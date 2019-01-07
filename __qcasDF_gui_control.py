@@ -566,13 +566,13 @@ class qcas_df_gui:
             self.my_preferences = Preferences() 
             self.handleCheckButton() # get CheckButton unit tests
             self.UpdatePreferences()            
-            threading.Thread(self.StartUnitTest(self.my_unittests, self.my_test_output)).start()                    
+            threading.Thread(self.StartUnitTest()).start()                    
             # self.button_start.config(state=DISABLED)         
             self.root.deiconify() # show window  
             
         elif choice == '__save__':
-            self.my_preferences = None 
-            self.my_preferences = Preferences() 
+            #self.my_preferences = None 
+            # self.my_preferences = Preferences() 
             self.handleCheckButton() # get CheckButton unit tests
             self.UpdatePreferences()
             
@@ -586,16 +586,17 @@ class qcas_df_gui:
             self.button_start.config(state=NORMAL)
 
             
-    def StartUnitTest(self, tests, testoutput):
+    def StartUnitTest(self):
         # self.root.withdraw() # hide main window
-        if self.proc == None:
+        self.UpdatePreferences()
+        
+        if self.proc == None or self.proc.returncode == 0:
             self.proc = subprocess.Popen(['py.exe', '__start_qcas_unittesting_script.py'])
         else: 
             print("\n\n ### Validation in Progress. Please Stop first ###")                
         
-    def UpdatePreferences(self):   
-        self.my_preferences = None
-        self.my_preferences = Preferences() 
+    def UpdatePreferences(self):           
+        self.my_preferences.data['unittests'] = self.my_test_output
         
         #update vars
         self.my_preferences.data['previous_TSLfile'] = self.tf_previousmonth_tsl.get()
@@ -608,6 +609,7 @@ class qcas_df_gui:
         self.my_preferences.data['number_of_random_games'] = self.box_value.get()
         self.my_preferences.data['epsig_log_file'] = self.v_epsiglog.get()        
         
+                      
         if self.intensive_validation.get() == 0: 
             self.my_preferences.data['skip_lengthy_validations'] = "FALSE"
         else:

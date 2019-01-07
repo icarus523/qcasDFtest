@@ -47,32 +47,27 @@ for file in unit_test_files:
 logging.getLogger().info("==== Starting Unit Tests ====")
 
 # Build Tests         
-my_unittests = list() # clear list    
-my_test_output = list() # clear list
+my_test_output = my_preferences.data['unittests'] # list() # clear list
+my_unittests = list()
 
-my_unittests.append(test_chk01_intensive_checklist)
-my_test_output.append("CHK01 intensive validations")          
-
-my_unittests.append(test_chk01_checklist_game_removals)
-my_test_output.append("CHK01 game removals")   
-
-my_unittests.append(test_file_name_format)
-my_test_output.append("Datafile filename format tests")
-
-my_unittests.append(test_msl_file_content)
-my_test_output.append("MSL file content Tests: ")
-
-my_unittests.append(test_psl_file_content)
-my_test_output.append("PSL file content Tests: ")
-
-my_unittests.append(test_tsl_file_content)
-my_test_output.append("TSL file content tests: ")        
-
-my_unittests.append(test_epsig_log_files)
-my_test_output.append("epsig log file content tests: ")   
-
-my_unittests.append(test_chk01_checklist)
-my_test_output.append("CHK01 validations: ")          
+# These have to match what's in preferences.dat
+for test_output in my_test_output:    
+    if test_output.strip() == "CHK01 Intensive validations":
+        my_unittests.append(test_chk01_intensive_checklist)
+    elif test_output.strip() == "CHK01 game removals":
+        my_unittests.append(test_chk01_checklist_game_removals)                
+    elif test_output.strip() == "Datafile Filename format tests":
+        my_unittests.append(test_file_name_format)
+    elif test_output.strip() == "MSL File Content Tests:":
+        my_unittests.append(test_msl_file_content)
+    elif test_output.strip() == "PSL File Content Tests:":
+        my_unittests.append(test_psl_file_content)
+    elif test_output.strip() == "TSL File Content Tests:":
+        my_unittests.append(test_tsl_file_content)
+    elif test_output.strip() == "epsig log file content tests":
+        my_unittests.append(test_epsig_log_files)
+    elif test_output.strip() == "CHK01 Validations":
+        my_unittests.append(test_chk01_checklist)
 
 # Run Tests
 for test in my_unittests: 
