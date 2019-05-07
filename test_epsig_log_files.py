@@ -99,7 +99,8 @@ class test_epsig_log_files(QCASTestClient):
         
         self.assertTrue(os.path.isfile(self.my_preferences.data['epsig_log_file']), 
         	msg=self.my_preferences.data['epsig_log_file'] + ": File not found")
-        
+    
+    @unittest.skip("Skipping")
     @unittest.skipIf(last_four_logs_success_exit() == False, "Skipping PSL version inc tests: Last 4 entries did not complete!")        
     @unittest.skipIf(skipping_PSL_comparison_tests() == True, "Single PSL Validation only") 
     def test_epsig_log_file_last_four_entries_are_valid_for_psl_versions(self): 
@@ -174,6 +175,8 @@ class test_epsig_log_files(QCASTestClient):
             # Sort to make sure that filenames are in order
             current_month_list.sort()
             next_month_list.sort()
+            print("current_month_list: " + ','.join(current_month_list)) 
+            print("next_month_list: " + ','.join(next_month_list)) 
             
             self.assertTrue(int(current_month_list[1][14:16]) == (int(current_month_list[0][14:16]) + 1), "Second PSL version is not incremented by 1")
             self.assertTrue(int(next_month_list[1][14:16]) == (int(next_month_list[0][14:16]) + 1), "Second PSL version is not incremented by 1")
