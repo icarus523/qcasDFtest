@@ -86,10 +86,16 @@ class test_chk01_checklist_game_removals(QCASTestClient):
         if self.verbose_mode: 
             logging.getLogger().debug("Expected PSL differences: " + str(len(psl_ssan_difference)))
         
-        err_msg = "Not the same games being added/removed from TSL vs PSL, check you selected the correct previous PSL file: " + previousMonth_PSLfile
-        xor_difference =  psl_ssan_difference ^ set(tsl_ssan_list)                # psl_ssan_difference.symmetric_difference(set(tsl_ssan_list))# 
+        xor_difference =  psl_ssan_difference ^ set(tsl_ssan_list) # psl_ssan_difference.symmetric_difference(set(tsl_ssan_list))
+        # psl_ssan_difference ^ set(tsl_ssan_list)
+        
         if len(xor_difference) != 0: 
-            logging.getLogger().debug("Unexpected SSAN differences: " + str(xor_difference))
-            
-        self.assertTrue(len(xor_difference) == 0, msg=err_msg) # bitwise XOR, must be zero fcr matching
+            logging.getLogger().debug("Unexpected SSAN differences: " + str(xor_difference)) # display differences in log file
+
+        err_msg = "Not the same games being added/removed from TSL vs PSL. \nCheck you selected the correct previous PSL files: " \
+            + previousMonth_PSLfile + " vs " + PSLfile \
+            + " \nCheck you selected the correct TSL files: "  + previous_TSLfile + " vs " + currentTSLfile \
+            + " \nSSAN differences: " + str(xor_difference)
+        
+        self.assertTrue(len(xor_difference) == 0, msg=err_msg) # bitwise XOR, must be zero for matching
         
