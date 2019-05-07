@@ -28,15 +28,14 @@ class test_chk01_checklist_game_removals(QCASTestClient):
 
     def getTSLDifference_List(self, previous_TSLfile, currentTSLfile): 
         tsl_difference = set()
-        verbose_mode = self.my_preferences.data['verbose_mode'].upper() == "TRUE"
 
         with open(previous_TSLfile, 'r') as file1: 
             with open(currentTSLfile, 'r') as file2: 
-                tsl_difference = set(file2).difference(file1)
+                tsl_difference = set(file2).symmetric_difference(set(file1))
                 
         # tsl_difference should now contain added and removed games. 
-        if verbose_mode: 
-            logging.getLogger().debug("Expected TSL differences: " + str(len(tsl_difference))) 
+        if self.verbose_mode: 
+            logging.getLogger().debug("Expected TSL differences: " + str(len(tsl_difference)))   
         
         # build a list of SSAN from TSL objects for comparison
         tsl_ssan_list = list() 
@@ -67,16 +66,13 @@ class test_chk01_checklist_game_removals(QCASTestClient):
         
         return psl_ssan_difference
         
-    # @unittest.skip("TODO: Not yet implemented")
     def test_Games_removed_from_PSL_files(self): 
         previous_TSLfile = self.my_preferences.data['previous_TSLfile']
         currentTSLfile = self.my_preferences.data['TSLfile']        
         PSLfile = self.my_preferences.data['PSLfile']
         previousMonth_PSLfile = self.my_preferences.data['previousMonth_PSLfile']
-        
-        verbose_mode = self.my_preferences.data['verbose_mode'].upper() == "TRUE"
-        
-        if verbose_mode: 
+                
+        if self.verbose_mode: 
             logging.getLogger().info("Testing Games removed from TSL files matches PSL files")
         
         # the verify script can perform checks comparing the differences in the entries of old and new TSL file which 
@@ -87,8 +83,19 @@ class test_chk01_checklist_game_removals(QCASTestClient):
         # We will require previous Month's PSL file.        
         psl_ssan_difference = self.getPSLDifference_List(PSLfile, previousMonth_PSLfile)
 
-        if verbose_mode: 
+        if self.verbose_mode: 
             logging.getLogger().debug("Expected PSL differences: " + str(len(psl_ssan_difference)))
         
-        err_msg = "Not the same games being added/removed from TSL vs PSL, check you selected the correct previous PSL file: " + previousMonth_PSLfile
-        self.assertTrue(len(psl_ssan_difference ^ set(tsl_ssan_list)) == 0, msg=err_msg) # bitwise XOR, must be zero fcr matching
+        xor_difference =  psl_ssan_difference ^ set(tsl_ssan_list) # psl_ssan_difference.symmetric_difference(set(tsl_ssan_list))
+        # psl_ssan_difference ^ set(tsl_ssan_list)
+        
+        if len(xor_difference) != 0: 
+            logging.getLogger().debug("Unexpected SSAN differences: " + str(xor_difference)) # display differences in log file
+
+        err_msg = "Not the same games being added/removed from TSL vs PSL. \nCheck you selected the correct previous PSL files: " \
+            + previousMonth_PSLfile + " vs " + PSLfile \
+            + " \nCheck you selected the correct TSL files: "  + previous_TSLfile + " vs " + currentTSLfile \
+            + " \nSSAN differences: " + str(xor_difference)
+        
+        self.assertTrue(len(xor_difference) == 0, msg=err_msg) # bitwise XOR, must be zero for matching
+        
