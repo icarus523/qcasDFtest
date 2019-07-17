@@ -12,6 +12,7 @@ import getpass
 import operator
 import random
 import time
+from io import StringIO
 
 from datetime import datetime, timedelta
 from time import sleep
@@ -739,7 +740,11 @@ class QCASTestClient(unittest.TestCase):
 
         with open(blnk_file, 'r') as file:         # Read BNK file
             field_names = ['fname', 'type', 'blah']
-            reader = csv.DictReader(file, delimiter=' ', fieldnames=field_names)
+            
+            data = file.read()
+            data = data.replace('\x00','') # remove null characters in file
+            
+            reader = csv.DictReader(StringIO(data), delimiter=' ', fieldnames=field_names)
         
             for row in reader: 
                 if row['type'].upper() == 'SHA1': # To handle CR32, 0A4R, 0A4F
@@ -930,8 +935,13 @@ class QCASTestClient(unittest.TestCase):
 
             for seed in seed_list: 
                 # def dobnk(self, fname, seed, mid, blocksize:65534)
-                h = self.dobnk(blnk_file, seed, seed_list.index(seed), TSL_object.mid, blocksize=65535)
-
+                # test if BIN LINK FILE 
+                h = ""
+                if blnk_file.upper().endswith(".BNK"): # Process BNK file
+                    h = self.dobnk(blnk_file, seed, seed_list.index(seed), TSL_object.mid, blocksize=65535)
+                else: # PROCESS everything else as HMAC-SHA1 files
+                    h = self.dohash_hmacsha1(blnk_file, seed_list.index(seed), self.getQCAS_Expected_output(seed)) 
+                  
                 tmpStr = str(h).lstrip('0X').zfill(40) # forces 40 characters with starting 0 characters. 
                 tmpStr = str(h).lstrip('0x').zfill(40)
             

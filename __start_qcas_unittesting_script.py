@@ -47,7 +47,7 @@ for file in unit_test_files:
 logging.getLogger().info("==== Starting Unit Tests ====")
 
 # Build Tests         
-my_test_output = my_preferences.data['unittests'] # list() # clear list
+my_test_output = my_preferences.data['unittests'] # read from preference file
 my_unittests = list()
 
 # These have to match what's in preferences.dat
@@ -68,7 +68,7 @@ for test_output in my_test_output:
         my_unittests.append(test_epsig_log_files)
     elif test_output.strip() == "CHK01 Validations":
         my_unittests.append(test_chk01_checklist)
-
+       
 # Run Tests
 for test in my_unittests: 
     testLoad = unittest.TestLoader().loadTestsFromModule(test)      
