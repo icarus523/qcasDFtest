@@ -32,11 +32,11 @@ class test_chk01_intensive_checklist(QCASTestClient):
         count = 0
         
         for game in TSL_game_list_to_be_added: 
-            blnk_file = os.path.join(self.my_preferences.data['path_to_binimage'], 
+            binimage_file = os.path.join(self.my_preferences.data['path_to_binimage'], 
             	self.getMID_Directory(game.mid), game.bin_file.strip() + "." + 
             	self.get_bin_type(game.bin_type))
             
-            psl_entry_list = self.generate_PSL_entry(blnk_file, game)
+            psl_entry_list = self.generate_PSL_entry(binimage_file, game)
             
             if not skipping_PSL_comparison_tests():
                 self.assertEqual(len(psl_entry_list), 2) # one PSL entry for each month       
@@ -88,7 +88,9 @@ class test_chk01_intensive_checklist(QCASTestClient):
         
         new_games_to_be_added = self.get_newgames_to_be_added()   # TSL object list
         random_tsl_entry = random.choice(new_games_to_be_added) 
-        blnk_file = os.path.join(self.my_preferences.data['path_to_binimage'], 
+        
+        # this process only does BIN LINK FILE and SHA1 files
+        binimage_file = os.path.join(self.my_preferences.data['path_to_binimage'], 
             self.getMID_Directory(random_tsl_entry.mid), 
             random_tsl_entry.bin_file.strip() + "." + self.get_bin_type(random_tsl_entry.bin_type))
             
@@ -96,7 +98,7 @@ class test_chk01_intensive_checklist(QCASTestClient):
             man_name = self.get_manufacturer_name(random_tsl_entry.mid)                                
             logging.getLogger().debug("Generating PSL entry for one [NEW] approved game: " +  random_tsl_entry.game_name + " (" + man_name + ")")
 
-        psl_entry_list = self.generate_PSL_entry(blnk_file, random_tsl_entry)
+        psl_entry_list = self.generate_PSL_entry(binimage_file, random_tsl_entry)
 
         if self.verbose_mode: 
             for psl_entry in psl_entry_list: 
