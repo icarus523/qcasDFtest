@@ -5,14 +5,7 @@ Rationale: CHK01 is essentially a manual process to verify an automated procedur
 
 This script attempts to complete all CHK01 process as well as thoroughly check the outgoing Casino Datafiles for formating, naming convention and sanity checking. 
 
-### [NEW] There is now a GUI to control the validation of casino datafiles. 
-To use: 
-1. Double-Click on `__qcasDF_gui_control.py`
-
-2. Select Your Options from GUI 
-3. Press [Start Verification]
-
-### Manual Process
+To use in Windows: 
 1. Modify preferences.dat file and change the following references: 
 
  ```
@@ -25,15 +18,8 @@ To use:
         
         "path_to_binimage" : "\\\\Justice.qld.gov.au\\Data\\OLGR-TECHSERV\\BINIMAGE"
         "epsig_log_file": "\\\\Justice.qld.gov.au\\Data\\OLGR-TECHSERV\\OLGR-TECHSERV\\MISC\\BINIMAGE\\qcas\\log\\epsig.log"  
-        
-        "previousMonth_PSLfile": "G:/OLGR-TECHSERV/MISC/BINIMAGE/qcas/qcas_2018_11_v03.psl",
-        "previous_TSLfile": "G:/OLGR-TECHSERV/MISC/BINIMAGE/qcas/qcas_2018_11_v01.tsl",
 ```
-
-#### Important Options
-`previousMonth_PSLfile` is used to determine whether new games being included matches with what is being expected through: `TSLfile`.
-
-
+        
 2. On the command prompt (in Windows) use: `py -m unittest -v`
 Will run all unit test scripts. To specify a specifc unit test use: `py -m unittest test_chk01_checklist.py`
 
@@ -43,38 +29,34 @@ Otherwise you can use the helper script named: `__start_qcas_unittesting_script.
 There is an option in the preferences.dat file to skip lengthy checks. 
 
 ```
-    "skip_lengthy_validations": "FALSE"
+    "skip_lengthy_validations": "false"
 ```
 
-Change the above variable to `"skip_lengthy_validations": "TRUE"` and the script will avoid any lengthy tests. These include: 
-```
+Change the above variable to `"skip_lengthy_validations": "true"` and the script will avoid any lengthy tests. These include: 
+
 `test_new_games_to_be_added_are_in_PSL_files()`
 `test_One_old_game_to_be_added_in_PSL_files_full()`
 `test_One_new_game_to_be_added_in_PSL_files_full()`
 `test_TSL_entries_exist_in_PSL_files()`
-```
+
 4. Test only a single month
 There is now an option to test a single month: MSL, PSL files, set the following: 
 
 ```
-    "one_month_mode": "TRUE",
+        "nextMonth_MSLfile": "ONE_MONTH_ONLY",
+        "nextMonth_PSLfile": "ONE_MONTH_ONLY",
 ```
 
 Note: Previous month TSL is still mandatory, for testing single month datafiles 
 
-5. Other configurations
-Refer to `preferences.dat` file and change the following to suit
+This will result with the unit tests to skip tests related to verifying the next month MSL and PSL files. This means the following tests are ignored: 
 
-```
-"percent_changed_acceptable" : 0.10,
-```
-This parameter is related to the PSL change in file size, i.e. 10% expected file size will be acceptable. 
-
-```
-"verbose_mode" : "false"
-```
-This parameter will display more "output" onscreen, including the generation of hashes for each component in a BLNK file. 
-Can slow the script down. 
+````
+`test_epsig_log_file_last_four_entries_are_valid_for_psl_versions`
+`test_epsig_log_file_two_entries_command_str_is_valid`
+`test_psl_size_reduction` 
+`test_Generated_PSL_files_Differ`
+````
 
 ---
 # Unit Test Module Details
@@ -107,24 +89,11 @@ Reads the text file and creates an Object, it also performs the following sanity
 ## CHK01: Datafiles Checklist Module: `test_chk01_checklist.py`
 Mirrors the checks specified in CHK01 Casino Datafiles checklist, the following unit tests are performed in this test: 
 
-#### `test_PSL_files_are_Different()`
+#### `test_Generated_PSL_files_Differ()`
 - Verifies that the two PSL files: `self.PSLfile and self.nextMonth_PSLfile` are not the same. 
 
 #### `test_new_games_to_be_added_are_in_PSL_files()`
 - Verifies if the SSANs of new games exist in both `self.PSLfile and self.nextMonth_PSLfile` files. 
-
-#### `test_X_OLD_games_with_one_seed_in_PSL_file()`
-- Similar to `test_One_old_game_to_be_added_in_PSL_files()` but utilises one random seed for both months for X number of games
-
-#### `test_X_NEW_game_with_one_seed_in_PSL_file()`
-- Similar to `test_One_new_game_to_be_added_in_PSL_files()` but utilises one random seed for both months for X number of games
-
-## CHK01: Game Removal Module: `test_chk01_checklist_game_removals.py`
-
-#### `test_Games_removed_from_PSL_files()`
-- Verifies that expected games removed has been identified from the PSL files. 
-
-## CHK01: Intensive Checklist Module: `test_chk01_intensive_checklist.py`
 
 #### `test_TSL_entries_exist_in_PSL_files()`
 Verifies the following entry for each new game generated: 
@@ -135,43 +104,44 @@ Verifies the following entry for each new game generated:
 - PSL SSAN is valid: 150000 < SSAN < 999999999
 - Number of Hashes in the PSL entry is equal to 31
 
-#### `test_One_new_game_to_be_added_in_PSL_files_full()`
+#### [to be completed] `test_Games_removed_from_PSL_files()`
+- Verifies that expected games removed has been identified from the PSL files. 
+
+#### `test_One_new_game_to_be_added_in_PSL_files()`
 - Verifies that the generated PSL entries for two months is created for the Random game. 
 - Verifies that the PSL entries matches for two months exists in `self.PSLfile and self.nextMonth_PSLfile`
 
-#### `test_One_old_game_to_be_added_in_PSL_files_full()`
+#### `test_One_old_game_to_be_added_in_PSL_files()`
 - Verifies that the generated PSL entries for two months is created for the Random game. 
 - Verifies that the PSL entries matches for two months exists in `self.PSLfile and self.nextMonth_PSLfile`
+
+
+
 
 ## Epsig Log file Verification Module: `test_epsig_log_files.py`
 This test script verifies the expected output of the EPSIG log. 
 
 #### `test_Read_Epsig_log_file_from_disk()`
-- Verifies `self.my_preferences.data['epsig_log_file']` can be read from disk
+- Verifies self.my_preferences.data['epsig_log_file'] can be read from disk
 
-#### `test_epsig_log_file_last_four_entries_are_valid_for_psl_versions()`
-- Verifies the last four paragraphs in the epsig log file are complete and as expected. 
-- Verifies that the end of each paragraph indicates: "with EXIT_SUCCESS"
-- Verifies that the time stamp for when EPSIG last ran is reasonable (within 30 days)
-- Verifies that the time stamp for when EPSIG last completed is reasonable (within 30 days)
-
-#### `test_epsig_log_file_last_two_entries_command_str_is_valid()`
+#### `test_Epsig_Log_file()`
 - Verifies the last entry of the Epsig log file
 - Verifies the version of EPSIG being used (expected: v3.5)
-- Verifies that the time stamp for when EPSIG last ran is reasonable (within 30 days)
-- Verifies that the time stamp for when EPSIG last completed is reasonable (within 30 days)
+- Verifies that the time stamp for when EPSIG last ran is reasonable (within 7 days)
+- Verifies that the time stamp for when EPSIG last completed is reasonable (within 7 days)
 - Verifies that the end of the Epsig Log File indicates: "with EXIT_SUCCESS"
 - Verifies that the command that was used for Epsig is correct. (Correct Epsig Binary used; Correct BINIMAGE Path used: i.e. G:\; Correct Datafiles referenced, i.e. MSL file is `self.MSLfile or self.my_preferences.data['nextMonth_MSLfile']`; TSL file is `self.TSLfile`; PSL file is `self.PSLfile or self.nextMonth_PSLfile`
-- Verifies that the PSL versions per month are incremented by 1. 
+
+
 
 ## Filename Test Module: `test_file_name_format.py`
 Generic test scripts for correct file name format and conventions. 
 
 #### `test_MSL_filename_ends_with_MSL()`
-- Verifies that `MSLfile or nextMonth_MSLfile` ends with .msl
+- Verifies that `self.MSLfile or self.my_preferences.data['nextMonth_MSLfile']` ends with .msl
 
 #### `test_MSL_filename_date()`
-- Verifies that the month fields in `MSLfile or nextMonth_MSLfile` are not equal
+- Verifies that the month fields in `self.MSLfile or self.my_preferences.data['nextMonth_MSLfile']` are not equal
 - Verifies that the MSL filename month fields are not equal
 - Verifies that the MSL year fields is the same if month is less than 12, otherwise an increment in Year value is expected
 
@@ -190,7 +160,7 @@ Generic test scripts for correct file name format and conventions.
 #### `test_PSL_filename_date()`
 - Verify that current PSL month is not equal to the new PSL month 
 - Verify that the PSL year is the same, unless current PSL month is December.
-- Verify that if PSL month is new year then the Year field should be current month field + 1
+
 
 ## TSL file Module: `test_tsl_file_content.py`
 
@@ -205,10 +175,10 @@ Generic test scripts for correct file name format and conventions.
 
 ## PSL file Module: `test_psl_file_content.py`
 
-##### `test_psl_size_is_reasonable()`
+#### `test_psl_size_is_reasonable()`
 - Verifies that the file size of the PSL files is reasonable (greater than 1055KB as at July 2013)
 
-#### `test_PSL_content_can_be_parsed()`
+### `test_PSL_content_can_be_parsed()`
 - Verifies the `self.PSLfile` and `self.nextMonth_PSLfile` file formats
 - Verifies PSL file manufacturer field is valid
 - Verifies PSL Game name field length is 30 characters or less

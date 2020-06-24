@@ -704,7 +704,7 @@ class QCASTestClient(unittest.TestCase):
                     file.writelines("\n\n" + self.get_manufacturer_name(game.mid) + "\n")
                 
                 # str1 = str("\n%(man)15s\t%(game_name)40s\tSSAN: %(ssan)-10s" %
-                str1 = str("\n%(game_name)40s\tSSAN: %(ssan)-10s" %
+                str1 = str("\n%(game_name)50s\tSSAN: %(ssan)-10s" %
                 {  # 'man' : self.get_manufacturer_name(game.mid),
                     'game_name' : game.game_name,
                     'ssan': str(game.ssan)
@@ -912,7 +912,8 @@ class QCASTestClient(unittest.TestCase):
         head, psl_tail = os.path.split(self.my_preferences.data['PSLfile'])
         head, psl_tail2 = os.path.split(self.my_preferences.data['nextMonth_PSLfile'])
 
-        self.assertTrue(psl in [psl_tail, psl_tail2])
+        expected_str = psl + " : expected: " + psl_tail + " or: " + psl_tail2
+        self.assertTrue(psl in [psl_tail, psl_tail2], expected_str)
 
     # input:    complete path to blnk file, TSL game object to for blnk file
     # output:   list containing two (2) PSL entries (text) for two months for the TSL game object
