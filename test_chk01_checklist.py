@@ -98,7 +98,7 @@ class test_chk01_checklist(QCASTestClient):
         print("\n" + display_msg)
         logging.getLogger().info(display_msg)        
         
-        while True: 
+        while not complete: 
             # Choose a Random game from TSL file
             random_tsl_entry = random.choice(all_games) # same for both months
             
@@ -134,7 +134,7 @@ class test_chk01_checklist(QCASTestClient):
                     
                     if self.verbose_mode: 
                         display_msg = "Hash Generated for: " + os.path.basename(blnk_file) + " = [" \
-                            + localhash + "] with seed: ["+ self.getQCAS_Expected_output(random_seed) + "]"
+                            + localhash + "] with seed[" + str(hash_list_idx+1) + "]: ["+ self.getQCAS_Expected_output(random_seed) + "]"
                         print("\n" + display_msg)
                         logging.getLogger().debug(display_msg)                   
 
@@ -172,8 +172,8 @@ class test_chk01_checklist(QCASTestClient):
                     logging.getLogger().info("Skipping: " + random_tsl_entry.game_name + ". Reason: " 
                         + random_tsl_entry.bin_type + " TSL file type, unsupported")
 
-            if complete: 
-                break
+            ##if complete: 
+            ##    break
 
     # Unit test to address complaints about verifying a complete PSL entry being too slow
     # Note check's both month's PSL and MSL, and only verifies BLNK files. 
@@ -207,12 +207,13 @@ class test_chk01_checklist(QCASTestClient):
         random_chosen_game_list = list() 
         valid_random_game = False
 
-        while True: 
+        while not complete: 
             # Choose a Random game from TSL file              
             random_tsl_entry = random.choice(new_games)            
             
             if len(new_games) < 4: # if < 4 games overall, continue just use different seeds
                 valid_random_game = True
+                logging.getLogger().info("< 4 games being verified, just using different seeds")
             else: # otherwise make sure its not an already tested game
                 if random_tsl_entry not in random_chosen_game_list: 
                     valid_random_game = True
@@ -258,7 +259,7 @@ class test_chk01_checklist(QCASTestClient):
                     
                     if self.verbose_mode: 
                         display_msg = "Hash Generated for: " + os.path.basename(blnk_file) + " = [" \
-                            + localhash + "] with seed: ["+ self.getQCAS_Expected_output(random_seed) + "]"
+                            + localhash + "] with seed[" + str(hash_list_idx+1) + "]: ["+ self.getQCAS_Expected_output(random_seed) + "]"
                         print("\n" + display_msg)
                         logging.getLogger().debug(display_msg)                   
                     
@@ -293,7 +294,7 @@ class test_chk01_checklist(QCASTestClient):
                     logging.getLogger().info("Skipping: " + random_tsl_entry.game_name + ". Reason: " 
                         + random_tsl_entry.bin_type + " TSL file type, unsupported")
 
-            if complete == True: 
-                break
+            ##if complete == True: 
+            ##    break
 
         

@@ -44,14 +44,14 @@ class test_PSLfile_content(QCASTestClient):
         self.assertTrue(nextMonth_PSLfile_size_in_bytes > (float(PSLfile_size_in_bytes) - acceptable_size), warning_string_lower)  
         
     
-    def test_PSL_content_can_be_parsed(self):
+    def test_PSL_file_contents_can_be_parsed_and_valid(self):
         if skipping_PSL_comparison_tests() == True: 
             pslfile_list = [self.my_preferences.data['PSLfile']] 
         else: 
             pslfile_list = [self.my_preferences.data['PSLfile'], self.my_preferences.data['nextMonth_PSLfile']] 
         
         if self.verbose_mode: 
-            logging.getLogger().info("Testing PSL files can be parsed: " + ",".join(pslfile_list))    
+            logging.getLogger().info("Testing PSL file contents can be parsed and valid: " + ",".join(pslfile_list))    
             
         for pslfile in pslfile_list: 
             # Check for PSL File Format by Instantiating an object of PSL type
@@ -105,7 +105,7 @@ class test_PSLfile_content(QCASTestClient):
         verified_manufacturer = list()
         pslfile_list = list() 
         
-        if skipping_PSL_comparison_tests() == True: 
+        if skipping_PSL_comparison_tests(): 
             pslfile_list = [self.my_preferences.data['PSLfile']] 
         else: 
             pslfile_list = [self.my_preferences.data['PSLfile'], self.my_preferences.data['nextMonth_PSLfile']] 

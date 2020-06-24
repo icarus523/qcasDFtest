@@ -22,7 +22,7 @@ from tkinter import messagebox
 import tkinter as tk
 
 # Configure Console Window
-os.system('mode con: cols=150 lines=120')
+os.system('mode con: cols=150 lines=60')
 
 # Configure logging to file and format
 logging.basicConfig(level=logging.DEBUG,
