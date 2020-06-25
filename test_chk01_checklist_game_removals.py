@@ -26,45 +26,47 @@ class test_chk01_checklist_game_removals(QCASTestClient):
         
         return return_game
 
-    def getTSLDifference_List(self, previous_TSLfile, currentTSLfile): 
-        tsl_difference = set()
+    def get_all_ssan_in_month(self, f_list): 
+        ssan_in_current_month = list() 
+        for f_entry in f_list:            
+            ssan_in_current_month.append(f_entry.ssan) 
+        ssan_in_current_month.sort()
+        
+        return ssan_in_current_month
 
-        with open(previous_TSLfile, 'r') as file1: 
-            with open(currentTSLfile, 'r') as file2: 
-                tsl_difference = set(file2).symmetric_difference(set(file1))
+    def getDifference_list(self, file1, file2, l_type):         
+        
+        # difference_set = set() 
+        
+        # with open(file1, 'r') as f1: 
+            # with open(file2, 'r') as f2: 
+                # difference_set = set(f2).symmetric_difference(set(f1))
                 
-        # tsl_difference should now contain added and removed games. 
-        if self.verbose_mode: 
-            logging.getLogger().debug("Expected TSL differences: " + str(len(tsl_difference)))   
+        # ssan_list = list() 
+        # for item in list(difference_set): 
+            # if l_type == 'TSL': 
+                # game = TSLfile(item)
+                # ssan_list.append(game.ssan)
+            # elif l_type == 'PSL': 
+                # game = PSLfile(item)
+                # ssan_list.append(game.ssan)
+       
         
-        # build a list of SSAN from TSL objects for comparison
-        tsl_ssan_list = list() 
-        for tsl_game in tsl_difference: 
-            game = TSLfile(tsl_game)
-            tsl_ssan_list.append(game.ssan)
+        # return sorted(ssan_list)
         
-        return tsl_ssan_list
-
-    def getPSLDifference_List(self, PSLfile, previous_PSLfile):         
-        currentPSLfile = self.check_file_format(PSLfile, 'PSL')
-        prevPSLfile = self.check_file_format(previous_PSLfile, 'PSL')
+        f1 = self.check_file_format(file1, l_type)
+        f2 = self.check_file_format(file2, l_type)
 
         # get all ssan in current PSL file
-        psl_ssan_in_current_month = list() 
-        for psl_file_entry in currentPSLfile:            
-            psl_ssan_in_current_month.append(psl_file_entry.ssan) 
-        psl_ssan_in_current_month.sort()
+        ssan_in_current_month = self.get_all_ssan_in_month(f1) 
         
         # get all ssan in previous month's PSL file
-        psl_ssan_in_previous_month = list() 
-        for psl_file_entry in prevPSLfile: 
-            psl_ssan_in_previous_month.append(psl_file_entry.ssan)  
-        psl_ssan_in_previous_month.sort() 
-        
+        ssan_in_previous_month = self.get_all_ssan_in_month(f2)
+
         # get the difference between the two sets
-        psl_ssan_difference = set(psl_ssan_in_previous_month).symmetric_difference(psl_ssan_in_current_month)        
+        ssan_difference = set(ssan_in_previous_month) ^ set(ssan_in_current_month) 
         
-        return psl_ssan_difference
+        return ssan_difference
         
     def test_Games_removed_from_PSL_files(self): 
         previous_TSLfile = self.my_preferences.data['previous_TSLfile']
@@ -77,16 +79,20 @@ class test_chk01_checklist_game_removals(QCASTestClient):
         
         # the verify script can perform checks comparing the differences in the entries of old and new TSL file which 
         # should match with the new and old current month PS1 files – whether additions or removals.    
-        tsl_ssan_list = self.getTSLDifference_List(previous_TSLfile, currentTSLfile)
+        tsl_ssan_difference_list = self.getDifference_list(previous_TSLfile, currentTSLfile, 'TSL')
     
         # Generate a list of games removed from PSL files, as the current Month and next Month will have identical SSANs 
         # We will require previous Month's PSL file.        
-        psl_ssan_difference = self.getPSLDifference_List(PSLfile, previousMonth_PSLfile)
+        psl_ssan_difference_list = self.getDifference_list(PSLfile, previousMonth_PSLfile,'PSL')
 
         if self.verbose_mode: 
-            logging.getLogger().debug("Expected PSL differences: " + str(len(psl_ssan_difference)))
+            logging.getLogger().debug("Expected PSL differences: " + str(len(psl_ssan_difference_list)))
+            logging.getLogger().debug("Expected TSL differences: " + str(len(tsl_ssan_difference_list)))   
+            print("Expected PSL differences: " + str(len(psl_ssan_difference_list)))
+            print("Expected TSL differences: " + str(len(tsl_ssan_difference_list)))           
         
-        xor_difference =  psl_ssan_difference ^ set(tsl_ssan_list) # psl_ssan_difference.symmetric_difference(set(tsl_ssan_list))
+        xor_difference =  set(psl_ssan_difference_list) ^ set(tsl_ssan_difference_list) 
+        # psl_ssan_difference.symmetric_difference(set(tsl_ssan_list))
         # psl_ssan_difference ^ set(tsl_ssan_list)
         
         if len(xor_difference) != 0: 
