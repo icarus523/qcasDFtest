@@ -9,22 +9,7 @@ import logging
 from test_datafiles import QCASTestClient, PSLfile, PSLEntry_OneHash, TSLfile, MSLfile, Preferences, skipping_PSL_comparison_tests, binimage_path_exists
 from tkinter import filedialog, Tk
 
-
-DF_DIRECTORY = "G:/OLGR-TECHSERV/MISC/BINIMAGE/qcas/"
-
 class test_chk01_checklist_game_removals(QCASTestClient):      
-
-    def getGame(self, ssan): 
-        currentTSLfile = self.my_preferences.data['TSLfile']
-        myTSLfile_list = self.check_file_format(currentTSLfile, 'TSL')
-        return_game = Nil
-        
-        for game in myTSLfile_list: 
-            if game.ssan == ssan: 
-                return_game = game
-                break
-        
-        return return_game
 
     def get_all_ssan_in_month(self, f_list): 
         ssan_in_current_month = list() 
@@ -35,25 +20,7 @@ class test_chk01_checklist_game_removals(QCASTestClient):
         return ssan_in_current_month
 
     def getDifference_list(self, file1, file2, l_type):         
-        
-        # difference_set = set() 
-        
-        # with open(file1, 'r') as f1: 
-            # with open(file2, 'r') as f2: 
-                # difference_set = set(f2).symmetric_difference(set(f1))
-                
-        # ssan_list = list() 
-        # for item in list(difference_set): 
-            # if l_type == 'TSL': 
-                # game = TSLfile(item)
-                # ssan_list.append(game.ssan)
-            # elif l_type == 'PSL': 
-                # game = PSLfile(item)
-                # ssan_list.append(game.ssan)
-       
-        
-        # return sorted(ssan_list)
-        
+               
         f1 = self.check_file_format(file1, l_type)
         f2 = self.check_file_format(file2, l_type)
 
@@ -88,12 +55,10 @@ class test_chk01_checklist_game_removals(QCASTestClient):
         if self.verbose_mode: 
             logging.getLogger().debug("Expected PSL differences: " + str(len(psl_ssan_difference_list)))
             logging.getLogger().debug("Expected TSL differences: " + str(len(tsl_ssan_difference_list)))   
-            print("Expected PSL differences: " + str(len(psl_ssan_difference_list)))
-            print("Expected TSL differences: " + str(len(tsl_ssan_difference_list)))           
+            # print("Expected PSL differences: " + str(len(psl_ssan_difference_list)))
+            # print("Expected TSL differences: " + str(len(tsl_ssan_difference_list)))           
         
         xor_difference =  set(psl_ssan_difference_list) ^ set(tsl_ssan_difference_list) 
-        # psl_ssan_difference.symmetric_difference(set(tsl_ssan_list))
-        # psl_ssan_difference ^ set(tsl_ssan_list)
         
         if len(xor_difference) != 0: 
             logging.getLogger().debug("Unexpected SSAN differences: " + str(xor_difference)) # display differences in log file
