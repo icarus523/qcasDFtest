@@ -1,7 +1,7 @@
 {
-    "MSLfile": "G:/OLGR-TECHSERV/MISC/BINIMAGE/qcas/qcas_2019_02_v01.msl",
-    "PSLfile": "G:/OLGR-TECHSERV/MISC/BINIMAGE/qcas/qcas_2019_02_v03.psl",
-    "TSLfile": "G:/OLGR-TECHSERV/MISC/BINIMAGE/qcas/qcas_2019_02_v01.tsl",
+    "MSLfile": "G:/OLGR-TECHSERV/MISC/BINIMAGE/qcas/qcas_2020_07_v01.msl",
+    "PSLfile": "G:/OLGR-TECHSERV/MISC/BINIMAGE/qcas/qcas_2020_07_v02.psl",
+    "TSLfile": "G:/OLGR-TECHSERV/MISC/BINIMAGE/qcas/qcas_2020_07_v01.tsl",
     "epsig_log_file": "G:/OLGR-TECHSERV/MISC/BINIMAGE/qcas/log/epsig.log",
     "mid_list": [
         "00",
@@ -10,16 +10,17 @@
         "07",
         "09",
         "12",
+        "14",
         "17"
     ],
-    "nextMonth_MSLfile": "G:/OLGR-TECHSERV/MISC/BINIMAGE/qcas/qcas_2019_03_v01.msl",
-    "nextMonth_PSLfile": "G:/OLGR-TECHSERV/MISC/BINIMAGE/qcas/qcas_2019_03_v01.psl",
+    "nextMonth_MSLfile": "G:/OLGR-TECHSERV/MISC/BINIMAGE/qcas/qcas_2020_08_v01.msl",
+    "nextMonth_PSLfile": "G:/OLGR-TECHSERV/MISC/BINIMAGE/qcas/qcas_2020_08_v01.psl",
     "number_of_random_games": 4,
     "one_month_mode": "FALSE",
     "path_to_binimage": "//Justice.qld.gov.au/Data/OLGR-TECHSERV/BINIMAGE",
     "percent_changed_acceptable": 0.1,
-    "previousMonth_PSLfile": "G:/OLGR-TECHSERV/MISC/BINIMAGE/qcas/qcas_2019_02_v02.psl",
-    "previous_TSLfile": "G:/OLGR-TECHSERV/MISC/BINIMAGE/qcas/qcas_2019_01_v02.tsl",
+    "previousMonth_PSLfile": "G:/OLGR-TECHSERV/MISC/BINIMAGE/qcas/qcas_2020_07_v01.psl",
+    "previous_TSLfile": "G:/OLGR-TECHSERV/MISC/BINIMAGE/qcas/qcas_2020_06_v01.tsl",
     "skip_lengthy_validations": "TRUE",
     "unittests": [
         "CHK01 Intensive validations",

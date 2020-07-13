@@ -21,7 +21,7 @@ p_reset = "\x08"*8
 CHECK_ONE_FILE_ONLY_FLG = "ONE_MONTH_ONLY"
 
 DEFAULT_DATA = { 'path_to_binimage' : 'G:\\OLGR-TECHSERV\\BINIMAGE',
-                  'mid_list' : [ '00', '01', '05', '07', '09', '12', '17'],
+                  'mid_list' : [ '00', '01', '05', '07', '09', '12', '14', '17'],
                   'valid_bin_types' : ['BLNK','PS32','SHA1'], #
                   'epsig_log_file' : 'G:\\OLGR-TECHSERV\\MISC\\BINIMAGE\\qcas\\log\\epsig.log',# 
                   'previous_TSLfile' : "qcas_2017_09_v02.tsl", 
@@ -408,7 +408,7 @@ class TSLfile:
         
         fields = str(line).split(',')
         self.mid = fields[0]
-        assert(self.mid in my_preferences.data['mid_list'])
+        assert(self.mid in my_preferences.data['mid_list']), print(line)
         
         assert(len(fields[1]) == 10)
         self.ssan = int(fields[1])
@@ -728,6 +728,8 @@ class QCASTestClient(unittest.TestCase):
             return "Konami"
         elif s == '12': 
             return "AGT"
+        elif s == '14': 
+            return "Wymac"
         elif s == '17':
             return "QGS"
         else: 
@@ -855,6 +857,7 @@ class QCASTestClient(unittest.TestCase):
         elif (mid == '07'): manufacturer = 'VID'
         elif (mid == '09'): manufacturer = 'KONAMI'
         elif (mid == '12'): manufacturer = 'AGT'
+        elif (mid == '14'): manufacturer = 'Wymac'
         elif (mid == '17'): manufacturer = 'QGS'
         else:
             assert(mid in self.my_preferences.data['mid_list'])
