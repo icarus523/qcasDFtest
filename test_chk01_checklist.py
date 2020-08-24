@@ -6,7 +6,23 @@ import sys
 import json
 import pickle
 import logging
-from test_datafiles import QCASTestClient, PSLfile, PSLEntry_OneHash, TSLfile, MSLfile, Preferences, skipping_PSL_comparison_tests, binimage_path_exists
+from test_datafiles import QCASTestClient, PSLfile, PSLEntry_OneHash, TSLfile, MSLfile, \
+    Preferences, skipping_PSL_comparison_tests, binimage_path_exists
+
+def newgames_to_be_added(): 
+    game_list_to_be_added = list()
+    tsl_difference_games_added = set()
+
+    prefs = Preferences()
+    with open(prefs.data['TSLfile'], 'r') as file1:
+        with open(prefs.data['previous_TSLfile'], 'r') as file2:
+            tsl_difference_games_added = set(file1).difference(file2)
+    
+            # no new games added? 
+            if len(tsl_difference_games_added) > 0: 
+                return True
+            else: 
+                return False 
 
 class test_chk01_checklist(QCASTestClient):      
     
@@ -32,7 +48,8 @@ class test_chk01_checklist(QCASTestClient):
         with open(PSL_file, 'r') as file1:
             with open(nextMonth_PSLfile, 'r') as file2:
                 same = set(file1).intersection(file2)
-                
+
+    @unittest.skipUnless(newgames_to_be_added(), "No new games to be added in PSL files")                
     def test_new_games_to_be_added_are_in_PSL_files(self):
         game_list_to_be_added = self.get_newgames_to_be_added()
         PSL_file = self.my_preferences.data['PSLfile']
@@ -71,7 +88,7 @@ class test_chk01_checklist(QCASTestClient):
             self.assertTrue(set(verified_game) == set(game_list_to_be_added), msg=err_msg)
             
             #self.assertTrue(set(verified_game).intersection(set(game_list_to_be_added)), 
-            #	msg="New PSL entry not found in PSL file") 
+            #   msg="New PSL entry not found in PSL file") 
             
     # Unit test to address complaints about verifying a complete PSL entry being too slow
     # Note checks both month's MSL and PSL files; only verifies BLNK files. 
@@ -179,6 +196,7 @@ class test_chk01_checklist(QCASTestClient):
     # Note check's both month's PSL and MSL, and only verifies BLNK files. 
     # @unittest.skipUnless(os.path.isdir('\\\\Justice.qld.gov.au\\Data\\OLGR-TECHSERV\\BINIMAGE'), "requires Binimage Path")
     @unittest.skipUnless(binimage_path_exists(), "requires BINIMAGE path")
+    @unittest.skipUnless(newgames_to_be_added(), "No new games to be added in PSL files")                
     def test_X_NEW_game_with_one_seed_in_PSL_file(self): 
         new_games = self.get_newgames_to_be_added()
         msl_file_list = list() 
