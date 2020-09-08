@@ -1,6 +1,7 @@
 import tkinter as tk
 import threading
 import subprocess
+import signal
 import json
 import getpass
 import glob
@@ -565,7 +566,12 @@ class qcas_df_gui:
             self.my_preferences = None 
             self.my_preferences = Preferences() 
             self.handleCheckButton() # get CheckButton unit tests
-            self.UpdatePreferences()            
+            self.UpdatePreferences() 
+
+            # 
+            command = 'Get-Content -Path qcas_test.log -Wait -Tail 20'
+            self.proc_tail = subprocess.Popen(['powershell.exe', command])
+
             threading.Thread(self.StartUnitTest()).start()                    
             # self.button_start.config(state=DISABLED)         
             self.root.deiconify() # show window  
@@ -584,8 +590,10 @@ class qcas_df_gui:
                 logging.getLogger().info("==== QCAS Unit Test STOPPED/INTERRUPTED: " + str(datetime.now()) + " by: " + getpass.getuser()  + " ====")
 
             self.button_start.config(state=NORMAL)
+            # https://stackoverflow.com/questions/4789837/how-to-terminate-a-python-subprocess-launched-with-shell-true
+            # os.killpg(os.getpgid(self.proc_tail.pid), signal.SIGTERM)  # Send the signal to all the process groups
+            self.proc_tail.kill()
 
-            
     def StartUnitTest(self):
         # self.root.withdraw() # hide main window
         self.UpdatePreferences()
