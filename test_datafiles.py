@@ -730,6 +730,8 @@ class QCASTestClient(unittest.TestCase):
             return "AGT"
         elif s == '14': 
             return "Wymac"
+        elif s == '15': 
+            return "Atlas"
         elif s == '17':
             return "QGS"
         else: 
@@ -858,6 +860,7 @@ class QCASTestClient(unittest.TestCase):
         elif (mid == '09'): manufacturer = 'KONAMI'
         elif (mid == '12'): manufacturer = 'AGT'
         elif (mid == '14'): manufacturer = 'Wymac'
+        elif (mid == '15'): manufacturer = 'Atlas'
         elif (mid == '17'): manufacturer = 'QGS'
         else:
             assert(mid in self.my_preferences.data['mid_list'])
