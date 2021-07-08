@@ -1,0 +1,1 @@
+Get-Content -Path C:\Users\aceretjr\Documents\dev\qcasDFtest\qcas_test.log -Wait -Tail 20

@@ -1,11 +1,13 @@
 import os
 import csv
+import sys
 import unittest
-from test_datafiles import QCASTestClient, PSLfile, TSLfile, MSLfile, Preferences
+import logging
+from test_datafiles import QCASTestClient, PSLfile, TSLfile, MSLfile, Preferences, skipping_PSL_comparison_tests
 from datetime import datetime, date
 
-NUMBER_OF_VALID_DAYS_SINCE_START_OF_LOG = 60
-NUMBER_OF_VALID_DAYS_SINCE_END_OF_LOG = 60
+NUMBER_OF_VALID_DAYS_SINCE_START_OF_LOG = 30
+NUMBER_OF_VALID_DAYS_SINCE_END_OF_LOG = 30
 
 VALID_EPSIG_VERSION = '3.5'
 #LOG_FILE = "G:\\OLGR-TECHSERV\\MISC\\BINIMAGE\\qcas\\log\\epsig.log"
@@ -15,6 +17,9 @@ VALID_EPSIG_VERSION = '3.5'
 class EpsigLogFile(): 
 
     def __init__(self, data): 
+       
+        assert(len(data) == 6), "Data is not complete."
+    
         self.header = data[0] 
         self.version_number = self.header.split(' ')[2] # 3.5
 
@@ -24,7 +29,6 @@ class EpsigLogFile():
         self.time_stamp_end = data[4]
         self.footer_status = data[5]                
         
-        assert(len(data) == 6) # this should be 5
 
     def is_complete(self): 
         if self.time_stamp_start_str.strip() and self.time_stamp_end.strip() and \
@@ -47,35 +51,6 @@ class EpsigLogFile():
 
         return self.epsig_log_entry_str.strip()
 
-def last_four_logs_success_exit(): 
-    today = datetime.now()
-    my_preferences = Preferences()
-    last_four_logs_ok = False
-    
-    with open(my_preferences.epsig_log_file, 'r') as file: 
-        epsig_log = file.read()
-        paragraphs = epsig_log.split('\n\n')
-        
-        log_blocks = list() 
-        
-        # Get Last 4 paragraphs (end of file) with EXIT_SUCCESS
-        for i in list(range(1,5)): 
-            data = paragraphs[len(paragraphs)-i].split('\n') 
-            data = list(filter(None, data)) # remove empty lists    
-            log_entry = EpsigLogFile(data)
-            log_blocks.append(log_entry)
-            
-        current_month_list = list() 
-        next_month_list = list() 
-        
-        for log_file in log_blocks:
-            if not log_file.is_complete(): 
-                last_four_logs_ok = False
-                break
-            else: 
-                last_four_logs_ok = True
-                    
-    return last_four_logs_ok
         
 class test_epsig_log_files(QCASTestClient):
 
@@ -83,12 +58,51 @@ class test_epsig_log_files(QCASTestClient):
         psl_file = s.split(' ')[5]
         self.assertTrue(psl_file.endswith(".psl")) 
         return psl_file
+    
+    def last_four_logs_success_exit(): 
+        today = datetime.now()
+        last_four_logs_ok = False
+        my_preferences = Preferences()
         
-    def test_Read_Epsig_log_file_from_disk(self):
-        self.assertTrue(os.path.isfile(self.my_preferences.epsig_log_file), 
-        	msg=self.my_preferences.epsig_log_file + ": File not found")
+        with open(my_preferences.data['epsig_log_file'], 'r') as file: 
+            epsig_log = file.read()
+            paragraphs = epsig_log.split('\n\n')
+            
+            log_blocks = list() 
+            try: 
+                # Get Last 4 paragraphs (end of file) with EXIT_SUCCESS
+                for i in list(range(1,5)): 
+                    data = paragraphs[len(paragraphs)-i].split('\n') 
+                    data = list(filter(None, data)) # remove empty lists    
+                    log_entry = EpsigLogFile(data)
+                    log_blocks.append(log_entry)
+                    
+                current_month_list = list() 
+                next_month_list = list() 
+                
+                for log_file in log_blocks:
+                    if not log_file.is_complete(): 
+                        last_four_logs_ok = False
+                        break
+                    else: 
+                        last_four_logs_ok = True
+            except:  # handle the index error exception nicely
+                e = sys.exc_info()[0]
+                print("Exception caught during Reading of Epsig Log file: " + str(e)) 
+                print("Make sure epsig log files are complete!")
+                last_four_logs_ok = False
+                
+        return last_four_logs_ok
+    
+    def test_Read_Epsig_log_file_from_disk(self):    
+        logging.getLogger().info("Testing epsig log file can be read from disk")       
         
+        self.assertTrue(os.path.isfile(self.my_preferences.data['epsig_log_file']), 
+        	msg=self.my_preferences.data['epsig_log_file'] + ": File not found")
+    
+    @unittest.skip("Skipping")
     @unittest.skipIf(last_four_logs_success_exit() == False, "Skipping PSL version inc tests: Last 4 entries did not complete!")        
+    @unittest.skipIf(skipping_PSL_comparison_tests() == True, "Single PSL Validation only") 
     def test_epsig_log_file_last_four_entries_are_valid_for_psl_versions(self): 
         # EPSIG.EXE Version 3.5 Copyright The State of Queensland 1999-2015
         # Started at   Fri Oct 06 08:41:37 2017
@@ -96,10 +110,11 @@ class test_epsig_log_files(QCASTestClient):
         # Allocating buffer 262144 bytes
         # Finished at Mon Oct 09 13:18:15 2017
         # with EXIT_SUCCESS   
+        logging.getLogger().info("Testing epsig log file for last 4 entries")        
 
         today = datetime.now()
 
-        with open(self.my_preferences.epsig_log_file, 'r') as file: 
+        with open(self.my_preferences.data['epsig_log_file'], 'r') as file: 
             epsig_log = file.read()
             paragraphs = epsig_log.split('\n\n')
             
@@ -142,7 +157,7 @@ class test_epsig_log_files(QCASTestClient):
                     self.assertEqual(log_file.footer_status, " with EXIT_SUCCESS", 
                         msg="Epsig Log file did not end with 'EXIT_SUCCESS")
                 else: 
-                    if self.my_preferences.verbose_mode == "true": 
+                    if self.verbose_mode:
                         print("#### WARNING: Entry in EPSIG log indicates it has not finished. ####")
 
                 # Need to Verify PSL files used in the last 4 Entries are correct
@@ -160,14 +175,18 @@ class test_epsig_log_files(QCASTestClient):
             # Sort to make sure that filenames are in order
             current_month_list.sort()
             next_month_list.sort()
+            print("current_month_list: " + ','.join(current_month_list)) 
+            print("next_month_list: " + ','.join(next_month_list)) 
             
             self.assertTrue(int(current_month_list[1][14:16]) == (int(current_month_list[0][14:16]) + 1), "Second PSL version is not incremented by 1")
             self.assertTrue(int(next_month_list[1][14:16]) == (int(next_month_list[0][14:16]) + 1), "Second PSL version is not incremented by 1")
     
+    @unittest.skipIf(skipping_PSL_comparison_tests(), "Single PSL Validation only")     
     def test_epsig_log_file_last_two_entries_command_str_is_valid(self): 
         today = datetime.now()
-        
-        with open(self.my_preferences.epsig_log_file, 'r') as file: 
+        logging.getLogger().info("Testing epsig log file for valid command string")        
+
+        with open(self.my_preferences.data['epsig_log_file'], 'r') as file: 
             epsig_log = file.read()
             paragraphs = epsig_log.split('\n\n')
 
