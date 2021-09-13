@@ -140,9 +140,19 @@ class test_chk01_checklist(QCASTestClient):
                     
                     blnk_file = os.path.join(self.my_preferences.data['path_to_binimage'], 
                         self.getMID_Directory(random_tsl_entry.mid), random_tsl_entry.bin_file.strip() + "." + self.get_bin_type(random_tsl_entry.bin_type))
-                    
+
+                    if random_tsl_entry.bin_type == "BLNK": 
+                        localhash = self.dobnk(blnk_file, random_seed, random_seed_idx, random_tsl_entry.mid, blocksize=65535)
+                    elif random_tsl_entry.bin_type == "SHA1": 
+                        #     def dohash_hmacsha1(self, fname, seed_index, seed='00', chunksize=32768):
+                        localhash = self.dohash_hmacsha1(blnk_file, random_seed_idx, self.getQCAS_Expected_output(random_seed)) 
+                    else:
+                        print("\n")
+                        logging.getLogger().error("Trying to Process TSL entry: ", random_tsl_entry.game_name)
+                        sys.exit(1) 
+
                     # IMPORTANT currently only verifies BLNK files
-                    localhash = self.dobnk(blnk_file, random_seed, random_seed_idx, random_tsl_entry.mid, blocksize=65535)
+                    # localhash = self.dobnk(blnk_file, random_seed, random_seed_idx, random_tsl_entry.mid, blocksize=65535)
                     
                     # Need to format Hashes
                     tmpStr = str(localhash).lstrip('0X').zfill(40) # forces 40 characters with starting 0 characters. 
@@ -225,7 +235,7 @@ class test_chk01_checklist(QCASTestClient):
         random_chosen_game_list = list() 
         valid_random_game = False
 
-        while not complete: 
+        while not complete:            
             # Choose a Random game from TSL file              
             random_tsl_entry = random.choice(new_games)            
             
@@ -257,14 +267,19 @@ class test_chk01_checklist(QCASTestClient):
                     if self.verbose_mode: 
                         print("\n" + display_msg)
                         logging.getLogger().debug(display_msg)
-                                            
+                    
+
                     blnk_file = os.path.join(self.my_preferences.data['path_to_binimage'], 
                     self.getMID_Directory(random_tsl_entry.mid), random_tsl_entry.bin_file.strip() + "." + 
                     self.get_bin_type(random_tsl_entry.bin_type))
                     
-                    # IMPORTANT currently only verifies BLNK files
+                    # IMPORTANT currently only verifies BLNK files & SHA1
                     if random_tsl_entry.bin_type == "BLNK": 
                         localhash = self.dobnk(blnk_file, random_seed, random_seed_idx, random_tsl_entry.mid, blocksize=65535)
+                    elif random_tsl_entry.bin_type == "SHA1": 
+                        #     def dohash_hmacsha1(self, fname, seed_index, seed='00', chunksize=32768):
+                        localhash = self.dohash_hmacsha1(blnk_file, random_seed_idx, self.getQCAS_Expected_output(random_seed)) 
+
                     else:
                         print("\n")
                         logging.getLogger().error("Trying to Process BLNK file")

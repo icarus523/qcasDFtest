@@ -4,6 +4,10 @@
 		"selected_items":
 		[
 			[
+				"proc",
+				"proc_tail"
+			],
+			[
 				"gvn",
 				"gvn_meter_report_fname"
 			],
@@ -419,16 +423,8 @@
 			"file": "test_chk01_checklist.py",
 			"settings":
 			{
-				"buffer_size": 17279,
+				"buffer_size": 17423,
 				"encoding": "UTF-8",
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "test_datafiles.py",
-			"settings":
-			{
-				"buffer_size": 40590,
 				"line_ending": "Windows"
 			}
 		}
@@ -499,6 +495,10 @@
 	],
 	"file_history":
 	[
+		"/C/Users/aceretjr/DJAG/OneDrive Work - Documents/WFH/dev/qcasDFtest/preferences.dat",
+		"/C/Users/aceretjr/DJAG/OneDrive Work - Documents/WFH/dev/qcasDFtest/__qcasDF_gui_control.pyw",
+		"/C/Users/aceretjr/DJAG/OneDrive Work - Documents/WFH/dev/qcasDFtest/test_datafiles.py",
+		"/C/Users/aceretjr/DJAG/OneDrive Work - Documents/WFH/dev/qcasDFtest/run_tail_win.pyw",
 		"/C/Users/aceretjr/DJAG/OneDrive Work - Documents/WFH/dev/incoming-datafiles/incoming_datafiles/09000109.JM1",
 		"/C/Users/aceretjr/DJAG/OneDrive Work - Documents/WFH/dev/incoming-datafiles/incoming_datafiles/09000109.JC0",
 		"/C/Users/aceretjr/DJAG/OneDrive Work - Documents/WFH/dev/incoming-datafiles/UtopiaReports.py",
@@ -646,61 +646,34 @@
 		[
 		],
 		"reverse": false,
+		"scrollbar_highlights": true,
 		"show_context": true,
 		"use_buffer2": true,
+		"use_gitignore": true,
 		"whole_word": false,
 		"wrap": true
 	},
 	"groups":
 	[
 		{
-			"selected": 0,
 			"sheets":
 			[
 				{
 					"buffer": 0,
 					"file": "test_chk01_checklist.py",
+					"selected": true,
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 17279,
+						"buffer_size": 17423,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								588,
-								588
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Python/Python.sublime-syntax",
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 0,
-					"type": "text"
-				},
-				{
-					"buffer": 1,
-					"file": "test_datafiles.py",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 40590,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								17190,
-								17160
+								584,
+								584
 							]
 						],
 						"settings":
@@ -710,10 +683,11 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 6995.0,
+						"translation.y": 180.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 1,
+					"stack_index": 0,
+					"stack_multiselect": false,
 					"type": "text"
 				}
 			]
@@ -758,7 +732,7 @@
 	{
 		"height": 109.0
 	},
-	"pinned_build_system": "Packages/Python/Python.sublime-build",
+	"pinned_build_system": "Packages/User/newPython3.sublime-build",
 	"project": "qcasDFtest.sublime-project",
 	"replace":
 	{
@@ -800,7 +774,7 @@
 	"show_open_files": true,
 	"show_tabs": true,
 	"side_bar_visible": true,
-	"side_bar_width": 444.0,
+	"side_bar_width": 331.0,
 	"status_bar_visible": true,
 	"template_settings":
 	{

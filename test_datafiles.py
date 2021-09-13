@@ -21,7 +21,7 @@ p_reset = "\x08"*8
 CHECK_ONE_FILE_ONLY_FLG = "ONE_MONTH_ONLY"
 
 DEFAULT_DATA = { 'path_to_binimage' : 'G:\\OLGR-TECHSERV\\BINIMAGE',
-                  'mid_list' : [ '00', '01', '05', '07', '09', '12', '14', '17'],
+                  'mid_list' : [ '00', '01', '05', '07', '09', '12', '14', '15', '17'],
                   'valid_bin_types' : ['BLNK','PS32','SHA1'], #
                   'epsig_log_file' : 'G:\\OLGR-TECHSERV\\MISC\\BINIMAGE\\qcas\\log\\epsig.log',# 
                   'previous_TSLfile' : "qcas_2017_09_v02.tsl", 
@@ -742,7 +742,7 @@ class QCASTestClient(unittest.TestCase):
     def dobnk(self, blnk_file, seed, s_index, mid, blocksize=65534):
         oh = "0000000000000000000000000000000000000000"
 
-        with open(blnk_file, 'r') as file:         # Read BNK file
+        with open(blnk_file, 'r', encoding='utf-8', errors='ignore') as file:         # Read BNK file
             field_names = ['fname', 'type', 'blah']
             
             data = file.read()
@@ -1004,6 +1004,8 @@ class QCASTestClient(unittest.TestCase):
                     else: 
                         rv = False # Everything other than SHA1 in BLNK files are invalid. 
 
+        if tsl_entry_object.bin_type == 'SHA1': 
+            rv = True
         else: 
             rv = False
 

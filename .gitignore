@@ -1,0 +1,5 @@
+
+*.pyc
+qcas_test.log
+*.sublime-workspace
+preferences.dat
