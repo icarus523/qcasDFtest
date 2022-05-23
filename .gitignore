@@ -3,3 +3,7 @@
 qcas_test.log
 *.sublime-workspace
 preferences.dat
+new_games.json
+preferences.dat
+*.pyc
+*.sublime-workspace

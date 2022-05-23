@@ -982,7 +982,7 @@ class QCASTestClient(unittest.TestCase):
     # Returns: Boolean
     # Input: TSL game object
     def check_game_type(self, tsl_entry_object): 
-        rv = None
+        rv = False
 
         if tsl_entry_object.bin_type == 'BLNK':  # Check only BLNK files 
 
@@ -1004,7 +1004,7 @@ class QCASTestClient(unittest.TestCase):
                     else: 
                         rv = False # Everything other than SHA1 in BLNK files are invalid. 
 
-        if tsl_entry_object.bin_type == 'SHA1': 
+        elif tsl_entry_object.bin_type == 'SHA1': 
             rv = True
         else: 
             rv = False

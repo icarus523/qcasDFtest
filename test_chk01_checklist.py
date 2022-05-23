@@ -27,7 +27,7 @@ def newgames_to_be_added():
 class test_chk01_checklist(QCASTestClient):      
     
     def write_to_file(self, fname, data):
-            with open(self.my_preferences.data['write_new_games_to_file'], 'w+') as json_file:
+            with open(self.my_preferences.data['write_new_games_l_to_file'], 'w+') as json_file:
                 pickle.dump(list(tsl_difference_games_added), outfile)
                 # json.dumps(data, json_file, sort_keys=True, indent=4, separators=(',',':'))
                 
@@ -50,7 +50,7 @@ class test_chk01_checklist(QCASTestClient):
                 same = set(file1).intersection(file2)
 
     @unittest.skipUnless(newgames_to_be_added(), "No new games to be added in PSL files")                
-    def test_new_games_to_be_added_are_in_PSL_files(self):
+    def test_new_games_l_to_be_added_are_in_PSL_files(self):
         game_list_to_be_added = self.get_newgames_to_be_added()
         PSL_file = self.my_preferences.data['PSLfile']
         nextMonth_PSLfile = self.my_preferences.data['nextMonth_PSLfile']
@@ -208,7 +208,7 @@ class test_chk01_checklist(QCASTestClient):
     @unittest.skipUnless(binimage_path_exists(), "requires BINIMAGE path")
     @unittest.skipUnless(newgames_to_be_added(), "No new games to be added in PSL files")                
     def test_X_NEW_game_with_one_seed_in_PSL_file(self): 
-        new_games = self.get_newgames_to_be_added()
+        new_games_l = self.get_newgames_to_be_added()
         msl_file_list = list() 
 
         MSLfile = self.my_preferences.data['MSLfile']
@@ -226,6 +226,7 @@ class test_chk01_checklist(QCASTestClient):
             
         complete = False
         count = 1
+        retries = 0
         number_of_random_games = self.my_preferences.data['number_of_random_games']
         
         display_msg = "Testing " + str(number_of_random_games) + " new game with random seed"
@@ -237,22 +238,22 @@ class test_chk01_checklist(QCASTestClient):
 
         while not complete:            
             # Choose a Random game from TSL file              
-            random_tsl_entry = random.choice(new_games)            
+            random_tsl_entry = random.choice(new_games_l)            
             
-            if len(new_games) < 4: # if < 4 games overall, continue just use different seeds
-                valid_random_game = True
-                logging.getLogger().info("< 4 games being verified, just using different seeds")
-            else: # otherwise make sure its not an already tested game
-                if random_tsl_entry not in random_chosen_game_list: 
-                    valid_random_game = True
-                else: 
-                    valid_random_game = False
+            # if len(new_games_l) < 4: # if < 4 games overall, continue just use different seeds
+            #     valid_random_game = True
+            #     logging.getLogger().info("< 4 games being verified, just using different seeds")
+            # else: # otherwise make sure its not an already tested game
+            #     if random_tsl_entry not in random_chosen_game_list: 
+            #         valid_random_game = True
+            #     else: 
+            #         valid_random_game = False
             
             # Test that "BLNK" file contents can be processed, ie. HMAC-SHA1 or SHA1 only. 
             # Will skip if files being hashed in the BLNK is not SHA1, e.g.  CR32, 0A4R, 0A4F 
-            if self.check_game_type(random_tsl_entry) == True and valid_random_game == True: 
+            if self.check_game_type(random_tsl_entry) == True and random_tsl_entry not in random_chosen_game_list: 
                 random_chosen_game_list.append(random_tsl_entry) # save the game
-                valid_random_game = False
+                valid_random_game = False # reset
                 
                 for msl in msl_file_list:
                     random_seed_idx =  random.randint(0,30) # Choose a random day for the month
@@ -279,10 +280,9 @@ class test_chk01_checklist(QCASTestClient):
                     elif random_tsl_entry.bin_type == "SHA1": 
                         #     def dohash_hmacsha1(self, fname, seed_index, seed='00', chunksize=32768):
                         localhash = self.dohash_hmacsha1(blnk_file, random_seed_idx, self.getQCAS_Expected_output(random_seed)) 
-
                     else:
                         print("\n")
-                        logging.getLogger().error("Trying to Process BLNK file")
+                        logging.getLogger().error("Trying to Process file: " + random_tsl_entry.bin_type)
                         sys.exit(1) 
                     
                     # Need to format Hashes
@@ -321,13 +321,16 @@ class test_chk01_checklist(QCASTestClient):
                 else:
                     complete = True # set the flag.
             else: 
-                if not valid_random_game: 
-                    logging.getLogger().info("Skipping: " + random_tsl_entry.game_name + ". Reason: Game already processed, trying another random game.")
-                else: 
-                    logging.getLogger().info("Skipping: " + random_tsl_entry.game_name + ". Reason: " 
-                        + random_tsl_entry.bin_type + " TSL file type, unsupported")
+                logging.getLogger().info("Skipping: " + random_tsl_entry.game_name + ". Reason: " 
+                   + random_tsl_entry.bin_type + " TSL file type, unsupported")
 
-            ##if complete == True: 
-            ##    break
+                
+                    # logging.getLogger().info("Skipping: " + random_tsl_entry.game_name + ". Reason: Game already processed, trying another random game.")
 
-        
+
+
+
+                #else: 
+
+            #if complete == True: 
+            #   break
