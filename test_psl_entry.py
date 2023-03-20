@@ -26,6 +26,8 @@ class test_psl_entry(QCASTestClient):
         # format
         if str(localhash).startswith('0x') or str(localhash).startswith('0X'): 
             tmpStr = str(localhash)[2:]
+        else: 
+            tmpStr = localhash
 
         tmpStr = str(tmpStr).zfill(40) # forces 40 characters with starting 0 characters. 
         tmpStr = str(tmpStr).zfill(40)
