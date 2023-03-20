@@ -122,8 +122,8 @@ class test_chk01_checklist(QCASTestClient):
             # Test that "BLNK" file contents can be processed, ie. HMAC-SHA1 or SHA1 only. 
             # Will skip if files being hashed in the BLNK is not SHA1, e.g.  CR32, 0A4R, 0A4F 
             if self.check_game_type(random_tsl_entry) == True and random_tsl_entry not in random_chosen_game_list: 
-                
                 random_chosen_game_list.append(random_tsl_entry) 
+
                 for msl in msl_file_list:
                     mslfile = self.check_file_format(msl, 'MSL')
                                         
@@ -193,11 +193,11 @@ class test_chk01_checklist(QCASTestClient):
                     complete = True # set the flag.
                         
             else: 
-                if random_tsl_entry not in random_chosen_game_list: 
-                    logging.getLogger().info("Skipping: " + random_tsl_entry.game_name + ". Reason: Game already processed, trying another random game.")
-                else: 
-                    logging.getLogger().info("Skipping: " + random_tsl_entry.game_name + ". Reason: " 
-                        + random_tsl_entry.bin_type + " TSL file type, unsupported")
+                # if random_tsl_entry not in random_chosen_game_list: 
+                #     logging.getLogger().info("Skipping: " + random_tsl_entry.game_name + ". Reason: Game already processed, trying another random game.")
+                # else: 
+                logging.getLogger().info("Skipping: " + random_tsl_entry.game_name + ". Reason: " 
+                    + random_tsl_entry.bin_type + " TSL file type, unsupported or game already processed")
 
             ##if complete: 
             ##    break
@@ -227,7 +227,10 @@ class test_chk01_checklist(QCASTestClient):
         complete = False
         count = 1
         retries = 0
+
         number_of_random_games = self.my_preferences.data['number_of_random_games']
+        if len(new_games_l) < number_of_random_games: 
+            number_of_random_games = len(new_games_l)
         
         display_msg = "Testing " + str(number_of_random_games) + " new game with random seed"
         print("\n" + display_msg)

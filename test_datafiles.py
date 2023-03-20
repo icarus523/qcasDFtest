@@ -39,7 +39,11 @@ DEFAULT_DATA = { 'path_to_binimage' : 'G:\\OLGR-TECHSERV\\BINIMAGE',
                   'one_month_mode': "false"
                 }
 
-   
+logging.basicConfig(level=logging.DEBUG,
+        format='%(asctime)s - %(levelname)-8s %(message)s',
+        datefmt='%d-%m-%y %H:%M',
+        filename='qcas_test.log',
+        filemode='a')
                 
 def skipping_PSL_comparison_tests(): 
     my_preferences = Preferences()    
