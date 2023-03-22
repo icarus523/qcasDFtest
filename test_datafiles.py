@@ -474,6 +474,30 @@ class QCASTestClient(unittest.TestCase):
     def tearDown(self): 
         err_msg = ""  
         self.my_preferences = None
+
+    # used for tsl_psl_entry.py
+    def getHash(self, blnk_file, test_seed, hash_list_idx, test_game): 
+        localhash = None
+        if test_game.bin_type == "BLNK": 
+            localhash = self.dobnk(blnk_file, test_seed, hash_list_idx, test_game.mid, blocksize=65535)
+        elif test_game.bin_type == "SHA1": 
+            #     def dohash_hmacsha1(self, fname, seed_index, seed='00', chunksize=32768):
+            localhash = self.dohash_hmacsha1(blnk_file, hash_list_idx, self.getQCAS_Expected_output(test_seed)) 
+        else:
+            print("\n")
+            logging.getLogger().error("Trying to Process TSL entry: ", test_game.game_name)
+            sys.exit(1) 
+
+        # format
+        if str(localhash).startswith('0x') or str(localhash).startswith('0X'): 
+            tmpStr = str(localhash)[2:] # splice first two characters in string. 
+        else: 
+            tmpStr = localhash
+
+        tmpStr = str(tmpStr).zfill(40) # forces 40 characters with starting 0 characters. 
+        localhash = self.getQCAS_Expected_output(tmpStr).upper() # format it          
+
+        return localhash     
             
     def generate_seed_list_for_test(self): 
         seedlist = list() 
